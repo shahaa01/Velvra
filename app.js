@@ -26,6 +26,7 @@ app.use(methodOverride('_method'));
 //routes
 app.use('/home', require('./routes/indexRoute'));
 app.use('/auth', require('./routes/authRoute'));
+app.use('/shop', require('./routes/shopRoute'));
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

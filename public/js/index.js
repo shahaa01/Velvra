@@ -16,13 +16,6 @@ function initMobileMenu() {
             mobileMenuIcon.classList.add('hidden');
             mobileCloseIcon.classList.remove('hidden');
             
-            // Add backdrop
-            const backdrop = document.createElement('div');
-            backdrop.id = 'menu-backdrop';
-            backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden';
-            backdrop.onclick = toggleMobileMenu;
-            document.body.appendChild(backdrop);
-            
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
         } else {
@@ -31,10 +24,6 @@ function initMobileMenu() {
             mobileMenu.classList.remove('translate-x-0');
             mobileMenuIcon.classList.remove('hidden');
             mobileCloseIcon.classList.add('hidden');
-            
-            // Remove backdrop
-            const backdrop = document.getElementById('menu-backdrop');
-            if (backdrop) backdrop.remove();
             
             // Restore body scroll
             document.body.style.overflow = '';
@@ -200,4 +189,90 @@ window.addEventListener('scroll', () => {
         yearElement.textContent = new Date().getFullYear();
     }
 
+
+    // Touch gesture support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    const productGrid = document.getElementById('productGrid');
+    
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) {
+            // Swiped left - could implement carousel navigation
+            console.log('Swiped left');
+        }
+        if (touchEndX > touchStartX + 50) {
+            // Swiped right - could implement carousel navigation
+            console.log('Swiped right');
+        }
+    }
+    
+    productGrid?.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    productGrid?.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    // Intersection Observer for lazy loading
+    const imageObserverLazy = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.add('animate-fade-in');
+                observer.unobserve(img);
+            }
+        });
+    });
+    
+    // Observe all product images
+    document.querySelectorAll('img[data-src]').forEach(img => {
+        imageObserverLazy.observe(img);
+    });
+    
+    // Premium scroll effects
+    let lastScrollTop = 0;
+    const nav = document.querySelector('nav');
+    
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scrolling down - hide nav
+            nav?.classList.add('-translate-y-full');
+        } else {
+            // Scrolling up - show nav
+            nav?.classList.remove('-translate-y-full');
+        }
+        
+        lastScrollTop = scrollTop;
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Calculate and set navbar height
+    function setNavbarHeight() {
+        const navbar = document.querySelector('nav');
+        if (navbar) {
+            const height = navbar.offsetHeight;
+            document.documentElement.style.setProperty('--navbar-height', `${height}px`);
+            document.documentElement.style.setProperty('--navbar-height-mobile', `${height}px`);
+        }
+    }
+    
+    // Set initial height
+    setNavbarHeight();
+    
+    // Recalculate on resize
+    window.addEventListener('resize', setNavbarHeight);
+    
+    // Recalculate when navbar content changes
+    const observer = new MutationObserver(setNavbarHeight);
+    const navbar = document.querySelector('nav') || document.querySelector('.navbar');
+    if (navbar) {
+        observer.observe(navbar, { childList: true, subtree: true });
+    }
+});
 

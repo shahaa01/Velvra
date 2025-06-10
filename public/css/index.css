@@ -56,6 +56,31 @@ transition: transform 0.5s ease;
 transform: scale(1.05);
 }
 
+     .mobile-menu {
+            position: fixed !important;
+            top: 64px !important; /* Height of navbar */
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 16rem !important; /* w-64 */
+            background-color: white !important;
+            z-index: 60 !important; /* Higher than backdrop */
+            transform: translateX(100%) !important;
+            transition: transform 0.3s ease-in-out !important;
+            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .mobile-menu.translate-x-0 {
+            transform: translateX(0) !important;
+        }
+        
+        .mobile-menu.translate-x-full {
+            transform: translateX(100%) !important;
+        }
+        
+        #menu-backdrop {
+            z-index: 50 !important; /* Lower than mobile menu but higher than content */
+        }
+
 /* Button hover effect */
 .btn-primary {
 position: relative;
@@ -122,23 +147,14 @@ scrollbar-width: none;  /* Firefox */
 
 /* Dynamic navbar spacing */
 body {
-    padding-top: 64px; /* Default navbar height */
+    padding-top: var(--navbar-height); 
+    transition: padding-top 0.3s ease;
 }
 
 @media (min-width: 768px) {
     body {
-        padding-top: 64px;
+    padding-top: var(--navbar-height); 
     }
-}
-
-/* Remove padding from signup page body if you added the wrapper class */
-body.has-main-wrapper {
-    padding-top: 0;
-}
-
-.main-content-wrapper {
-    padding-top: 64px;
-    min-height: 100vh;
 }
 
 /* Mobile menu enhancements */
@@ -209,3 +225,62 @@ body.has-main-wrapper {
 #mobile-menu a:hover::before {
     height: 20px;
 }
+
+    /* Mobile-first touch optimizations */
+    @media (max-width: 640px) {
+        /* Larger touch targets */
+        button, a, label {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Prevent text selection on interactive elements */
+        .product-card, button {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Smooth scrolling for touch devices */
+        .filter-sidebar {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Remove hover effects on touch devices */
+        @media (hover: none) {
+            .group:hover .group-hover\:opacity-100 {
+                opacity: 0;
+            }
+        }
+    }
+    
+    /* Swipe gesture support */
+    .swipe-container {
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .swipe-item {
+        scroll-snap-align: start;
+    }
+    
+    /* Premium loading states */
+    .loading-shimmer {
+        background: linear-gradient(
+            90deg,
+            #f0f0f0 0%,
+            #f8f8f8 50%,
+            #f0f0f0 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    /* Elegant transitions */
+    * {
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }

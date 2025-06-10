@@ -85,23 +85,6 @@ padding-right: env(safe-area-inset-right);
 }
 }
 
-/* Add to your global CSS or in the signup page */
-.main-content-wrapper {
-    padding-top: var(--navbar-height); /* Default fallback */
-}
-
-/* Calculate navbar height dynamically */
-@media (max-width: 768px) {
-    .main-content-wrapper {
-        padding-top: var(--navbar-height-mobile);
-    }
-}
-
-/* Smooth transition when navbar changes */
-.main-content-wrapper {
-    transition: padding-top 0.3s ease;
-}
-
 .bgImageWrapper img{
     box-shadow: -10px 10px 20px rgba(0, 0, 0, 0.3);
 }
