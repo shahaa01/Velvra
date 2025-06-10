@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "vite"
+    "start": "node app.js",
+    "build:css": "tailwindcss -i ./public/css/style.css -o ./public/css/output.css --watch"
   },
   "name": "velvra",
   "version": "1.0.0",

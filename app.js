@@ -10,8 +10,7 @@ const mongoose = require('mongoose');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
 
-const sessionConfig = {
-    secret: 
+
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,4 +22,12 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(methodOverride('_method'));
 
+
+//routes
+app.use('/home', require('./routes/indexRoute'));
+app.use('/auth', require('./routes/authRoute'));
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
 
