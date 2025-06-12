@@ -12,7 +12,7 @@ const methodOverride = require('method-override');
 
 
 
-// Serve static files from the 'public' directory
+// Serve static file from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.engine('ejs', ejsMate); 
