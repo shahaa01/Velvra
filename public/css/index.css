@@ -56,30 +56,7 @@ transition: transform 0.5s ease;
 transform: scale(1.05);
 }
 
-     .mobile-menu {
-            position: fixed !important;
-            top: 64px !important; /* Height of navbar */
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 16rem !important; /* w-64 */
-            background-color: white !important;
-            z-index: 60 !important; /* Higher than backdrop */
-            transform: translateX(100%) !important;
-            transition: transform 0.3s ease-in-out !important;
-            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .mobile-menu.translate-x-0 {
-            transform: translateX(0) !important;
-        }
-        
-        .mobile-menu.translate-x-full {
-            transform: translateX(100%) !important;
-        }
-        
-        #menu-backdrop {
-            z-index: 50 !important; /* Lower than mobile menu but higher than content */
-        }
+     
 
 /* Button hover effect */
 .btn-primary {
@@ -157,74 +134,7 @@ body {
     }
 }
 
-/* Mobile menu enhancements */
-#mobile-menu {
-    z-index: 45;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-}
 
-/* Smooth backdrop animation */
-#menu-backdrop {
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Better touch feedback */
-#mobile-menu-button {
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.2s ease;
-}
-
-#mobile-menu-button:active {
-    transform: scale(0.9);
-}
-
-/* Ensure mobile menu is above fixed navbar */
-#mobile-menu {
-    z-index: 51;
-}
-
-/* Smooth icon transitions */
-#mobile-menu-icon,
-#mobile-close-icon {
-    transition: transform 0.3s ease;
-}
-
-/* Rotate hamburger to X */
-#mobile-menu-button.menu-open #mobile-menu-icon {
-    transform: rotate(180deg);
-}
-
-/* Premium hover effects for mobile menu links */
-#mobile-menu a {
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-#mobile-menu a:hover {
-    padding-left: 20px;
-    color: #ea580c;
-}
-
-#mobile-menu a::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    background: #ea580c;
-    transition: height 0.2s ease;
-}
-
-#mobile-menu a:hover::before {
-    height: 20px;
-}
 
     /* Mobile-first touch optimizations */
     @media (max-width: 640px) {

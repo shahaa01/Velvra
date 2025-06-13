@@ -1,60 +1,60 @@
-.luxury-gradient {
-    background: linear-gradient(135deg, #f8f6f0 0%, #fefcf7 50%, #e8dcc6 100%);
-}
-
-.gold-gradient {
-    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
-}
-
-.glass-effect {
-    backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.image-gallery {
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.image-gallery::-webkit-scrollbar {
-    display: none;
-}
-
-.quantity-input::-webkit-outer-spin-button,
-.quantity-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.quantity-input {
-    -moz-appearance: textfield;
-}
-
-.accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.5s cubic-bezier(0.23, 1, 0.320, 1);
-}
-
-.accordion-content.active {
-    max-height: 500px;
-}
-
-.related-products {
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.related-products::-webkit-scrollbar {
-    display: none;
-}
-
-.product-image-zoom {
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1);
-}
-
-.product-image-zoom:hover {
-    transform: scale(1.05);
-}
+        .luxury-gradient {
+            background: linear-gradient(135deg, #f8f6f0 0%, #fefcf7 50%, #e8dcc6 100%);
+        }
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .image-gallery {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .image-gallery::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .quantity-input {
+            -moz-appearance: textfield;
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+        
+        .accordion-content.active {
+            max-height: 500px;
+        }
+        
+        .related-products {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .related-products::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .product-image-zoom {
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+        
+        .product-image-zoom:hover {
+            transform: scale(1.05);
+        }

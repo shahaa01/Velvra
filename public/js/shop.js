@@ -152,15 +152,26 @@ const filterOverlay = document.getElementById('filterOverlay');
 
 // Open mobile filter
 mobileFilterTrigger?.addEventListener('click', () => {
-    filterSidebar.classList.add('active');
-    filterOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    filterSidebar.classList.toggle('active');
+    filterOverlay.classList.toggle('active');
+
+    if(filterSidebar.classList.contains('active') || filterOverlay.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+    }
+    else {
+        document.body.style.overflow = '';
+    }
+
 });
 
 // Close mobile filter
 const closeFilter = () => {
-    filterSidebar.classList.remove('active');
-    filterOverlay.classList.remove('active');
+    if(filterSidebar.classList.contains('active'))
+            filterSidebar.classList.remove('active');
+
+    if(filterOverlay.classList.contains('active'))
+            filterOverlay.classList.remove('active');
+
     document.body.style.overflow = '';
 };
 
@@ -348,20 +359,24 @@ document.querySelectorAll('.size-quick-option').forEach(sizeBtn => {
 
 // Quick add functionality
 document.querySelectorAll('.quick-add-mobile').forEach(btn => {
+    btn.quickAddFlag = false;
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         
         // Show success animation
-        btn.textContent = 'Added!';
-        btn.style.background = 'var(--velvra-gold)';
-        btn.style.color = 'var(--velvra-charcoal)';
+        btn.quickAddFlag = !btn.quickAddFlag;
+        if(btn.quickAddFlag) {
+            btn.textContent = 'Added!';
+            btn.style.background = 'var(--velvra-gold)';
+            btn.style.color = 'var(--velvra-charcoal)';
+        } else {
+            btn.textContent = 'Quick Add!';
+            btn.style.background = 'black';
+            btn.style.color = 'white';
+        }
+
         
-        setTimeout(() => {
-            btn.textContent = 'Quick Add';
-            btn.style.background = '';
-            btn.style.color = '';
-        }, 2000);
     });
 });
 

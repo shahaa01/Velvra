@@ -450,7 +450,7 @@
                     </svg>
                 </button>
                 <% if(product.salePercentage && product.salePercentage > 0) { %>
-                    <div class="sale-badge">Sale <%= product.salePercentage %>% Off</div>
+                    <div class="sale-badge"><%= product.salePercentage %>%</div>
                 <% } %>
                 
                 <figure class="product-image-container">

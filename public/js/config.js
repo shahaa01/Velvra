@@ -1,10 +1,4 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./views/**/*.ejs",
-    "./public/**/*.html",
-    "./*.html",
-  ],
+tailwind.config = {
     theme: {
         extend: {
             fontFamily: {
@@ -19,7 +13,6 @@ module.exports = {
                     'pearl': '#fefcf7',
                     'beige': '#e8dcc6',
                     'stone': '#a8a196',
-                    'brand' : '#f8e9d3',
                 }
             },
             animation: {
@@ -50,6 +43,5 @@ module.exports = {
                 'xs': '2px',
             }
         }
-    },
-  plugins: [],
+    }
 }
