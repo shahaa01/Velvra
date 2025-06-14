@@ -102,6 +102,7 @@ main().then(() => console.log('Database connected successfully🚀')).catch(err 
 
 async function main() {
   await mongoose.connect('mongodb://127.0.0.1:27017/velvra');
+  await Product.ensureIndexes();
 }
 
 //routes

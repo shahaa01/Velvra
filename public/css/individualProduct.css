@@ -1,14 +1,30 @@
+        :root {
+    --velvra-charcoal: #1a1a1a;
+    --velvra-gold: #d4af37;
+    --velvra-cream: #f8f6f0;
+    --velvra-pearl: #fefcf7;
+    --velvra-beige: #e8dcc6;
+    --velvra-stone: #a8a196;
+    --velvra-shadow: rgba(26, 26, 26, 0.1);
+    --velvra-shadow-dark: rgba(26, 26, 26, 0.15);
+    --velvra-blur: blur(20px);
+    --transition-luxury: cubic-bezier(0.23, 1, 0.320, 1);
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+        
+        body {
+            padding-top: var(--navbar-height);
+        }
         .luxury-gradient {
             background: linear-gradient(135deg, #f8f6f0 0%, #fefcf7 50%, #e8dcc6 100%);
         }
         
         .gold-gradient {
-            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+            background: var(--velvra-gold);
         }
         
         .glass-effect {
             backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.95);
         }
         
         .image-gallery {
@@ -58,3 +74,58 @@
         .product-image-zoom:hover {
             transform: scale(1.05);
         }
+
+#wishlistBtn.active {
+    background-color: var(--velvra-gold);
+    color: white;
+}
+
+
+.wishlist-btn.active {
+  background-color: var(--velvra-gold);
+  color: white;
+}
+
+
+
+.color-options {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.color-option {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid rgba(26, 26, 26, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s var(--transition-smooth);
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: black;
+}
+
+.color-option.selected {
+    border-color: black;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #f4cf3e;
+}
+
+@media (max-width: 410px) {
+    .breadcrumb a{
+        font-size: smaller;
+    }
+    .cartText {
+        font-size: 0.7rem;
+    }
+}
+
+        .product-card,
+.wishlist-btn,
+.thumbnail-btn,
+.color-selector,
+.size-selector {
+    will-change: transform; /* Only if hover effects feel janky */
+}

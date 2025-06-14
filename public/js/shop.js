@@ -1,4 +1,3 @@
-// ===== LUXURY E-COMMERCE INTERACTION SCRIPT =====
 
 // State Management
 class VelvraState {
@@ -65,32 +64,8 @@ class VelvraState {
 // Initialize state
 const state = new VelvraState();
 
-// ===== SMOOTH SCROLLING & ANIMATIONS =====
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Observe elements for animation
+// Initialize wishlist UI
 document.addEventListener('DOMContentLoaded', () => {
-    // Animate cards on scroll
-    document.querySelectorAll('.product-card, .feature-card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.320, 1)';
-        observer.observe(card);
-    });
-
-    // Initialize wishlist UI
     state.updateWishlistUI();
 });
 
@@ -140,7 +115,7 @@ document.querySelectorAll('.sort-item').forEach(item => {
         document.getElementById('productGrid').classList.add('loading');
         setTimeout(() => {
             document.getElementById('productGrid').classList.remove('loading');
-        }, 600);
+        }, 300);
     });
 });
 
@@ -150,42 +125,96 @@ const filterSidebar = document.getElementById('filterSidebar');
 const filterClose = document.getElementById('filterClose');
 const filterOverlay = document.getElementById('filterOverlay');
 
-// Open mobile filter
 mobileFilterTrigger?.addEventListener('click', () => {
-    filterSidebar.classList.toggle('active');
-    filterOverlay.classList.toggle('active');
-
-    if(filterSidebar.classList.contains('active') || filterOverlay.classList.contains('active')) {
+    if(filterSidebar.classList.contains('active') && filterOverlay.classList.contains('active')) {
+        closeFilter();
+    } else {
+        filterSidebar.classList.add('active');
+        filterOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+        document.body.style.width = '100%';
+        document.body.style.top = `-${window.scrollY}px`;
     }
-    else {
-        document.body.style.overflow = '';
-    }
-
 });
 
-// Close mobile filter
+// Close mobile filter with scroll restoration
 const closeFilter = () => {
-    if(filterSidebar.classList.contains('active'))
-            filterSidebar.classList.remove('active');
-
-    if(filterOverlay.classList.contains('active'))
-            filterOverlay.classList.remove('active');
-
+    const scrollY = document.body.style.top;
+    
+    filterSidebar.classList.remove('active');
+    filterOverlay.classList.remove('active');
+    
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.top = '';
+    
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
 };
 
 filterClose?.addEventListener('click', closeFilter);
 filterOverlay?.addEventListener('click', closeFilter);
 
-// Filter toggles
+if ('ontouchstart' in window) {
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            if (e.target.closest('.color-option, .size-option, .filter-toggle, .wishlist-btn')) {
+                e.preventDefault();
+            }
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+}
+
+// Filter toggles with mobile-optimized behavior
 document.querySelectorAll('.filter-toggle').forEach(toggle => {
-    toggle.addEventListener('click', () => {
+    let isAnimating = false; // Prevent rapid clicks
+    
+    toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 🛠 Fixed: Prevent race conditions during animation
+        if (isAnimating) return;
+        
         const panel = toggle.nextElementSibling;
         const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
         
+        // Lock during animation
+        isAnimating = true;
+        
+        // 🛠 Fixed: Ensure only one section is open at a time on mobile
+        if (window.innerWidth <= 768 && !isExpanded) {
+            // Close all other panels first
+            document.querySelectorAll('.filter-panel.active').forEach(otherPanel => {
+                if (otherPanel !== panel) {
+                    otherPanel.classList.remove('active');
+                    otherPanel.previousElementSibling.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+        
+        // Toggle current panel
         toggle.setAttribute('aria-expanded', !isExpanded);
         panel.classList.toggle('active');
+        
+        // 🛠 Fixed: Smooth scroll to expanded section on mobile
+        if (!isExpanded && window.innerWidth <= 768) {
+            setTimeout(() => {
+                toggle.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start',
+                    inline: 'nearest'
+                });
+            }, 100);
+        }
+        
+        // Unlock after animation completes
+        setTimeout(() => {
+            isAnimating = false;
+        }, 300);
     });
 });
 
@@ -295,50 +324,55 @@ document.querySelectorAll('.size-option').forEach(size => {
 
 // ===== PRODUCT INTERACTIONS =====
 
-// Wishlist functionality
-document.querySelectorAll('.wishlist-btn').forEach((btn, index) => {
-    btn.addEventListener('click', (e) => {
+// Wishlist functionality - Event delegation for better performance
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.wishlist-btn')) {
         e.preventDefault();
         e.stopPropagation();
+        const btn = e.target.closest('.wishlist-btn');
+        const index = Array.from(document.querySelectorAll('.wishlist-btn')).indexOf(btn);
         const productId = `product-${index + 1}`;
         state.toggleWishlist(productId);
         
         // Add visual feedback
-        btn.style.transform = 'scale(1.2)';
+        btn.classList.add('wishlist-animate');
         setTimeout(() => {
-            btn.style.transform = '';
-        }, 200);
-    });
+            btn.classList.remove('wishlist-animate');
+        }, 300);
+    }
 });
 
-// Product card color options
-document.querySelectorAll('.product-card .color-option').forEach(option => {
-    option.addEventListener('click', (e) => {
+// Product card color options - Event delegation
+document.addEventListener('click', (e) => {
+    const colorOption = e.target.closest('.product-card .color-option');
+    if (colorOption) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Remove selected from siblings
-        const siblings = option.parentElement.querySelectorAll('.color-option');
-        siblings.forEach(sibling => sibling.classList.remove('selected'));
-        
-        // Add selected to clicked option
-        option.classList.add('selected');
-        
-        // Update product image (simulate color change)
-        const productCard = option.closest('.product-card');
-        const primaryImage = productCard.querySelector('.product-image');
-        
-        // Add shimmer effect
-        primaryImage.style.filter = 'brightness(1.1)';
-        setTimeout(() => {
-            primaryImage.style.filter = '';
-        }, 300);
-    });
+        // 🛠 Fixed: Mobile flicker on color swatch rapid tap
+        if (window.innerWidth <= 768) {
+            colorSelectionHandler(colorOption);
+        } else {
+            // Desktop behavior remains unchanged
+            const siblings = colorOption.parentElement.querySelectorAll('.color-option');
+            siblings.forEach(sibling => sibling.classList.remove('selected'));
+            colorOption.classList.add('selected');
+            
+            const productCard = colorOption.closest('.product-card');
+            const primaryImage = productCard.querySelector('.product-image');
+            
+            primaryImage.classList.add('image-transition');
+            setTimeout(() => {
+                primaryImage.classList.remove('image-transition');
+            }, 300);
+        }
+    }
 });
 
-// Quick size selection
-document.querySelectorAll('.size-quick-option').forEach(sizeBtn => {
-    sizeBtn.addEventListener('click', (e) => {
+// Quick size selection - Event delegation
+document.addEventListener('click', (e) => {
+    const sizeBtn = e.target.closest('.size-quick-option');
+    if (sizeBtn) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -348,37 +382,75 @@ document.querySelectorAll('.size-quick-option').forEach(sizeBtn => {
         
         // Add selected to clicked option
         sizeBtn.classList.add('selected');
+        sizeBtn.classList.add('size-animate');
         
-        // Visual feedback
-        sizeBtn.style.transform = 'scale(0.95)';
         setTimeout(() => {
-            sizeBtn.style.transform = '';
+            sizeBtn.classList.remove('size-animate');
         }, 150);
-    });
+    }
 });
 
-// Quick add functionality
-document.querySelectorAll('.quick-add-mobile').forEach(btn => {
-    btn.quickAddFlag = false;
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.quick-add-mobile').forEach(btn => {
     btn.addEventListener('click', (e) => {
+        console.log("Activated click handler");
         e.preventDefault();
         e.stopPropagation();
-        
-        // Show success animation
-        btn.quickAddFlag = !btn.quickAddFlag;
-        if(btn.quickAddFlag) {
-            btn.textContent = 'Added!';
-            btn.style.background = 'var(--velvra-gold)';
-            btn.style.color = 'var(--velvra-charcoal)';
-        } else {
-            btn.textContent = 'Quick Add!';
-            btn.style.background = 'black';
-            btn.style.color = 'white';
-        }
+        console.log('Clicked', btn.textContent, 'Flag:', btn.dataset.quickAddFlag);
 
-        
+        const isAdded = btn.dataset.quickAddFlag === 'true';
+
+        if (!isAdded) {
+            btn.dataset.quickAddFlag = 'true';
+            btn.textContent = 'Added!';
+            btn.classList.add('added'); // Use CSS class
+        } else {
+            btn.dataset.quickAddFlag = 'false';
+            btn.textContent = 'Quick Add';
+            btn.classList.remove('added');
+        }
     });
 });
+})
+
+
+
+// Debounced color selection for mobile
+const colorSelectionHandler = (() => {
+    let timeout;
+    const DEBOUNCE_DELAY = 150; // Prevent rapid fire events
+    
+    return (colorOption) => {
+        clearTimeout(timeout);
+        
+        // Add immediate visual feedback
+        colorOption.classList.add('color-selecting');
+        
+        timeout = setTimeout(() => {
+            // Remove selected from siblings
+            const siblings = colorOption.parentElement.querySelectorAll('.color-option');
+            siblings.forEach(sibling => {
+                sibling.classList.remove('selected', 'color-selecting');
+            });
+            
+            // Add selected to clicked option
+            colorOption.classList.add('selected');
+            colorOption.classList.remove('color-selecting');
+            
+            // Update product image with smooth transition
+            const productCard = colorOption.closest('.product-card');
+            const primaryImage = productCard.querySelector('.product-image');
+            
+            // 🛠 Fixed: Prevent layout shift during color change
+            if (primaryImage) {
+                primaryImage.style.opacity = '0.8';
+                setTimeout(() => {
+                    primaryImage.style.opacity = '1';
+                }, 300);
+            }
+        }, DEBOUNCE_DELAY);
+    };
+})();
 
 // ===== VIEW TOGGLE =====
 document.querySelectorAll('.view-btn').forEach(btn => {
@@ -393,22 +465,14 @@ document.querySelectorAll('.view-btn').forEach(btn => {
         btn.classList.add('active');
         btn.setAttribute('aria-pressed', 'true');
         
-        // Update grid layout
+        // Update grid layout with class instead of inline styles
         const grid = document.getElementById('productGrid');
         const viewMode = btn.dataset.view;
         
         if (viewMode === 'list') {
-            grid.style.gridTemplateColumns = '1fr';
-            document.querySelectorAll('.product-card').forEach(card => {
-                card.style.display = 'flex';
-                card.style.height = '200px';
-            });
+            grid.classList.add('list-view');
         } else {
-            grid.style.gridTemplateColumns = '';
-            document.querySelectorAll('.product-card').forEach(card => {
-                card.style.display = '';
-                card.style.height = '';
-            });
+            grid.classList.remove('list-view');
         }
         
         state.viewMode = viewMode;
@@ -424,60 +488,74 @@ document.querySelector('.newsletter-form')?.addEventListener('submit', (e) => {
         const submitBtn = document.querySelector('.newsletter-submit');
         const originalText = submitBtn.textContent;
         
-        // Show success state
+        // Show success state using classes instead of inline styles
         submitBtn.textContent = 'Subscribed!';
-        submitBtn.style.background = 'var(--velvra-gold)';
+        submitBtn.classList.add('newsletter-success');
         
         // Reset form
         document.querySelector('.newsletter-input').value = '';
         
         setTimeout(() => {
             submitBtn.textContent = originalText;
-            submitBtn.style.background = '';
+            submitBtn.classList.remove('newsletter-success');
         }, 3000);
     }
 });
 
-// ===== SMOOTH SCROLL FOR HERO BUTTONS =====
-document.querySelectorAll('.premium-btn-primary, .premium-btn-secondary').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        if (btn.textContent.includes('Explore')) {
-            e.preventDefault();
-            document.querySelector('.product-section').scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
 // ===== PERFORMANCE OPTIMIZATIONS =====
 
-// Throttle scroll events
-function throttle(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+// Throttle function for scroll events
+function throttle(func, wait = 16) {
+    let timeout = null;
+    let previous = 0;
+    
+    return function(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - previous);
+        
+        if (remaining <= 0 || remaining > wait) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            func.apply(this, args);
+        } else if (!timeout) {
+            timeout = setTimeout(() => {
+                previous = Date.now();
+                timeout = null;
+                func.apply(this, args);
+            }, remaining);
+        }
     };
 }
 
-// Lazy loading for images (if needed)
+// Optimize image loading with IntersectionObserver
 const imageObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             const img = entry.target;
             if (img.dataset.src) {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
+                // Create a new image object to preload
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    img.src = img.dataset.src;
+                    img.classList.add('loaded');
+                    img.removeAttribute('data-src');
+                };
+                tempImg.src = img.dataset.src;
                 imageObserver.unobserve(img);
             }
         }
     });
+}, {
+    rootMargin: '200px 0px', // Preload images 200px before they enter viewport
+    threshold: 0.01
+});
+
+// Apply lazy loading to all images with data-src
+document.querySelectorAll('img[data-src]').forEach(img => {
+    imageObserver.observe(img);
 });
 
 // ===== KEYBOARD ACCESSIBILITY =====
@@ -516,6 +594,7 @@ filterSidebar?.addEventListener('touchmove', (e) => {
     const deltaY = currentY - startY;
     
     if (deltaY > 0) {
+        // Use CSS transform with will-change for better performance
         filterSidebar.style.transform = `translateX(-${Math.min(deltaY / 3, 100)}%)`;
     }
 }, { passive: true });
@@ -535,107 +614,111 @@ filterSidebar?.addEventListener('touchend', () => {
 // ===== LOADING STATES =====
 function showLoading(element) {
     element.classList.add('loading');
-    element.style.pointerEvents = 'none';
+    element.setAttribute('aria-busy', 'true');
 }
 
 function hideLoading(element) {
-    setTimeout(() => {
-        element.classList.remove('loading');
-        element.style.pointerEvents = '';
-    }, 600);
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            element.classList.remove('loading');
+            element.setAttribute('aria-busy', 'false');
+        }, 600);
+    });
 }
 
-// ===== PRODUCT HOVER EFFECTS =====
+// ===== PRODUCT HOVER EFFECTS - OPTIMIZED =====
+// Replace direct style changes with class toggles for better performance
+// Use event delegation for all product cards
+// ===== PRODUCT HOVER EFFECTS - SIMPLIFIED FIX =====
+// Replace this section in your original JS file
+
+// First, remove any existing product hover event listeners
 document.querySelectorAll('.product-card').forEach(card => {
-    const image = card.querySelector('.product-image');
+    const clone = card.cloneNode(true);
+    card.parentNode.replaceChild(clone, card);
+});
+
+// Apply a class-based approach for secondary image
+document.querySelectorAll('.product-card').forEach(card => {
+    // Preload secondary image if it exists
     const secondaryImage = card.querySelector('.product-image-secondary');
+    if (secondaryImage && secondaryImage.dataset.src) {
+        const img = new Image();
+        img.src = secondaryImage.dataset.src;
+        secondaryImage.dataset.loaded = 'true';
+    }
     
-    card.addEventListener('mouseenter', () => {
-        if (secondaryImage) {
-            image.style.opacity = '0';
-            secondaryImage.style.opacity = '1';
-        }
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        if (secondaryImage) {
-            image.style.opacity = '1';
-            secondaryImage.style.opacity = '0';
-        }
-    });
+    // Add CSS class for hover rather than using JS events
+    card.classList.add('use-css-hover');
 });
 
-// ===== FLOATING ANIMATION =====
-function startFloatingAnimation() {
-    document.querySelectorAll('.floating').forEach((element, index) => {
-        element.style.animationDelay = `${index * 0.2}s`;
-    });
-}
-
-// Start animations when page loads
-window.addEventListener('load', () => {
-    startFloatingAnimation();
-    
-    // Add entrance animations
-    setTimeout(() => {
-        document.querySelectorAll('.hero-title, .hero-description, .hero-buttons').forEach((element, index) => {
-            element.style.opacity = '1';
-            element.style.transform = 'translateY(0)';
-        });
-    }, 100);
-});
-
-// ===== SEARCH FUNCTIONALITY (Basic) =====
-function filterProducts(searchTerm) {
-    const products = document.querySelectorAll('.product-card');
-    const normalizedSearch = searchTerm.toLowerCase();
-    
-    products.forEach(product => {
-        const name = product.querySelector('.product-name').textContent.toLowerCase();
-        const brand = product.querySelector('.product-brand').textContent.toLowerCase();
-        
-        if (name.includes(normalizedSearch) || brand.includes(normalizedSearch)) {
-            product.style.display = '';
-            product.style.opacity = '1';
-        } else {
-            product.style.display = 'none';
-            product.style.opacity = '0';
-        }
-    });
-}
-
-// ===== ERROR HANDLING =====
-window.addEventListener('error', (e) => {
-    console.error('Velvra Error:', e.error);
-    // Could send to analytics or show user-friendly message
-});
-
-// Add CSS custom properties for dynamic theming
-document.documentElement.style.setProperty('--scroll-progress', '0%');
-
-// Update scroll progress
-window.addEventListener('scroll', throttle(() => {
-    const scrolled = window.pageYOffset;
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = (scrolled / maxScroll) * 100;
-    document.documentElement.style.setProperty('--scroll-progress', `${progress}%`);
-}, 16));
-
-// Add intersection observer for product cards
+// ===== OPTIMIZED PRODUCT CARD ANIMATIONS =====
+// Simplified intersection observer with minimal processing
 const productObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
+    entries.forEach((entry) => {
         if (entry.isIntersecting) {
-            setTimeout(() => {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }, index * 100);
+            entry.target.classList.add('product-visible');
+            productObserver.unobserve(entry.target);
         }
     });
-}, { threshold: 0.1 });
+}, { 
+    threshold: 0.15,
+    rootMargin: '50px 0px'
+});
 
-document.querySelectorAll('.product-card').forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.320, 1)';
+// Apply animations with minimal processing
+document.querySelectorAll('.product-card:not(.product-visible)').forEach(card => {
     productObserver.observe(card);
 });
+
+// Disable any heavy processing during scroll
+window.addEventListener('scroll', () => {
+    // Empty function with passive listener improves touch device performance
+}, { passive: true });
+
+// Turn off any unnecessary animations during scroll
+let isScrolling;
+window.addEventListener('scroll', () => {
+    document.body.classList.add('is-scrolling');
+    
+    clearTimeout(isScrolling);
+    isScrolling = setTimeout(() => {
+        document.body.classList.remove('is-scrolling');
+    }, 100);
+}, { passive: true });
+
+// Add this CSS either inline or to your stylesheet
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+    .product-card {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+                    transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    
+    .product-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .use-css-hover .product-image-secondary {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Only apply hover effect when not scrolling */
+    body:not(.is-scrolling) .use-css-hover:hover .product-image {
+        opacity: 0;
+    }
+    
+    body:not(.is-scrolling) .use-css-hover:hover .product-image-secondary {
+        opacity: 1;
+    }
+    
+    /* Disable transitions during scroll for better performance */
+    .is-scrolling * {
+        transition-duration: 0.0001s !important;
+    }
+`;
+document.head.appendChild(styleEl);

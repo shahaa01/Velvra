@@ -72,7 +72,7 @@ const productSchema = new mongoose.Schema({
   salePercentage: { type: Number, default: 0 },
 
   images: {
-    type: String,
+    type: [String],
     required: true,
     validate: [(val) => val.length >= 1, 'At least one image is required']
   },

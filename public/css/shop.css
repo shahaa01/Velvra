@@ -1028,7 +1028,7 @@ text-overflow: ellipsis;
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
+    /* transform: translateY(-8px); */
     box-shadow: 0 20px 60px rgba(26, 26, 26, 0.15);
 }
 
@@ -1053,9 +1053,9 @@ text-overflow: ellipsis;
     transition: opacity 0.6s var(--transition-luxury);
 }
 
-.product-card:hover .product-image {
+/* .product-card:hover .product-image {
     transform: scale(1.05);
-}
+} */
 
 .product-card:hover .product-image-secondary {
     opacity: 1;
@@ -1499,7 +1499,6 @@ text-overflow: ellipsis;
         left: 0;
         width: 90%;
         max-width: 400px;
-        height: 100vh;
         z-index: 40;
         background: white;
         box-shadow: 0 0 60px rgba(26, 26, 26, 0.3);
@@ -1942,7 +1941,7 @@ select:focus {
     }
 }
 
-@media (max-width: 550px) {
+@media (max-width: 768px) {
     .product-section {
         padding: 0;
     }
@@ -1950,5 +1949,161 @@ select:focus {
     .wishlist-btn {
         display: none !important;
     }
+
+    .product-grid {
+        gap: 0.1rem;
+        padding: 0 0.1rem;
+    }
+
 }
 
+/* .product-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    will-change: opacity, transform;
+}
+
+.product-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 🛠 Add these mobile-specific optimizations at the end of shop.css: */
+
+/* Mobile Touch Optimizations */
+@media (max-width: 768px) {
+    /* 🛠 Fixed: Prevent flicker during color selection */
+    .color-option {
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .color-option.color-selecting {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    
+    .color-option.selected {
+        animation: colorSelectPulse 0.3s ease;
+    }
+    
+    @keyframes colorSelectPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+        100% { transform: scale(1.1); }
+    }
+    
+    /* 🛠 Fixed: Smooth filter panel transitions */
+    .filter-panel {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .filter-panel.active {
+        max-height: 600px; /* Adjust based on content */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 🛠 Fixed: Prevent layout shift during image transitions */
+    .product-image-container {
+        position: relative;
+        overflow: hidden;
+        contain: layout style paint;
+    }
+    
+    .product-image {
+        transition: opacity 0.3s ease;
+        will-change: opacity;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    
+    /* 🛠 Fixed: Better touch targets for filter toggles */
+    .filter-toggle {
+        min-height: 48px;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .filter-toggle::after {
+        content: '';
+        position: absolute;
+        inset: -8px;
+        z-index: -1;
+    }
+    
+    /* 🛠 Fixed: Smooth scrolling for filter sidebar */
+    .filter-sidebar {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    
+    /* Ensure discount section scrolls properly */
+    .brand-list,
+    .discount-options {
+        max-height: 300px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        padding-bottom: 1rem;
+    }
+    
+    /* Visual scroll indicator */
+    .brand-list::after,
+    .discount-options::after {
+        content: '';
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2rem;
+        background: linear-gradient(transparent, white);
+        pointer-events: none;
+    }
+    
+    /* 🛠 Fixed: Prevent body scroll when filter is open */
+    body.filter-open {
+        position: fixed;
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    /* Better animation for filter sidebar */
+    .filter-sidebar {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Optimize wishlist button interactions */
+    .wishlist-btn {
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .wishlist-btn:active {
+        transform: scale(0.9);
+    }
+}
+
+/* 🛠 Replace the existing color-option hover state (around line 1400) with this: */
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: var(--velvra-charcoal);
+}
+
+/* Add touch-specific styles */
+@media (hover: none) and (pointer: coarse) {
+    .color-option:active {
+        transform: scale(0.95);
+    }
+} 
+
+.quick-add-mobile.added {
+    background-color: var(--velvra-gold);
+    color: var(--velvra-charcoal);
+}

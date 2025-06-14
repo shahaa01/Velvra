@@ -64,11 +64,11 @@ sizeSelectors.forEach(selector => {
         
         // Update visual states
         sizeSelectors.forEach(s => {
-            s.classList.remove('border-velvra-gold', 'bg-velvra-gold', 'text-white');
+            s.classList.remove('border-velvra-gold', 'gold-gradient', 'text-white');
             s.classList.add('border-gray-200');
         });
         selector.classList.remove('border-gray-200');
-        selector.classList.add('border-velvra-gold', 'bg-velvra-gold', 'text-white');
+        selector.classList.add('border-velvra-gold', 'gold-gradient', 'text-white');
         
         // Update state and UI
         productState.selectedSize = size;
@@ -101,46 +101,41 @@ quantityInput.addEventListener('change', (e) => {
 });
 
 // Wishlist Functionality
-wishlistBtn.addEventListener('click', () => {
-    const isInWishlist = productState.wishlist.includes('premium-cashmere-coat');
+wishlistBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    if (isInWishlist) {
-        // Remove from wishlist
-        productState.wishlist = productState.wishlist.filter(id => id !== 'premium-cashmere-coat');
-        wishlistBtn.classList.remove('bg-velvra-gold', 'text-white');
-        wishlistBtn.querySelector('.heart-outline').style.fill = 'none';
+    if (wishlistBtn.classList.contains('active')) {
+        wishlistBtn.classList.remove('active');
     } else {
-        // Add to wishlist
-        productState.wishlist.push('premium-cashmere-coat');
-        wishlistBtn.classList.add('bg-velvra-gold', 'text-white');
-        wishlistBtn.querySelector('.heart-outline').style.fill = 'currentColor';
-        
-        // Create floating heart effect
+        wishlistBtn.classList.add('active');
         createFloatingHeart(wishlistBtn);
     }
     
     // Animate button
-    wishlistBtn.style.transform = 'scale(1.2)';
+    btn.style.transform = 'scale(1.2)';
     setTimeout(() => {
-        wishlistBtn.style.transform = '';
+        btn.style.transform = '';
     }, 200);
 });
 
 // Add to Cart Functionality
+addToCartBtn.flag = false;
+const addToCartOriginalText = addToCartBtn.innerHTML;
 addToCartBtn.addEventListener('click', () => {
     // Simulate add to cart
-    const originalText = addToCartBtn.innerHTML;
-    addToCartBtn.innerHTML = `
-        <span class="relative z-10 flex items-center justify-center space-x-2">
-            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Adding...</span>
-        </span>
-    `;
+    addToCartBtn.flag = !addToCartBtn.flag;
+    if(addToCartBtn.flag) {
+    // addToCartBtn.innerHTML = `
+    //     <span class="relative z-10 flex items-center justify-center space-x-2">
+    //         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+    //             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    //             <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    //         </svg>
+    //         <span>Adding...</span>
+    //     </span>
+    // `;
     
-    setTimeout(() => {
         addToCartBtn.innerHTML = `
             <span class="relative z-10 flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,10 +145,9 @@ addToCartBtn.addEventListener('click', () => {
             </span>
         `;
         
-        setTimeout(() => {
-            addToCartBtn.innerHTML = originalText;
-        }, 1500);
-    }, 1000);
+    } else {
+        addToCartBtn.innerHTML = addToCartOriginalText;
+    }
 });
 
 // Accordion Functionality
@@ -302,11 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.animate-fadeInUp').forEach((el, index) => {
         el.style.animationDelay = `${index * 0.1}s`;
     });
-    
-    console.log('🎨 Velvra Product Detail Page initialized');
-    console.log('💎 All interactive features ready');
-    console.log('📱 Mobile-first responsive design optimized');
-    console.log('🏆 World-class luxury fashion experience complete');
 });
 
 // Keyboard Navigation
@@ -406,67 +395,3 @@ document.querySelectorAll('.product-card').forEach(card => {
     card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.320, 1)';
     observer.observe(card);
 });
-
-// Smooth scrolling for related products on mobile
-let isScrollingRelated = false;
-relatedProducts.addEventListener('scroll', () => {
-    if (!isScrollingRelated) {
-        isScrollingRelated = true;
-        setTimeout(() => {
-            isScrollingRelated = false;
-        }, 150);
-    }
-});
-
-// Update scroll button visibility
-function updateScrollButtons() {
-    const scrollLeft = relatedProducts.scrollLeft;
-    const maxScroll = relatedProducts.scrollWidth - relatedProducts.clientWidth;
-    
-    scrollLeftBtn.style.opacity = scrollLeft > 0 ? '1' : '0.5';
-    scrollRightBtn.style.opacity = scrollLeft < maxScroll ? '1' : '0.5';
-}
-
-relatedProducts.addEventListener('scroll', updateScrollButtons);
-window.addEventListener('resize', updateScrollButtons);
-updateScrollButtons();
-
-// Add smooth transitions for better UX
-const style = document.createElement('style');
-style.textContent = `
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    .product-card:hover .wishlist-btn {
-        transform: scale(1.1);
-    }
-    
-    .thumbnail-btn:hover {
-        transform: scale(1.05);
-    }
-    
-    .color-selector:hover,
-    .size-selector:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-    }
-    
-    .accordion-trigger:hover {
-        background-color: rgba(248, 246, 240, 0.5);
-    }
-    
-    @media (max-width: 768px) {
-        .related-products {
-            scroll-snap-type: x mandatory;
-        }
-        
-        .product-card {
-            scroll-snap-align: start;
-        }
-    }
-`;
-document.head.appendChild(style);

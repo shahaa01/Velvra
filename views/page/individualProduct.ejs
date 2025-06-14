@@ -6,14 +6,14 @@
     <main class="luxury-gradient min-h-screen">
         <!-- Breadcrumb -->
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            <nav class="flex items-center space-x-2 text-sm text-velvra-stone animate-fadeInUp">
-                <a href="/" class="hover:text-velvra-charcoal transition-colors duration-300">Home</a>
+            <nav class="breadcrumb flex items-center space-x-2 text-sm text-velvra-stone animate-fadeInUp">
+                <a href="/home" class="hover:text-velvra-charcoal transition-colors duration-300">Home</a>
                 <span>/</span>
                 <a href="/shop" class="hover:text-velvra-charcoal transition-colors duration-300">Shop</a>
                 <span>/</span>
-                <a href="/men" class="hover:text-velvra-charcoal transition-colors duration-300">Men</a>
+                <a href="/shop/<%= product.category %>" class="hover:text-velvra-charcoal transition-colors duration-300"><%= product.category.charAt(0).toUpperCase() + product.category.slice(1).toLowerCase() %></a>
                 <span>/</span>
-                <span class="text-velvra-charcoal font-medium">Premium Cashmere Coat</span>
+                <span class="text-velvra-charcoal font-medium"> <%= product.name %> </span>
             </nav>
         </div>
 
@@ -26,8 +26,8 @@
                     <!-- Main Image -->
                     <div class="aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
                         <img id="mainImage" 
-                             src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&h=750&fit=crop&crop=center" 
-                             alt="Premium Cashmere Coat" 
+                             src="<%= product.images[0] %>" 
+                             alt="<%= product.name %>" 
                              class="w-full h-full object-cover product-image-zoom cursor-zoom-in">
                         
                         <!-- Image Overlay Info -->
@@ -65,18 +65,11 @@
                     
                     <!-- Thumbnail Gallery -->
                     <div class="flex space-x-4 image-gallery overflow-x-auto pb-2">
-                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-velvra-gold shadow-lg" data-image="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&h=750&fit=crop&crop=center">
-                            <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=150&h=150&fit=crop&crop=center" alt="View 1" class="w-full h-full object-cover">
+                        <% for(let image of product.images) { %>
+                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-velvra-gold shadow-lg" data-image="<%= image %>">
+                            <img src="<%= image %>" alt="<%= product.name %>" class="w-full h-full object-cover">
                         </button>
-                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300 shadow-lg" data-image="https://images.unsplash.com/photo-1594938373874-f4a59fccf9c6?w=600&h=750&fit=crop&crop=center">
-                            <img src="https://images.unsplash.com/photo-1594938373874-f4a59fccf9c6?w=150&h=150&fit=crop&crop=center" alt="View 2" class="w-full h-full object-cover">
-                        </button>
-                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300 shadow-lg" data-image="https://images.unsplash.com/photo-1548883354-d3b87c5f89b4?w=600&h=750&fit=crop&crop=center">
-                            <img src="https://images.unsplash.com/photo-1548883354-d3b87c5f89b4?w=150&h=150&fit=crop&crop=center" alt="View 3" class="w-full h-full object-cover">
-                        </button>
-                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300 shadow-lg" data-image="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=600&h=750&fit=crop&crop=center">
-                            <img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=150&h=150&fit=crop&crop=center" alt="View 4" class="w-full h-full object-cover">
-                        </button>
+                        <% } %>
                     </div>
                 </div>
 
@@ -87,21 +80,23 @@
                     <div class="mb-8">
                         <div class="flex items-center justify-between mb-3">
                             <span class="inline-block px-4 py-2 bg-velvra-charcoal text-white text-sm font-medium tracking-wider uppercase rounded-full">
-                                Brunello Cucinelli
+                                <%= product.name %>
                             </span>
                             <button id="wishlistBtn" class="w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group">
                                 <svg class="w-6 h-6 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                    <path class="heart-outline" fill="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
                             </button>
                         </div>
                         <h1 class="text-3xl lg:text-4xl font-playfair font-semibold text-velvra-charcoal leading-tight mb-4">
-                            Premium Double-Breasted Cashmere Coat
+                            <% product.name %>
                         </h1>
                         <div class="flex items-baseline space-x-4">
-                            <span class="text-3xl font-playfair font-semibold text-velvra-charcoal">₹2,49,999</span>
-                            <span class="text-xl text-velvra-stone line-through">₹3,12,499</span>
-                            <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">20% OFF</span>
+                            <span class="text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice %></span>
+                            <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
+                            <% if(product.sale) { %>
+                            <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= product.salePercentage %>% OFF</span>
+                            <% } %>
                         </div>
                     </div>
 
@@ -109,20 +104,14 @@
                     <div class="mb-8">
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Color</h3>
                         <div class="flex space-x-3">
-                            <button class="color-selector w-12 h-12 rounded-full border-4 border-velvra-gold shadow-lg transition-all duration-300" 
-                                    style="background-color: #2c2c2c" 
-                                    data-color="Charcoal"
-                                    title="Charcoal"></button>
-                            <button class="color-selector w-12 h-12 rounded-full border-4 border-gray-200 hover:border-velvra-gold shadow-lg transition-all duration-300" 
-                                    style="background-color: #8B7355" 
-                                    data-color="Camel"
-                                    title="Camel"></button>
-                            <button class="color-selector w-12 h-12 rounded-full border-4 border-gray-200 hover:border-velvra-gold shadow-lg transition-all duration-300" 
-                                    style="background-color: #1e3a5f" 
-                                    data-color="Navy"
-                                    title="Navy"></button>
+                            <% for(let prodColor of product.colors) { %>
+                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300" 
+                                    style="background-color: <%= prodColor.hex %>" 
+                                    data-color="<%= prodColor.name %>"
+                                    title="<%= prodColor.name %>"></button>
+                            <% } %>
                         </div>
-                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedColor" class="font-medium text-velvra-charcoal">Charcoal</span></p>
+                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedColor" class="font-medium text-velvra-charcoal"><%= product.colors[0].name %></span></p>
                     </div>
 
                     <!-- Size Selection -->
@@ -134,18 +123,17 @@
                             </button>
                         </div>
                         <div class="grid grid-cols-4 gap-3">
-                            <button class="size-selector py-3 px-4 border-2 border-gray-200 hover:border-velvra-gold rounded-xl text-center font-medium transition-all duration-300" data-size="S">S</button>
-                            <button class="size-selector py-3 px-4 border-2 border-velvra-gold bg-velvra-gold text-white rounded-xl text-center font-medium transition-all duration-300" data-size="M">M</button>
-                            <button class="size-selector py-3 px-4 border-2 border-gray-200 hover:border-velvra-gold rounded-xl text-center font-medium transition-all duration-300" data-size="L">L</button>
-                            <button class="size-selector py-3 px-4 border-2 border-gray-200 hover:border-velvra-gold rounded-xl text-center font-medium transition-all duration-300" data-size="XL">XL</button>
+                            <% for(let size of product.sizes) { %>
+                                <button class="size-selector py-3 px-4 border-2 border-gray-200 hover:border-velvra-gold rounded-xl text-center font-medium transition-all duration-300" data-size="<%= size %>"><%= size %></button>
+                            <% } %>
                         </div>
-                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedSize" class="font-medium text-velvra-charcoal">M</span></p>
+                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedSize" class="font-medium text-velvra-charcoal"><%= product.sizes[0] %></span></p>
                     </div>
 
                     <!-- Quantity & Add to Cart -->
                     <div class="mb-8">
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Quantity</h3>
-                        <div class="flex items-center space-x-6">
+                        <div class="flex items-center space-x-5 gap-4">
                             <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
                                 <button id="decreaseQty" class="px-4 py-3 hover:bg-gray-50 transition-colors duration-300">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +153,7 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8m-8 0V9a2 2 0 012-2h4a2 2 0 012 2v4"></path>
                                     </svg>
-                                    <span>Add to Cart</span>
+                                    <span class="cartText">Add to Cart</span>
                                 </span>
                                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             </button>
@@ -374,121 +362,43 @@
                 <div id="relatedProducts" class="related-products flex space-x-6 overflow-x-auto pb-4">
                     
                     <!-- Product 1 -->
+                <% for(let product of similarProducts) { %>
                     <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
                         <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
                         </button>
                         
-                        <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale 15% Off</div>
-                        
+                        <% if(product.salePercentage) { %>
+                            <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= product.salePercentage %>% Off</div>
+                        <% } %>
                         <figure class="aspect-[4/5] relative overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=500&fit=crop&crop=center" alt="Cashmere Sweater" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                            <% for(let image of product.images) { %>
+                            <a href="/product/<%= product._id %>">
+                                <img src="<%= image %>" alt="<%= product.name %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                            </a>
+                            <% } %>
                         </figure>
 
                         <div class="p-6">
-                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2">Tom Ford</p>
-                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2">Premium Cashmere V-Neck Sweater</h3>
+                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= product.name %></p>
+                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= product.description %></h3>
                             
-                            <div class="flex items-center space-x-2 mb-4">
-                                <button class="w-6 h-6 rounded-full border-2 border-velvra-gold" style="background-color: #f5f5f5"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #1a1a1a"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #6B7280"></button>
+                            <div class="color-options">
+                                <% for(let color of product.colors) { %>
+                                    <button class="color-option" style="background-color: <%= color.hex %>" data-color="<%= color.name %>"></button>
+                                <% } %>
                             </div>
                             
                             <div class="flex items-baseline space-x-2">
-                                <span class="text-xl font-semibold text-velvra-charcoal">₹68,000</span>
-                                <span class="text-sm text-velvra-stone line-through">₹80,000</span>
+                                <span class="text-xl font-semibold text-velvra-charcoal">₹<%= product.salePrice %></span>
+                                <span class="text-sm text-velvra-stone line-through">₹<%= product.price %></span>
                             </div>
                         </div>
                     </article>
+                    <% } %>
 
-                    <!-- Product 2 -->
-                    <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-                        <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
-                        
-                        <figure class="aspect-[4/5] relative overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=500&fit=crop&crop=center" alt="Italian Leather Shoes" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
-                        </figure>
-
-                        <div class="p-6">
-                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2">Berluti</p>
-                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2">Hand-Crafted Oxford Dress Shoes</h3>
-                            
-                            <div class="flex items-center space-x-2 mb-4">
-                                <button class="w-6 h-6 rounded-full border-2 border-velvra-gold" style="background-color: #8B4513"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #1a1a1a"></button>
-                            </div>
-                            
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-xl font-semibold text-velvra-charcoal">₹1,45,000</span>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- Product 3 -->
-                    <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-                        <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
-                        
-                        <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale 25% Off</div>
-                        
-                        <figure class="aspect-[4/5] relative overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=400&h=500&fit=crop&crop=center" alt="Silk Shirt" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
-                        </figure>
-
-                        <div class="p-6">
-                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2">Hermès</p>
-                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2">Pure Silk Dress Shirt</h3>
-                            
-                            <div class="flex items-center space-x-2 mb-4">
-                                <button class="w-6 h-6 rounded-full border-2 border-velvra-gold" style="background-color: #ffffff"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #e6f3ff"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #f5f5f5"></button>
-                            </div>
-                            
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-xl font-semibold text-velvra-charcoal">₹68,000</span>
-                                <span class="text-sm text-velvra-stone line-through">₹80,000</span>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- Product 4 -->
-                    <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-                        <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
-                        
-                        <figure class="aspect-[4/5] relative overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=400&h=500&fit=crop&crop=center" alt="Tailored Trousers" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
-                        </figure>
-
-                        <div class="p-6">
-                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2">Armani</p>
-                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2">Tailored Wool Dress Trousers</h3>
-                            
-                            <div class="flex items-center space-x-2 mb-4">
-                                <button class="w-6 h-6 rounded-full border-2 border-velvra-gold" style="background-color: #1a1a1a"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #1E3A8A"></button>
-                                <button class="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-colors duration-300" style="background-color: #4B5563"></button>
-                            </div>
-                            
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-xl font-semibold text-velvra-charcoal">₹42,500</span>
-                            </div>
-                        </div>
-                    </article>
                 </div>
             </div>
         </div>
