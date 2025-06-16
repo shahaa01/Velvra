@@ -1,0 +1,22 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Velvra",
+  "url": "<%= seo.canonical || '/home' %>",
+  "description": "Velvra is Nepal's most premium fashion destination, curating authentic designer pieces from verified Instagram boutiques and stylish independent labels.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "<%= seo.canonical || 'https://www.velvra.com' %>/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Velvra",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "<%= seo.logo || '/images/VELVRA.png' %>"
+    }
+  }
+}
+</script>

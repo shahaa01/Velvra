@@ -12,7 +12,6 @@
                     <a href="/shop/men" class="text-stone-700 hover:text-stone-900 transition-colors">Men</a>
                     <a href="/shop/women" class="text-stone-700 hover:text-stone-900 transition-colors">Women</a>
                     <a href="#" class="text-stone-700 hover:text-stone-900 transition-colors">Kids</a>
-                    <a href="#" class="text-stone-700 hover:text-stone-900 transition-colors">Gen-Z</a>
                 </div>
                 
                 <!-- Search Bar -->
@@ -29,12 +28,15 @@
                 
                 <!-- Right Side Icons -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <!-- Shopping Bag Icon -->
-                    <a href="#" class="text-stone-700 hover:text-stone-900 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    <!-- Shopping Cart-->
+                <a href="/cart" class="flex items-center py-3 px-4 text-stone-700 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-all duration-200">
+                    <div class="relative mr-3">
+                        <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"></path>
                         </svg>
-                    </a>
+                        <span class="absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                    </div>
+                </a>
                     
                     <!-- Profile Dropdown -->
                     <div class="relative group">
@@ -49,15 +51,26 @@
                             <div class="py-2">
                                 <a href="/auth/signup" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Signup</a>
                                 <a href="/auth/login" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Login</a>
+                                <a href="/cart" class="flex items-center py-3 px-4 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 rounded-xl transition-colors">
+                                    <div class="relative mr-3">
+                                        <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"></path>
+                                        </svg>
+                                        <span class="absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                                    </div>
+                                    Shopping Cart
+                                </a>                                
                                 <a href="#" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Orders</a>
                                 <a href="#" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Wishlist</a>
                                 <div class="border-t border-stone-100 my-2"></div>
                                 <a href="#" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Contact Us</a>
                                 <a href="#" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Gift Cards</a>
                                 <a href="#" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">About Us</a>
+                                <a href="/seller" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors bg-velvra-gold rounded-md font-medium">Become a Seller</a>
                             </div>
                         </div>
                     </div>
+                        <a href="/seller" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors bg-velvra-gold rounded-md flex justify-center items-center font-medium">Become a Seller</a>
                 </div>
                 
                 <!-- Mobile Menu Button -->
@@ -90,17 +103,18 @@
             <a href="/shop/men" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Men</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Women</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Kids</a>
-            <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Gen-Z</a>
             
             <div class="border-t border-stone-200 my-4"></div>
             
             <a href="/auth/signup" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Signup</a>
             <a href="/auth/login" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Login</a>
+            <a href="/auth/login" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Cart</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Orders</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Wishlist</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Contact Us</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Gift Cards</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">About Us</a>
+            <a href="/seller" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors bg-velvra-gold rounded-md flex justify-center items-center font-medium text-white">Become a Seller</a>
             
             <div class="border-t border-stone-200 my-4"></div>
             

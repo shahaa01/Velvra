@@ -1,0 +1,48 @@
+<!-- Primary Meta Tags -->
+<title><%= seo.title || 'Premium Fashion Brand | Velvra' %></title>
+<meta name="description" content="<%= seo.description || 'Explore Nepal’s most trusted luxury fashion destination — Velvra. Discover curated collections from verified boutiques and Instagram sellers.' %>">
+<meta name="keywords" content="<%= seo.keywords || 'luxury fashion nepal, designer clothing nepal, premium wear nepal, boutique brands nepal, Nepali fashion, Velvra' %>">
+
+<!-- Robots and Indexing -->
+<meta name="robots" content="<%= seo.robots || 'index, follow' %>">
+<meta name="googlebot" content="<%= seo.googlebot || 'index, follow' %>">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="<%= seo.canonical || `${baseUrl}${page.url || ''}` %>">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="<%= seo.ogType || 'website' %>">
+<meta property="og:url" href="<%= seo.canonical || `${baseUrl}${page.url || ''}` %>">
+<meta property="og:title" content="<%= seo.ogTitle || seo.title || 'Premium Fashion Brand | Velvra' %>">
+<meta property="og:description" content="<%= seo.ogDescription || seo.description || 'Explore Nepal’s most trusted luxury fashion destination — Velvra. Discover curated collections from verified boutiques and Instagram sellers.'%>">
+<meta property="og:image" content="<%= seo.ogImage || '/images/VELVRA.png' %>">
+<meta property="og:site_name" content="Velvra">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="<%= seo.twitterCard || 'summary_large_image' %>">
+<meta name="twitter:title" content="<%= seo.twitterTitle || seo.title || 'Premium Fashion Brand | Velvra' %>">
+<meta name="twitter:description" content="<%= seo.twitterDescription || seo.description || 'Explore Nepal’s most trusted luxury fashion destination — Velvra. Discover curated collections from verified boutiques and Instagram sellers.'%>">
+<meta name="twitter:image" content="<%= seo.twitterImage || seo.ogImage || '/images/VELVRA.png' %>">
+
+<!-- Additional Meta Tags -->
+<meta name="author" content="<%= seo.author || 'Velvra' %>">
+<meta name="geo.region" content=" NP ">
+
+<!-- Preconnects for Performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.velvra.com">
+
+<!-- Favicon -->
+<!-- <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> -->
+
+<!-- Conditional Schema Based on Page Type -->
+<% if (page.type === 'product' && product) { %>
+    <%- include('schema/product-schema', { product: product }) %>
+<% } else if (page.type === 'collection' && products) { %>
+    <%- include('schema/collection-schema', { products: products, page: page }) %>
+<% }
+
+//Always include Organization Schema 
+<%- include('schema/organization-schema') %>

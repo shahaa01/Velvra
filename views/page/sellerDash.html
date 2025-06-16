@@ -1,0 +1,842 @@
+<html>
+    <head>
+        <title>HI</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+/* Custom styles for premium feel */
+.luxury-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    background: linear-gradient(135deg, #B8941F 0%, #D4AF37 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+}
+
+/* Chart animations */
+.chart-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 2s ease-out forwards;
+}
+
+.chart-area {
+    opacity: 0;
+    animation: fadeIn 1s ease-out 1s forwards;
+}
+
+.chart-dot {
+    opacity: 0;
+    animation: popIn 0.3s ease-out forwards;
+}
+
+.chart-dot:nth-child(3) { animation-delay: 0.2s; }
+.chart-dot:nth-child(4) { animation-delay: 0.4s; }
+.chart-dot:nth-child(5) { animation-delay: 0.6s; }
+.chart-dot:nth-child(6) { animation-delay: 0.8s; }
+.chart-dot:nth-child(7) { animation-delay: 1s; }
+.chart-dot:nth-child(8) { animation-delay: 1.2s; }
+.chart-dot:nth-child(9) { animation-delay: 1.4s; }
+
+.chart-dot-active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    to { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    from {
+        transform: scale(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.7; }
+}
+
+/* Dark mode transitions */
+.dark .luxury-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .btn-gold {
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+}
+
+/* Mobile drawer styles */
+@media (max-width: 768px) {
+    .luxury-card {
+        margin-bottom: 1rem;
+    }
+}
+        </style>
+    </head>
+    <body>
+        <div class="min-h-screen bg-[#FAFAF5] dark:bg-gray-950 transition-colors duration-300">
+   <!-- Welcome Section -->
+   <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black dark:from-black dark:via-gray-900 dark:to-gray-950 text-white">
+       <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23D4AF37" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+       
+       <div class="relative px-6 py-8 md:px-8 lg:px-12">
+           <div class="flex items-center justify-between mb-6">
+               <div class="flex items-center space-x-4">
+                   <div class="relative">
+                       <img src="https://i.pravatar.cc/80?img=12" alt="Seller" class="w-16 h-16 rounded-full border-3 border-[#D4AF37] shadow-xl">
+                       <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white"></div>
+                   </div>
+                   <div>
+                       <h1 class="font-playfair text-2xl md:text-3xl font-bold">
+                           <span id="greeting">Good Morning</span>, Himalayan Boutique
+                       </h1>
+                       <p class="text-gray-300 text-sm mt-1">Premium Verified Seller • Member since 2023</p>
+                   </div>
+               </div>
+               <button id="darkModeToggle" class="p-3 bg-white/10 backdrop-blur rounded-full hover:bg-white/20 transition-all duration-300">
+                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                   </svg>
+               </button>
+           </div>
+           
+           <!-- Quick Stats -->
+           <div class="grid grid-cols-3 gap-3 md:gap-4">
+               <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all duration-300">
+                   <p class="text-gray-300 text-xs md:text-sm">Total Earnings</p>
+                   <p class="font-montserrat font-bold text-xl md:text-2xl mt-1">₨ 4,52,890</p>
+                   <p class="text-emerald-400 text-xs mt-1">↑ 12.5% this month</p>
+               </div>
+               <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all duration-300">
+                   <p class="text-gray-300 text-xs md:text-sm">Pending Orders</p>
+                   <p class="font-montserrat font-bold text-xl md:text-2xl mt-1">7</p>
+                   <p class="text-amber-400 text-xs mt-1">Process today</p>
+               </div>
+               <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all duration-300">
+                   <p class="text-gray-300 text-xs md:text-sm">Top Product</p>
+                   <p class="font-semibold text-sm md:text-base mt-1 truncate">Pashmina Shawl</p>
+                   <p class="text-[#D4AF37] text-xs mt-1">23 sold</p>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <!-- Main Content -->
+   <div class="px-6 py-6 md:px-8 lg:px-12 max-w-7xl mx-auto">
+       <!-- Revenue Chart Section -->
+       <div class="luxury-card bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 mb-6 transition-all duration-300 hover:shadow-xl">
+           <div class="flex items-center justify-between mb-6">
+               <h2 class="font-playfair text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Revenue Analytics</h2>
+               <div class="flex gap-2">
+                   <button class="px-3 py-1.5 text-xs font-medium bg-[#D4AF37] text-black rounded-full">7 Days</button>
+                   <button class="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">30 Days</button>
+                   <button class="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">90 Days</button>
+               </div>
+           </div>
+           
+           <!-- SVG Chart -->
+           <div class="relative h-64 md:h-80">
+               <svg class="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
+                   <defs>
+                       <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                           <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:0.3" />
+                           <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:0" />
+                       </linearGradient>
+                   </defs>
+                   <path d="M 0,180 L 57,150 L 114,120 L 171,140 L 228,100 L 285,80 L 342,60 L 400,40 L 400,200 L 0,200 Z" 
+                         fill="url(#goldGradient)" class="chart-area"/>
+                   <path d="M 0,180 L 57,150 L 114,120 L 171,140 L 228,100 L 285,80 L 342,60 L 400,40" 
+                         fill="none" stroke="#D4AF37" stroke-width="3" class="chart-line"/>
+                   
+                   <!-- Data points -->
+                   <circle cx="0" cy="180" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="57" cy="150" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="114" cy="120" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="171" cy="140" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="228" cy="100" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="285" cy="80" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="342" cy="60" r="4" fill="#D4AF37" class="chart-dot"/>
+                   <circle cx="400" cy="40" r="5" fill="#D4AF37" class="chart-dot-active"/>
+               </svg>
+               
+               <div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 dark:text-gray-400 px-2">
+                   <span>Mon</span>
+                   <span>Tue</span>
+                   <span>Wed</span>
+                   <span>Thu</span>
+                   <span>Fri</span>
+                   <span>Sat</span>
+                   <span>Today</span>
+               </div>
+           </div>
+           
+           <div class="mt-4 text-center">
+               <p class="text-3xl font-bold text-gray-900 dark:text-white">₨ 82,450</p>
+               <p class="text-sm text-gray-600 dark:text-gray-400">Total revenue this week</p>
+           </div>
+       </div>
+
+       <!-- Summary Cards Grid -->
+       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                   </svg>
+                   <span class="text-emerald-500 text-xs font-medium">+15%</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">₨ 12.4L</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Total Sales</p>
+           </div>
+           
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"></path>
+                   </svg>
+                   <span class="text-red-500 text-xs font-medium">2</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">₨ 8,200</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Returns</p>
+           </div>
+           
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                   </svg>
+                   <span class="text-blue-500 text-xs font-medium">48</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">48</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Active Products</p>
+           </div>
+           
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                   </svg>
+                   <span class="text-amber-500 text-xs font-medium">3</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">3</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Low Stock</p>
+           </div>
+           
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                   </svg>
+                   <span class="text-purple-500 text-xs font-medium">₨ 18.5K</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">₨ 18.5K</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Avg. Order</p>
+           </div>
+           
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+               <div class="flex items-center justify-between mb-2">
+                   <svg class="w-8 h-8 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
+                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                   </svg>
+                   <span class="text-[#D4AF37] text-xs font-medium">4.8</span>
+               </div>
+               <h3 class="font-montserrat font-bold text-lg text-gray-900 dark:text-white">4.8/5.0</h3>
+               <p class="text-xs text-gray-600 dark:text-gray-400">Seller Rating</p>
+           </div>
+       </div>
+
+       <!-- Orders Management -->
+       <div class="luxury-card bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 mb-6">
+           <div class="flex items-center justify-between mb-6">
+               <h2 class="font-playfair text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Recent Orders</h2>
+               <div class="flex gap-2">
+                   <select class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
+                       <option>All Orders</option>
+                       <option>Pending</option>
+                       <option>Processing</option>
+                       <option>Completed</option>
+                   </select>
+               </div>
+           </div>
+           
+           <div class="overflow-x-auto">
+               <table class="w-full">
+                   <thead class="border-b border-gray-200 dark:border-gray-700">
+                       <tr class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                           <th class="pb-3">Order ID</th>
+                           <th class="pb-3">Product</th>
+                           <th class="pb-3">Customer</th>
+                           <th class="pb-3">Status</th>
+                           <th class="pb-3">Date</th>
+                           <th class="pb-3">Action</th>
+                       </tr>
+                   </thead>
+                   <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                       <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                           <td class="py-4 text-sm font-mono">#VLV-8942</td>
+                           <td class="py-4">
+                               <div class="flex items-center space-x-3">
+                                   <img src="https://images.unsplash.com/photo-1591561954557-26941169b49e?w=40&h=40&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover">
+                                   <span class="text-sm font-medium">Leather Handbag</span>
+                               </div>
+                           </td>
+                           <td class="py-4 text-sm">Priya S.</td>
+                           <td class="py-4">
+                               <span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">Pending</span>
+                           </td>
+                           <td class="py-4 text-sm text-gray-600 dark:text-gray-400">2 hours ago</td>
+                           <td class="py-4">
+                               <button class="text-[#D4AF37] hover:text-[#B8941F] font-medium text-sm">Process →</button>
+                           </td>
+                       </tr>
+                       <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                           <td class="py-4 text-sm font-mono">#VLV-8941</td>
+                           <td class="py-4">
+                               <div class="flex items-center space-x-3">
+                                   <img src="https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=40&h=40&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover">
+                                   <span class="text-sm font-medium">Silk Scarf</span>
+                               </div>
+                           </td>
+                           <td class="py-4 text-sm">Amit K.</td>
+                           <td class="py-4">
+                               <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Processing</span>
+                           </td>
+                           <td class="py-4 text-sm text-gray-600 dark:text-gray-400">5 hours ago</td>
+                           <td class="py-4">
+                               <button class="text-[#D4AF37] hover:text-[#B8941F] font-medium text-sm">View →</button>
+                           </td>
+                       </tr>
+                       <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                           <td class="py-4 text-sm font-mono">#VLV-8940</td>
+                           <td class="py-4">
+                               <div class="flex items-center space-x-3">
+                                   <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=40&h=40&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover">
+                                   <span class="text-sm font-medium">Cashmere Sweater</span>
+                               </div>
+                           </td>
+                           <td class="py-4 text-sm">Sita R.</td>
+                           <td class="py-4">
+                               <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">Delivered</span>
+                           </td>
+                           <td class="py-4 text-sm text-gray-600 dark:text-gray-400">Yesterday</td>
+                           <td class="py-4">
+                               <button class="text-gray-600 hover:text-gray-800 font-medium text-sm">Review</button>
+                           </td>
+                       </tr>
+                   </tbody>
+               </table>
+           </div>
+       </div>
+
+       <!-- Product Performance -->
+       <div class="grid md:grid-cols-2 gap-6 mb-6">
+           <div class="luxury-card bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+               <h2 class="font-playfair text-xl font-bold text-gray-900 dark:text-white mb-4">Top Products</h2>
+               <div class="space-y-4">
+                   <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                       <div class="flex items-center space-x-3">
+                           <img src="https://images.unsplash.com/photo-1591561954557-26941169b49e?w=50&h=50&fit=crop" alt="Product" class="w-12 h-12 rounded-lg object-cover">
+                           <div>
+                               <h4 class="font-medium text-gray-900 dark:text-white">Premium Leather Bag</h4>
+                               <div class="flex items-center space-x-2 mt-1">
+                                   <div class="flex text-[#D4AF37]">
+                                       <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                       <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                       <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                       <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                       <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                   </div>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">(4.9)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-900 dark:text-white">₨ 89,500</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">32 sold</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=50&h=50&fit=crop" alt="Product" class="w-12 h-12 rounded-lg object-cover">
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Pashmina Shawl</h4>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <div class="flex text-[#D4AF37]">
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    </div>
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">(5.0)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-900 dark:text-white">₨ 67,200</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">23 sold</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=50&h=50&fit=crop" alt="Product" class="w-12 h-12 rounded-lg object-cover">
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Cashmere Collection</h4>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <div class="flex text-[#D4AF37]">
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    </div>
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">(4.7)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-900 dark:text-white">₨ 45,800</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">18 sold</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-4 btn-gold py-3 rounded-lg font-medium">
+                    View All Products →
+                </button>
+            </div>
+            
+            <!-- Stock Alerts -->
+            <div class="luxury-card bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+                <h2 class="font-playfair text-xl font-bold text-gray-900 dark:text-white mb-4">Stock Alerts</h2>
+                <div class="space-y-4">
+                    <div class="border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-r-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Silver Bracelet</h4>
+                                <p class="text-sm text-red-600 dark:text-red-400 mt-1">Out of stock</p>
+                            </div>
+                            <button class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors">
+                                Restock Now
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-r-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Wool Cardigan</h4>
+                                <p class="text-sm text-amber-600 dark:text-amber-400 mt-1">Only 2 left</p>
+                            </div>
+                            <button class="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors">
+                                Order More
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-r-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Himalayan Tea Set</h4>
+                                <p class="text-sm text-amber-600 dark:text-amber-400 mt-1">Only 3 left</p>
+                            </div>
+                            <button class="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors">
+                                Order More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">Inventory Summary</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">Total Products</span>
+                            <span class="font-medium text-gray-900 dark:text-white">48</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">In Stock</span>
+                            <span class="font-medium text-emerald-600">44</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">Low Stock</span>
+                            <span class="font-medium text-amber-600">3</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">Out of Stock</span>
+                            <span class="font-medium text-red-600">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Center -->
+        <div class="luxury-card bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="font-playfair text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Message Center</h2>
+                <span class="px-3 py-1 bg-[#D4AF37] text-black text-xs font-medium rounded-full">5 new</span>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-[#D4AF37]/20 rounded-full flex items-center justify-center">
+                                <span class="text-[#D4AF37] font-bold text-sm">PS</span>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Priya Sharma</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Is the leather handbag available in brown color?</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">10m ago</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-[#D4AF37] to-[#FFD700] rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Velvra Support</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Your monthly performance report is ready</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">1h ago</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">AK</span>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Amit Kumar</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Thank you for the quick delivery! 5 stars ⭐⭐⭐⭐⭐</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">3h ago</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="w-full mt-4 text-center text-[#D4AF37] hover:text-[#B8941F] font-medium text-sm transition-colors">
+                View All Messages →
+            </button>
+        </div>
+
+        <!-- Quick Actions Footer -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center">
+                <svg class="w-8 h-8 text-[#D4AF37] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Add Product</span>
+            </button>
+            
+            <button class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center">
+                <svg class="w-8 h-8 text-[#D4AF37] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Analytics</span>
+            </button>
+            
+            <button class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center">
+                <svg class="w-8 h-8 text-[#D4AF37] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Settings</span>
+            </button>
+            
+            <button class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center">
+                <svg class="w-8 h-8 text-[#D4AF37] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Support</span>
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+// Dark mode toggle
+document.getElementById('darkModeToggle')?.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+});
+
+// Load dark mode preference
+if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.classList.add('dark');
+}
+
+// Update greeting based on time
+function updateGreeting() {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+    document.getElementById('greeting').textContent = greeting;
+}
+updateGreeting();
+
+// Chart period toggle
+document.querySelectorAll('.flex.gap-2 button').forEach(btn => {
+    btn.addEventListener('click', function() {
+        this.parentElement.querySelectorAll('button').forEach(b => {
+            b.classList.remove('bg-[#D4AF37]', 'text-black');
+           b.classList.add('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+       });
+       this.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+       this.classList.add('bg-[#D4AF37]', 'text-black');
+   });
+});
+
+// Simulate order status updates
+function simulateOrderUpdate() {
+   const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+   const colors = {
+       'Pending': 'bg-amber-100 text-amber-700',
+       'Processing': 'bg-blue-100 text-blue-700',
+       'Shipped': 'bg-purple-100 text-purple-700',
+       'Delivered': 'bg-emerald-100 text-emerald-700'
+   };
+   
+   const statusElements = document.querySelectorAll('tbody tr td:nth-child(4) span');
+   statusElements.forEach((el, index) => {
+       setTimeout(() => {
+           const currentStatus = el.textContent;
+           const currentIndex = statuses.indexOf(currentStatus);
+           if (currentIndex < statuses.length - 1 && Math.random() > 0.5) {
+               const newStatus = statuses[currentIndex + 1];
+               el.textContent = newStatus;
+               el.className = `px-2.5 py-1 ${colors[newStatus]} text-xs font-medium rounded-full`;
+               
+               // Add animation
+               el.style.transform = 'scale(0.8)';
+               setTimeout(() => {
+                   el.style.transform = 'scale(1)';
+               }, 200);
+           }
+       }, index * 1000 + 5000);
+   });
+}
+
+// Start simulation after page load
+setTimeout(simulateOrderUpdate, 3000);
+
+// Product action buttons
+document.querySelectorAll('button').forEach(btn => {
+   if (btn.textContent.includes('Process') || btn.textContent.includes('View') || btn.textContent.includes('Review')) {
+       btn.addEventListener('click', function(e) {
+           e.preventDefault();
+           
+           // Create modal overlay
+           const modal = document.createElement('div');
+           modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 transition-opacity duration-300';
+           modal.innerHTML = `
+               <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+                   <h3 class="font-playfair text-xl font-bold text-gray-900 dark:text-white mb-4">Order Action</h3>
+                   <p class="text-gray-600 dark:text-gray-400 mb-6">This action would ${this.textContent.toLowerCase()} the order in a real application.</p>
+                   <div class="flex gap-3">
+                       <button class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" onclick="this.closest('.fixed').remove()">
+                           Cancel
+                       </button>
+                       <button class="flex-1 px-4 py-2 bg-[#D4AF37] text-black rounded-lg hover:bg-[#B8941F] transition-colors" onclick="this.closest('.fixed').remove()">
+                           Confirm
+                       </button>
+                   </div>
+               </div>
+           `;
+           
+           document.body.appendChild(modal);
+           
+           // Trigger animation
+           requestAnimationFrame(() => {
+               modal.classList.add('opacity-100');
+               modal.querySelector('.bg-white').classList.add('scale-100');
+           });
+           
+           // Close on backdrop click
+           modal.addEventListener('click', function(e) {
+               if (e.target === modal) {
+                   modal.remove();
+               }
+           });
+       });
+   }
+});
+
+// Animate numbers on scroll
+const animateValue = (element, start, end, duration) => {
+   const startTimestamp = Date.now();
+   const step = (timestamp) => {
+       const progress = Math.min((Date.now() - startTimestamp) / duration, 1);
+       const value = Math.floor(progress * (end - start) + start);
+       element.textContent = element.textContent.includes('₨') ? `₨ ${value.toLocaleString()}` : value.toLocaleString();
+       if (progress < 1) {
+           window.requestAnimationFrame(step);
+       }
+   };
+   window.requestAnimationFrame(step);
+};
+
+// Intersection Observer for animations
+const observer = new IntersectionObserver((entries) => {
+   entries.forEach(entry => {
+       if (entry.isIntersecting) {
+           if (entry.target.classList.contains('chart-line')) {
+               entry.target.style.animation = 'drawLine 2s ease-out forwards';
+           } else if (entry.target.classList.contains('luxury-card')) {
+               entry.target.style.opacity = '0';
+               entry.target.style.transform = 'translateY(20px)';
+               setTimeout(() => {
+                   entry.target.style.transition = 'all 0.6s ease-out';
+                   entry.target.style.opacity = '1';
+                   entry.target.style.transform = 'translateY(0)';
+               }, 100);
+           }
+       }
+   });
+}, { threshold: 0.1 });
+
+// Observe elements
+document.querySelectorAll('.luxury-card').forEach(card => observer.observe(card));
+document.querySelectorAll('.chart-line').forEach(line => observer.observe(line));
+
+// Stock alert animations
+document.querySelectorAll('.border-l-4').forEach((alert, index) => {
+   alert.style.opacity = '0';
+   alert.style.transform = 'translateX(-20px)';
+   setTimeout(() => {
+       alert.style.transition = 'all 0.5s ease-out';
+       alert.style.opacity = '1';
+       alert.style.transform = 'translateX(0)';
+   }, 200 * index);
+});
+
+// Message notifications
+let messageCount = 5;
+const messageBadge = document.querySelector('.px-3.py-1.bg-\\[\\#D4AF37\\]');
+
+setInterval(() => {
+   if (Math.random() > 0.8) {
+       messageCount++;
+       messageBadge.textContent = `${messageCount} new`;
+       messageBadge.style.transform = 'scale(1.2)';
+       setTimeout(() => {
+           messageBadge.style.transform = 'scale(1)';
+       }, 200);
+   }
+}, 10000);
+
+// Quick action hover effects
+document.querySelectorAll('.grid.grid-cols-2 button').forEach(btn => {
+   btn.addEventListener('mouseenter', function() {
+       this.querySelector('svg').style.transform = 'scale(1.1) rotate(5deg)';
+   });
+   
+   btn.addEventListener('mouseleave', function() {
+       this.querySelector('svg').style.transform = 'scale(1) rotate(0deg)';
+   });
+});
+
+// Add smooth scroll behavior
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// Mobile menu drawer (if needed)
+function createMobileDrawer() {
+   const drawer = document.createElement('div');
+   drawer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl p-4 transform translate-y-full transition-transform duration-300 md:hidden z-40';
+   drawer.innerHTML = `
+       <div class="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4"></div>
+       <div class="grid grid-cols-4 gap-2">
+           <button class="p-3 text-center">
+               <svg class="w-6 h-6 mx-auto mb-1 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+               </svg>
+               <span class="text-xs">Home</span>
+           </button>
+           <button class="p-3 text-center">
+               <svg class="w-6 h-6 mx-auto mb-1 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+               </svg>
+               <span class="text-xs">Orders</span>
+           </button>
+           <button class="p-3 text-center">
+               <svg class="w-6 h-6 mx-auto mb-1 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+               </svg>
+               <span class="text-xs">Analytics</span>
+           </button>
+           <button class="p-3 text-center">
+               <svg class="w-6 h-6 mx-auto mb-1 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+               </svg>
+               <span class="text-xs">Add</span>
+           </button>
+       </div>
+   `;
+   
+   document.body.appendChild(drawer);
+   
+   // Show drawer on scroll up
+   let lastScrollTop = 0;
+   window.addEventListener('scroll', () => {
+       const st = window.pageYOffset || document.documentElement.scrollTop;
+       if (st > lastScrollTop && st > 100) {
+           drawer.classList.add('translate-y-full');
+       } else {
+           drawer.classList.remove('translate-y-full');
+       }
+       lastScrollTop = st <= 0 ? 0 : st;
+   });
+}
+
+// Initialize mobile drawer on smaller screens
+if (window.innerWidth < 768) {
+   createMobileDrawer();
+}
+
+// Performance optimization - lazy load images
+document.querySelectorAll('img').forEach(img => {
+   img.loading = 'lazy';
+});
+
+// Add subtle parallax effect to hero section
+window.addEventListener('scroll', () => {
+   const scrolled = window.pageYOffset;
+   const hero = document.querySelector('.bg-gradient-to-br');
+   if (hero) {
+       hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+   }
+});
+</script>
+</body>
+</html>
+<!-- Velvra Seller Dashboard -->
+
+
+

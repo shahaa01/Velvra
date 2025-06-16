@@ -1,0 +1,33 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "<%= product.name %>",
+  "image": [
+    <% product.images.forEach((img, i) => { %>
+      "<%= img %>"<%= i < product.images.length - 1 ? ',' : '' %>
+    <% }) %>
+  ],
+  "description": "<%= product.description || 'Premium fashion item from Velvra' %>",
+  "sku": "<%= product._id %>",
+  "brand": {
+    "@type": "Brand",
+    "name": "<%= product.brand || 'Velvra Partner' %>"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "<%= seo.canonical || `/product/${product._id}` %>",
+    "priceCurrency": "NPR",
+    "price": "<%= product.price %>",
+    "availability": "<%= product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' %>",
+    "itemCondition": "https://schema.org/NewCondition"
+  }
+  <% if (product.rating) { %>,
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "<%= product.rating.average %>",
+    "reviewCount": "<%= product.rating.count %>"
+  }
+  <% } %>
+}
+</script>

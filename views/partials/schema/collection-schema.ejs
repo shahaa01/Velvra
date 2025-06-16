@@ -1,0 +1,30 @@
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "<%= page.title || 'Luxury Fashion Collection' %>",
+    "description": "<%= page.description || 'Curated luxury fashion collection' %>",
+    "url": "<%= seo.canonical || `${baseUrl}${page.url || ''}` %>",
+    "numberOfItems": <%= products.length %>,
+    "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": <%= products.length %>,
+        "itemListElement": [
+            <% products.forEach((product, index) => { %>
+            {
+                "@type": "Product",
+                "position": <%= index + 1 %>,
+                "name": "<%= product.name %>",
+                "url": "<%= seo.canonical || `/product/${product._id}` %>",
+                "image": "<%= product.images[0] %>",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "<%= product.price %>",
+                    "priceCurrency": "NP"
+                }
+            }<%= index < products.length - 1 ? ',' : '' %>
+            <% }) %>
+        ]
+    }
+}
+</script>

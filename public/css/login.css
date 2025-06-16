@@ -1,4 +1,8 @@
 /* Floating label animations */
+body {
+   padding-top: var(--navbar-height);
+
+}
 .peer:focus ~ label {
    font-size: 0.875rem;
    top: -0.875rem;
