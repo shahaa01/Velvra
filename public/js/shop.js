@@ -2,7 +2,7 @@
 class VelvraState {
     constructor() {
         this.filters = {
-            price: { min: 0, max: 2000 },
+            price: { min: 0, max: 10000 },
             categories: [],
             colors: [],
             sizes: [],
@@ -59,7 +59,7 @@ class VelvraState {
             params.append('page', this.currentPage);
             
             if (this.filters.price.min > 0) params.append('minPrice', this.filters.price.min);
-            if (this.filters.price.max < 2000) params.append('maxPrice', this.filters.price.max);
+            if (this.filters.price.max < 10000) params.append('maxPrice', this.filters.price.max);
             if (this.filters.categories.length > 0) params.append('categories', this.filters.categories.join(','));
             if (this.filters.colors.length > 0) params.append('colors', this.filters.colors.join(','));
             if (this.filters.brands.length > 0) params.append('brands', this.filters.brands.join(','));
@@ -479,15 +479,22 @@ const maxThumb = document.getElementById('maxThumb');
 // Range slider state
 let isSliderDragging = false;
 let activeThumb = null;
-const RANGE_MAX = 2000;
+const RANGE_MAX = 10000;
 const RANGE_MIN = 0;
+const RANGE_STEP = 100;
 
 function updateRangeSlider() {
     const min = parseInt(minRange.value);
     const max = parseInt(maxRange.value);
     
+    // Ensure minimum value is not less than 0
+    const adjustedMin = Math.max(RANGE_MIN, min);
+    if (min !== adjustedMin) {
+        minRange.value = adjustedMin;
+    }
+    
     // Calculate percentages (0-100)
-    const minPercent = ((min - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
+    const minPercent = ((adjustedMin - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
     const maxPercent = ((max - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
     
     // Update progress bar
@@ -501,15 +508,15 @@ function updateRangeSlider() {
     // Update tooltips
     const minTooltip = minThumb.querySelector('.price-tooltip');
     const maxTooltip = maxThumb.querySelector('.price-tooltip');
-    if (minTooltip) minTooltip.textContent = `₹${min}`;
+    if (minTooltip) minTooltip.textContent = `₹${adjustedMin}`;
     if (maxTooltip) maxTooltip.textContent = `₹${max}`;
     
     // Update input values
-    minPrice.value = min;
+    minPrice.value = adjustedMin;
     maxPrice.value = max;
     
     // Update state
-    state.filters.price = { min, max };
+    state.filters.price = { min: adjustedMin, max };
 }
 
 // Mouse/Touch event handlers for thumb dragging
@@ -583,11 +590,13 @@ function stopDragging() {
 
 // Range input event listeners
 minRange?.addEventListener('input', (e) => {
-    const minValue = parseInt(e.target.value);
+    const minValue = Math.max(RANGE_MIN, parseInt(e.target.value));
     const maxValue = parseInt(maxRange.value);
     
     if (minValue >= maxValue) {
-        e.target.value = maxValue - 10;
+        e.target.value = maxValue - RANGE_STEP;
+    } else {
+        e.target.value = minValue;
     }
     updateRangeSlider();
 });
@@ -597,7 +606,7 @@ maxRange?.addEventListener('input', (e) => {
     const minValue = parseInt(minRange.value);
     
     if (maxValue <= minValue) {
-        e.target.value = minValue + 10;
+        e.target.value = minValue + RANGE_STEP;
     }
     updateRangeSlider();
 });
@@ -608,8 +617,8 @@ minPrice?.addEventListener('change', (e) => {
     const maxValue = parseInt(maxPrice.value);
     
     if (value >= maxValue) {
-        e.target.value = maxValue - 10;
-        minRange.value = maxValue - 10;
+        e.target.value = maxValue - RANGE_STEP;
+        minRange.value = maxValue - RANGE_STEP;
     } else {
         minRange.value = value;
     }
@@ -621,8 +630,8 @@ maxPrice?.addEventListener('change', (e) => {
     const minValue = parseInt(minPrice.value);
     
     if (value <= minValue) {
-        e.target.value = minValue + 10;
-        maxRange.value = minValue + 10;
+        e.target.value = minValue + RANGE_STEP;
+        maxRange.value = minValue + RANGE_STEP;
     } else {
         maxRange.value = value;
     }
@@ -645,6 +654,9 @@ document.querySelector('.range-slider-container')?.addEventListener('click', (e)
     const percent = (clickX / rect.width) * 100;
     const value = Math.round((percent / 100) * (RANGE_MAX - RANGE_MIN) + RANGE_MIN);
     
+    // Ensure value is not less than minimum
+    const adjustedValue = Math.max(RANGE_MIN, value);
+    
     // Determine which thumb to update based on click position
     const minValue = parseInt(minRange.value);
     const maxValue = parseInt(maxRange.value);
@@ -653,11 +665,11 @@ document.querySelector('.range-slider-container')?.addEventListener('click', (e)
     
     if (percent < (minPercent + maxPercent) / 2) {
         // Click closer to min thumb
-        const newValue = Math.min(value, maxValue - 10);
+        const newValue = Math.min(adjustedValue, maxValue - RANGE_STEP);
         minRange.value = newValue;
     } else {
         // Click closer to max thumb
-        const newValue = Math.max(value, minValue + 10);
+        const newValue = Math.max(adjustedValue, minValue + RANGE_STEP);
         maxRange.value = newValue;
     }
     
@@ -665,7 +677,30 @@ document.querySelector('.range-slider-container')?.addEventListener('click', (e)
 });
 
 // Initialize range slider
-updateRangeSlider();
+document.addEventListener('DOMContentLoaded', () => {
+    // Set range input attributes
+    if (minRange && maxRange) {
+        minRange.min = RANGE_MIN;
+        minRange.max = RANGE_MAX;
+        minRange.step = RANGE_STEP;
+        maxRange.min = RANGE_MIN;
+        maxRange.max = RANGE_MAX;
+        maxRange.step = RANGE_STEP;
+    }
+
+    // Set price input attributes
+    if (minPrice && maxPrice) {
+        minPrice.min = RANGE_MIN;
+        minPrice.max = RANGE_MAX;
+        minPrice.step = RANGE_STEP;
+        maxPrice.min = RANGE_MIN;
+        maxPrice.max = RANGE_MAX;
+        maxPrice.step = RANGE_STEP;
+    }
+
+    // Initialize the slider
+    updateRangeSlider();
+});
 
 // ===== FILTER INTERACTIONS =====
 
@@ -1418,7 +1453,7 @@ class LoadMoreManager {
             
             // Append all existing filters from the state
             if (this.state.filters.price.min > 0) params.append('minPrice', this.state.filters.price.min);
-            if (this.state.filters.price.max < 2000) params.append('maxPrice', this.state.filters.price.max);
+            if (this.state.filters.price.max < 10000) params.append('maxPrice', this.state.filters.price.max);
             if (this.state.filters.categories.length > 0) params.append('categories', this.state.filters.categories.join(','));
             if (this.state.filters.colors.length > 0) params.append('colors', this.state.filters.colors.join(','));
             if (this.state.filters.brands.length > 0) params.append('brands', this.state.filters.brands.join(','));
