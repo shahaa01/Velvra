@@ -218,6 +218,8 @@ router.route('/men')
             const startItem = totalProducts > 0 ? skip + 1 : 0;
             const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
             
+            // Debug log to check product order
+            console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
             res.render('page/shop', {
                 title: "Men's Collection | Velvra", 
                 heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
@@ -293,6 +295,57 @@ router.route('/women')
         } catch (error) {
             console.error('Error loading women\'s shop page:', error);
             res.status(500).render('error', { message: 'Error loading products' });
+        }
+    });
+
+// Add new route for sale products
+router.route('/sale')
+    .get(async (req, res) => {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const skip = (page - 1) * ITEMS_PER_PAGE;
+            
+            // Build query for sale products
+            const query = { 
+                sale: true,
+                salePercentage: { $exists: true, $ne: null } // Ensure salePercentage exists and is not null
+            };
+            
+            // Get total count of sale products
+            const totalProducts = await Product.countDocuments(query);
+            
+            // Get sale products for current page, sorted by salePercentage
+            const products = await Product.find(query)
+                .sort({ salePercentage: -1 }) // Sort by salePercentage in descending order
+                .skip(skip)
+                .limit(ITEMS_PER_PAGE);
+            
+            // Calculate pagination info
+            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+            const hasMore = page < totalPages;
+            const startItem = totalProducts > 0 ? skip + 1 : 0;
+            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+            
+            // Debug log to check product order
+            console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
+            res.render('page/shop', {
+                title: "Sale Items | Velvra",
+                heroTitle: "Sale",
+                heroDescription: "Discover our exclusive sale items with the best discounts. Shop now to get amazing deals on premium fashion pieces.",
+                products: products,
+                pagination: {
+                    currentPage: page,
+                    totalPages: totalPages,
+                    totalProducts: totalProducts,
+                    hasMore: hasMore,
+                    startItem: startItem,
+                    endItem: endItem,
+                    itemsPerPage: ITEMS_PER_PAGE
+                }
+            });
+        } catch (error) {
+            console.error('Error loading sale products:', error);
+            res.status(500).render('error', { message: 'Error loading sale products' });
         }
     });
 

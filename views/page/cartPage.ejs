@@ -18,7 +18,7 @@
     </header>
 
     <!-- Mobile Cart Items -->
-    <div class="sm:hidden px-4 py-4 pb-32" id="mobileCartContainer">
+    <div class="sm:hidden px-4 py-4 pb-32 cart-content" id="mobileCartContainer">
         <% if (cart.items.length === 0) { %>
             <div class="text-center py-20">
                 <svg class="mx-auto w-20 h-20 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@
     </div>
 
     <!-- Desktop Cart Layout -->
-    <div class="hidden sm:block max-w-7xl mx-auto px-4 py-6">
+    <div class="hidden sm:block max-w-7xl mx-auto px-4 py-6 cart-content">
         <div class="grid lg:grid-cols-5 gap-8">
             <!-- Desktop Cart Items -->
             <div class="lg:col-span-3">
@@ -281,9 +281,11 @@
                         </div>
 
                         <!-- Desktop Checkout Button -->
-                        <button class="btn-primary btn-gold w-full py-4 text-lg rounded-xl" id="desktopCheckoutBtn">
-                            Proceed to Checkout
-                        </button>
+                         <a href="/payment/paymentSummary">
+                            <button class="btn-primary btn-gold w-full py-4 text-lg rounded-xl" id="desktopCheckoutBtn">
+                                Proceed to Checkout
+                            </button>
+                         </a>
                     </div>
                 </div>
             </div>
@@ -305,9 +307,11 @@
                 <p class="text-xs text-gray-500">on orders above ₹2,000</p>
             </div>
         </div>
-        <button class="btn-checkout-mobile" id="mobileCheckoutBtn">
-            Proceed to Checkout
-        </button>
+        <a href="/payment/paymentSummary">
+            <button class="btn-checkout-mobile" id="mobileCheckoutBtn">
+                Proceed to Checkout
+            </button>
+        </a>
     </div>
 </div>
 

@@ -138,25 +138,28 @@ class VelvraCart {
             // Update UI immediately for better user experience
             this.updateQuantityInDOM(cartItemId, updatedQuantity);
 
-            const response = await fetch('/cart/update-quantity', {
+            const response = await fetch('/cart/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     cartItemId,
-                    quantity: updatedQuantity
+                    change: delta
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to update quantity');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update quantity');
+            }
 
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
 
         } catch (error) {
             console.error('Error updating quantity:', error);
-            this.showErrorMessage('Failed to update quantity');
+            this.showErrorMessage(error.message || 'Failed to update quantity');
             // Revert the quantity change on error
             this.updateQuantityInDOM(cartItemId, currentQuantity);
         } finally {
@@ -332,8 +335,8 @@ class VelvraCart {
         try {
             this.showLoading('checkout');
             
-            // Redirect to checkout page
-            window.location.href = '/checkout';
+            // Redirect to payment summary page
+            window.location.href = '/payment/paymentSummary';
 
         } catch (error) {
             console.error('Error proceeding to checkout:', error);

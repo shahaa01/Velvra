@@ -20,6 +20,7 @@ const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
 const productRoutes = require('./routes/productRoute');
 const cartRoutes = require('./routes/cartRoute');
+const addressRoutes = require('./routes/address');
 
 // Serve static file from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -73,6 +74,8 @@ app.use('/shop', require('./routes/shopRoute'));
 app.use('/product', productRoutes);
 app.use('/seller', require('./routes/sellerRoute'));
 app.use('/cart', cartRoutes);
+app.use('/address', addressRoutes);
+app.use('/payment', require('./routes/paymentRoutes'));
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

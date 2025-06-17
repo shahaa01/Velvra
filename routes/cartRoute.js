@@ -86,41 +86,38 @@ router.post('/toggle', isLoggedIn, async (req, res) => {
 });
 
 // Update cart item quantity
-router.put('/update-quantity', isLoggedIn, async (req, res) => {
+router.put('/update', isLoggedIn, async (req, res) => {
     try {
-        const { cartItemId, quantity } = req.body;
+        const { cartItemId, change } = req.body;
         
         const cart = await Cart.findOne({ user: req.user._id });
         if (!cart) {
             return res.status(404).json({ error: 'Cart not found' });
         }
         
-        // Find the item
         const item = cart.items.id(cartItemId);
         if (!item) {
             return res.status(404).json({ error: 'Item not found in cart' });
         }
         
         // Update quantity
-        item.quantity = Math.min(Math.max(1, quantity), 10);
-        
-        // Save cart to trigger pre-save hook for total calculation
+        item.quantity = Math.max(1, item.quantity + change);
         await cart.save();
+        
+        // Calculate new total
+        const total = await cart.calculateTotal();
         
         // Populate product details for response
         await cart.populate('items.product');
         
-        // Ensure total is calculated correctly
-        const calculatedTotal = await cart.calculateTotal();
-        
         res.json({
             success: true,
             cart,
-            total: calculatedTotal
+            total
         });
     } catch (error) {
-        console.error('Error updating quantity:', error);
-        res.status(500).json({ error: 'Failed to update quantity' });
+        console.error('Error updating cart:', error);
+        res.status(500).json({ error: 'Failed to update cart' });
     }
 });
 
