@@ -1,4 +1,3 @@
-
 // State Management
 class VelvraState {
     constructor() {
@@ -390,30 +389,144 @@ document.addEventListener('click', (e) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.quick-add-mobile').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        console.log("Activated click handler");
+// Quick Add Functionality
+document.querySelectorAll('.quick-add-mobile').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Clicked', btn.textContent, 'Flag:', btn.dataset.quickAddFlag);
 
-        const isAdded = btn.dataset.quickAddFlag === 'true';
+        // Check if user is logged in
+        const isLoggedIn = btn.dataset.loggedIn === 'true';
+        
+        if (!isLoggedIn) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Please login to add items to your cart.',
+                confirmButtonText: 'Login',
+            }).then(result => {
+                if (result.isConfirmed) {
+                    window.location.href = '/auth/login';
+                }
+            });
+            return;
+        }
 
-        if (!isAdded) {
-            btn.dataset.quickAddFlag = 'true';
-            btn.textContent = 'Added!';
-            btn.classList.add('added'); // Use CSS class
-        } else {
-            btn.dataset.quickAddFlag = 'false';
-            btn.textContent = 'Quick Add';
-            btn.classList.remove('added');
+        // Get size selection
+        const sizeSelector = btn.closest('.product-card').querySelector('.size-selector.selected');
+        if (!sizeSelector) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Select Size',
+                text: 'Please select a size before adding to cart.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        const size = sizeSelector.dataset.size;
+        const color = btn.closest('.product-card').querySelector('.color-selector.selected')?.dataset.color || 'Default';
+        const productId = btn.dataset.productId;
+
+        try {
+            // Show loading state
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Processing...';
+
+            // Check if item is already in cart
+            const isInCart = btn.classList.contains('in-cart');
+
+            if (isInCart) {
+                // Confirm removal
+                const result = await Swal.fire({
+                    icon: 'question',
+                    title: 'Remove from Cart?',
+                    text: 'Do you want to remove this item from your cart?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, remove it',
+                    cancelButtonText: 'No, keep it'
+                });
+
+                if (!result.isConfirmed) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    return;
+                }
+            }
+
+            // Toggle cart item
+            const response = await fetch('/cart/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId,
+                    size,
+                    color,
+                    quantity: 1
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update cart');
+            }
+
+            const data = await response.json();
+
+            // Update button state
+            if (data.action === 'added') {
+                btn.classList.add('in-cart');
+                btn.innerHTML = 'Added to Cart ✓';
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Added!',
+                    text: 'Item has been added to your cart.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                btn.classList.remove('in-cart');
+                btn.innerHTML = 'Quick Add';
+                
+                // Show removal message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Removed!',
+                    text: 'Item has been removed from your cart.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+            // Update cart count if element exists
+            const cartCount = document.querySelector('.cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.cartCount;
+                cartCount.classList.add('animate-bounce');
+                setTimeout(() => cartCount.classList.remove('animate-bounce'), 1000);
+            }
+
+        } catch (error) {
+            console.error('Cart operation failed:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Something went wrong. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        } finally {
+            // Reset button state
+            btn.disabled = false;
+            if (!btn.classList.contains('in-cart')) {
+                btn.innerHTML = 'Quick Add';
+            }
         }
     });
 });
-})
-
-
 
 // Debounced color selection for mobile
 const colorSelectionHandler = (() => {

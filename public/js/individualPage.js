@@ -1,5 +1,3 @@
-
-
 // State Management
 let productState = {
     selectedColor: 'Charcoal',
@@ -21,6 +19,18 @@ const decreaseBtn = document.getElementById('decreaseQty');
 const increaseBtn = document.getElementById('increaseQty');
 const addToCartBtn = document.getElementById('addToCartBtn');
 const wishlistBtn = document.getElementById('wishlistBtn');
+const buyNowBtn = document.getElementById('buyNowBtn');
+
+// Initialize cart state on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if product is already in cart
+    const isInCart = addToCartBtn.dataset.inCart === 'true';
+    
+    if (isInCart) {
+        addToCartBtn.classList.add('in-cart');
+        addToCartBtn.querySelector('.cartText').textContent = '✔️ Added to Cart';
+    }
+});
 
 // Image Gallery Functionality
 thumbnails.forEach((thumbnail, index) => {
@@ -120,33 +130,198 @@ wishlistBtn.addEventListener('click', (e) => {
 });
 
 // Add to Cart Functionality
-addToCartBtn.flag = false;
-const addToCartOriginalText = addToCartBtn.innerHTML;
-addToCartBtn.addEventListener('click', () => {
-    // Simulate add to cart
-    addToCartBtn.flag = !addToCartBtn.flag;
-    if(addToCartBtn.flag) {
-    // addToCartBtn.innerHTML = `
-    //     <span class="relative z-10 flex items-center justify-center space-x-2">
-    //         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-    //             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-    //             <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    //         </svg>
-    //         <span>Adding...</span>
-    //     </span>
-    // `;
+addToCartBtn.addEventListener('click', async () => {
+    // Check if user is logged in
+    const isLoggedIn = addToCartBtn.dataset.loggedIn === 'true';
     
-        addToCartBtn.innerHTML = `
-            <span class="relative z-10 flex items-center justify-center space-x-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span>Added to Cart!</span>
-            </span>
-        `;
-        
-    } else {
-        addToCartBtn.innerHTML = addToCartOriginalText;
+    if (!isLoggedIn) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Please login to add items to your cart.',
+            confirmButtonText: 'Login',
+        }).then(result => {
+            if (result.isConfirmed) {
+                window.location.href = '/auth/login';
+            }
+        });
+        return;
+    }
+
+    // Validate size selection
+    if (!productState.selectedSize) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Select Size',
+            text: 'Please select a size before adding to cart.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    try {
+        // Show loading state
+        addToCartBtn.disabled = true;
+        const originalText = addToCartBtn.querySelector('.cartText').textContent;
+        addToCartBtn.querySelector('.cartText').textContent = 'Processing...';
+
+        // Check if item is already in cart
+        const isInCart = addToCartBtn.classList.contains('in-cart');
+
+        if (isInCart) {
+            // Confirm removal
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Remove from Cart?',
+                text: 'Do you want to remove this item from your cart?',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove it',
+                cancelButtonText: 'No, keep it'
+            });
+
+            if (!result.isConfirmed) {
+                addToCartBtn.disabled = false;
+                addToCartBtn.querySelector('.cartText').textContent = originalText;
+                return;
+            }
+        }
+
+        // Toggle cart item
+        const response = await fetch('/cart/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                productId: addToCartBtn.dataset.productId,
+                size: productState.selectedSize,
+                color: productState.selectedColor,
+                quantity: productState.quantity
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update cart');
+        }
+
+        const data = await response.json();
+
+        // Update button state
+        if (data.action === 'added') {
+            addToCartBtn.classList.add('in-cart');
+            addToCartBtn.querySelector('.cartText').textContent = '✔️ Added to Cart';            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Added!',
+                text: 'Item has been added to your cart.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            addToCartBtn.classList.remove('in-cart');
+            addToCartBtn.querySelector('.cartText').textContent = 'Add to Cart';
+            
+            // Show removal message
+            Swal.fire({
+                icon: 'success',
+                title: 'Removed!',
+                text: 'Item has been removed from your cart.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        // Update cart count if element exists
+        const cartCount = document.querySelector('.cart-count');
+        if (cartCount) {
+            cartCount.textContent = data.cartCount;
+            cartCount.classList.add('animate-bounce');
+            setTimeout(() => cartCount.classList.remove('animate-bounce'), 1000);
+        }
+
+    } catch (error) {
+        console.error('Cart operation failed:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Something went wrong. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    } finally {
+        // Reset button state
+        addToCartBtn.disabled = false;
+    }
+});
+
+// Buy Now Functionality
+buyNowBtn.addEventListener('click', async () => {
+    // Check if user is logged in
+    const isLoggedIn = buyNowBtn.dataset.loggedIn === 'true';
+    
+    if (!isLoggedIn) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Please login to proceed with checkout.',
+            confirmButtonText: 'Login',
+        }).then(result => {
+            if (result.isConfirmed) {
+                window.location.href = '/auth/login';
+            }
+        });
+        return;
+    }
+
+    // Validate size selection
+    if (!productState.selectedSize) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Select Size',
+            text: 'Please select a size before proceeding.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    try {
+        // Show loading state
+        buyNowBtn.disabled = true;
+        buyNowBtn.textContent = 'Processing...';
+
+        // Add to cart and redirect to checkout
+        const response = await fetch('/cart/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                productId: buyNowBtn.dataset.productId,
+                size: productState.selectedSize,
+                color: productState.selectedColor,
+                quantity: productState.quantity
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add item to cart');
+        }
+
+        // Redirect to checkout
+        window.location.href = '/checkout';
+
+    } catch (error) {
+        console.error('Cart operation failed:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Something went wrong. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    } finally {
+        // Reset button state
+        buyNowBtn.disabled = false;
+        buyNowBtn.textContent = 'Buy Now';
     }
 });
 
@@ -296,6 +471,85 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.animate-fadeInUp').forEach((el, index) => {
         el.style.animationDelay = `${index * 0.1}s`;
     });
+
+    // Get DOM elements
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    const quantityInput = document.getElementById('quantity');
+    const decreaseQtyBtn = document.getElementById('decreaseQty');
+    const increaseQtyBtn = document.getElementById('increaseQty');
+    const sizeSelectors = document.querySelectorAll('.size-selector');
+    const colorSelectors = document.querySelectorAll('.color-selector');
+    const selectedSizeSpan = document.getElementById('selectedSize');
+    const selectedColorSpan = document.getElementById('selectedColor');
+
+    // State variables
+    let selectedSize = '';
+    let selectedColor = '';
+    let quantity = 1;
+
+    // Handle quantity changes
+    decreaseQtyBtn.addEventListener('click', () => {
+        if (quantity > 1) {
+            quantity--;
+            quantityInput.value = quantity;
+        }
+    });
+
+    increaseQtyBtn.addEventListener('click', () => {
+        if (quantity < 10) {
+            quantity++;
+            quantityInput.value = quantity;
+        }
+    });
+
+    quantityInput.addEventListener('change', (e) => {
+        const value = parseInt(e.target.value);
+        if (value >= 1 && value <= 10) {
+            quantity = value;
+        } else {
+            quantity = 1;
+            e.target.value = 1;
+        }
+    });
+
+    // Handle size selection
+    sizeSelectors.forEach(selector => {
+        selector.addEventListener('click', () => {
+            // Remove selected class from all size selectors
+            sizeSelectors.forEach(s => s.classList.remove('selected', 'border-velvra-gold'));
+            
+            // Add selected class to clicked size
+            selector.classList.add('selected', 'border-velvra-gold');
+            
+            // Update selected size
+            selectedSize = selector.dataset.size;
+            selectedSizeSpan.textContent = selectedSize;
+        });
+    });
+
+    // Handle color selection
+    colorSelectors.forEach(selector => {
+        selector.addEventListener('click', () => {
+            // Remove selected class from all color selectors
+            colorSelectors.forEach(s => s.classList.remove('selected', 'ring-2', 'ring-velvra-gold'));
+            
+            // Add selected class to clicked color
+            selector.classList.add('selected', 'ring-2', 'ring-velvra-gold');
+            
+            // Update selected color
+            selectedColor = selector.dataset.color;
+            selectedColorSpan.textContent = selectedColor;
+        });
+    });
+
+    // Initialize first size and color as selected
+    if (sizeSelectors.length > 0) {
+        sizeSelectors[0].click();
+    }
+    if (colorSelectors.length > 0) {
+        colorSelectors[0].click();
+    }
 });
 
 // Keyboard Navigation

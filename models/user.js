@@ -25,18 +25,17 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+\@.+\..+/, 'Please enter a valid email']
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 8, // Adjust based on password policy
-    select: false // Don't send hashed password in queries by default
-  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
 
-userSchema.plugin(passportLocalMongoose);
+// Apply passport-local-mongoose plugin with email as username field
+userSchema.plugin(passportLocalMongoose, { 
+  usernameField: 'email',
+  usernameUnique: true,
+  usernameLowerCase: true
+});
 
 module.exports = mongoose.model('User', userSchema);

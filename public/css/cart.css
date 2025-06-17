@@ -1,0 +1,482 @@
+/* ===== VELVRA LUXURY VARIABLES ===== */
+:root {
+    --velvra-charcoal: #1a1a1a;
+    --velvra-gold: #d4af37;
+    --velvra-gold-light: #f4d03f;
+    --velvra-cream: #f8f6f0;
+    --velvra-pearl: #fefcf7;
+    --velvra-beige: #e8dcc6;
+    --velvra-stone: #a8a196;
+    --velvra-shadow: rgba(26, 26, 26, 0.1);
+    --velvra-shadow-dark: rgba(26, 26, 26, 0.15);
+    --velvra-shadow-luxury: rgba(212, 175, 55, 0.2);
+    --velvra-blur: blur(20px);
+    --transition-luxury: cubic-bezier(0.23, 1, 0.320, 1);
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ===== BASE STYLING ===== */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--velvra-pearl);
+    color: var(--velvra-charcoal);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--navbar-height);
+}
+
+.font-playfair {
+    font-family: 'Playfair Display', serif;
+}
+
+/* ===== MOBILE-FIRST CART ITEM STYLING ===== */
+.cart-item-mobile {
+    background: white;
+    border-radius: 20px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+@media (min-width: 640px) {
+    .cart-item-mobile {
+        padding: 1.5rem;
+        border-radius: 24px;
+    }
+}
+
+.cart-item-mobile:active {
+    transform: scale(0.99);
+}
+
+/* ===== MOBILE PRODUCT IMAGE ===== */
+.product-image-mobile {
+    width: 100px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 640px) {
+    .product-image-mobile {
+        width: 120px;
+        height: 160px;
+        border-radius: 20px;
+    }
+}
+
+/* ===== MOBILE QUANTITY CONTROLS ===== */
+.quantity-controls-mobile {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.quantity-btn-mobile {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    font-weight: 600;
+    font-size: 18px;
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.quantity-btn-mobile:active {
+    transform: scale(0.9);
+    background: #d4af37;
+    color: white;
+}
+
+@media (hover: hover) {
+    .quantity-btn-mobile:hover {
+        background: #d4af37;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+    }
+}
+
+.quantity-input-mobile {
+    width: 40px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: 16px;
+    color: #1a1a1a;
+    pointer-events: none;
+}
+
+/* ===== MOBILE COLOR SWATCHES ===== */
+.color-options-mobile {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.color-swatch-mobile {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.color-swatch-mobile.selected {
+    border-color: #d4af37;
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+}
+
+/* ===== MOBILE REMOVE BUTTON ===== */
+.remove-btn-mobile {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.08);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    color: #ef4444;
+}
+
+.remove-btn-mobile:active {
+    transform: scale(0.9);
+    background: #ef4444;
+    color: white;
+}
+
+/* ===== MOBILE PRICE DISPLAY ===== */
+.price-mobile {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+.price-original-mobile {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-weight: 500;
+}
+
+/* ===== MOBILE STICKY SUMMARY ===== */
+.mobile-summary-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 1rem;
+    z-index: 50;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== MOBILE BADGES ===== */
+.badge-mobile {
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.25rem 0.625rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+}
+
+/* ===== DESKTOP STYLES (640px+) ===== */
+@media (min-width: 640px) {
+    .mobile-only {
+        display: none !important;
+    }
+    
+    .desktop-only {
+        display: block !important;
+    }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+.cart-item-enter {
+    animation: slideInUp 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cart-item-remove {
+    animation: slideOutLeft 0.4s cubic-bezier(0.23, 1, 0.320, 1) forwards;
+}
+
+@keyframes slideOutLeft {
+    to {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+}
+
+/* ===== PREMIUM BUTTON MOBILE ===== */
+.btn-checkout-mobile {
+    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+    color: #1a1a1a;
+    border: none;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    border-radius: 30px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+}
+
+.btn-checkout-mobile:active {
+    transform: scale(0.98);
+}
+
+/* ===== TRUST BADGES MOBILE ===== */
+.trust-badge-mobile {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+/* ===== LOADING SKELETON ===== */
+.skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ===== HAPTIC FEEDBACK SIMULATION ===== */
+.haptic {
+    animation: haptic 0.1s var(--transition-bounce);
+}
+
+@keyframes haptic {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+}
+
+/* ===== iOS SAFE AREAS ===== */
+@supports (padding: max(0px)) {
+    .mobile-summary-bar {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* ===== FOCUS STATES ===== */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid #d4af37;
+    outline-offset: 2px;
+}
+
+/* ===== SCROLLBAR HIDING ===== */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== DESKTOP ENHANCED STYLES ===== */
+@media (min-width: 1024px) {
+    .cart-item-desktop {
+        padding: 2rem;
+        border-radius: 24px;
+        margin-bottom: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    }
+
+    .cart-item-desktop:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* ===== DESKTOP CART STYLES ===== */
+.desktop-cart-item {
+    background: white;
+    border-radius: 24px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.desktop-cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== DESKTOP BUTTONS ===== */
+.btn-primary {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(26, 26, 26, 0.3);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+    color: #1a1a1a;
+}
+
+/* ===== TOAST STYLES ===== */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s var(--transition-luxury);
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+.cart-item-mobile,
+.desktop-cart-item {
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Optimize scrolling performance */
+body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+}
+
+/* Disable hover effects on touch devices for better performance */
+@media (hover: none) and (pointer: coarse) {
+    .quantity-btn-mobile:hover,
+    .remove-btn-mobile:hover,
+    .color-swatch-mobile:hover {
+        transform: none !important;
+        background: inherit !important;
+    }
+}
+
+/* Optimize button transitions */
+.quantity-btn-mobile,
+.remove-btn-mobile,
+.color-swatch-mobile,
+.btn-checkout-mobile {
+    transition: transform 0.1s ease-out, background-color 0.1s ease-out;
+}
+
+/* Cart Page Styles */
+
+/* Loading state */
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Microinteractions */
+.color-selector-click,
+.size-selector-click {
+    transform: scale(0.95);
+}
+
+.quantity-btn-click {
+    transform: scale(0.9);
+}
+
+.remove-btn-click {
+    transform: scale(0.9);
+}
+
+/* Transitions */
+.cart-item {
+    transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

@@ -25,15 +25,16 @@
                    </div>
 
                    <!-- Login Form -->
-                   <form class="space-y-6" id="loginForm">
+                   <form class="space-y-6" id="loginForm" method="POST" action="/auth/login">
                        <!-- Email Field -->
                        <div class="relative">
                            <input type="email" 
-                                  id="email"
+                                  id="username"
+                                  name="username"
                                   class="peer w-full px-0 py-3 border-0 border-b border-stone-300 focus:border-stone-900 focus:outline-none transition-colors placeholder-transparent"
                                   placeholder="Email"
                                   required>
-                           <label for="email" 
+                           <label for="username" 
                                   class="absolute left-0 -top-3.5 text-stone-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-3 peer-placeholder-shown:text-stone-400 peer-focus:-top-3.5 peer-focus:text-sm peer-focus:text-stone-900">
                                Email Address
                            </label>
@@ -48,6 +49,7 @@
                        <div class="relative">
                            <input type="password" 
                                   id="password"
+                                  name="password"
                                   class="peer w-full px-0 py-3 border-0 border-b border-stone-300 focus:border-stone-900 focus:outline-none transition-colors placeholder-transparent"
                                   placeholder="Password"
                                   required>

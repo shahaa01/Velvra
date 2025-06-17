@@ -75,17 +75,19 @@
                 </div>
                 
                 <!-- Sign Up Form -->
-                <form class="space-y-5">
+                <form class="space-y-5" action="/auth/signup" method="POST">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-stone-600 mb-2 font-light">First Name</label>
                             <input type="text" 
+                                   name="firstName"
                                    class="form-input w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-stone-200 rounded-lg focus:outline-none focus:border-orange-500 focus:bg-white"
                                    placeholder="Jane">
                         </div>
                         <div>
                             <label class="block text-sm text-stone-600 mb-2 font-light">Last Name</label>
                             <input type="text" 
+                                   name="lastName"
                                    class="form-input w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-stone-200 rounded-lg focus:outline-none focus:border-orange-500 focus:bg-white"
                                    placeholder="Doe">
                         </div>
@@ -94,6 +96,7 @@
                     <div>
                         <label class="block text-sm text-stone-600 mb-2 font-light">Email Address</label>
                         <input type="email" 
+                               name="email"
                                class="form-input w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-stone-200 rounded-lg focus:outline-none focus:border-orange-500 focus:bg-white"
                                placeholder="jane@example.com">
                     </div>
@@ -101,6 +104,7 @@
                     <div>
                         <label class="block text-sm text-stone-600 mb-2 font-light">Password</label>
                         <input type="password" 
+                               name="password"
                                class="form-input w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-stone-200 rounded-lg focus:outline-none focus:border-orange-500 focus:bg-white"
                                placeholder="Create a strong password">
                         <p class="text-xs text-stone-500 mt-2">Must be at least 8 characters</p>

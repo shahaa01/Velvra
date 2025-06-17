@@ -470,8 +470,11 @@
                         <span class="price-current"> &#8377; <%= product.price %></span>
                     </div>
                 </div>
-                
-                <button type="button" class="quick-add-mobile" data-quick-add-flag="false">Quick Add</button>
+                <button type="button" 
+                        class="quick-add-mobile" 
+                        data-quick-add-flag="false" 
+                        data-logged-in="<%= currentUser ? 'true' : 'false' %>"
+                        data-product-id="<%= product._id %>">Quick Add</button>
             </article>
             <% } %>
         </div>

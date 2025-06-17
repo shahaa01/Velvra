@@ -49,8 +49,13 @@
                         <!-- Dropdown Menu -->
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
                             <div class="py-2">
+                                <% if (currentUser) { %>
+                                    <a href="/auth/me" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Profile</a>
+                                    <a href="/auth/logout" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Logout</a>
+                                <% } else { %>
                                 <a href="/auth/signup" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Signup</a>
                                 <a href="/auth/login" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Login</a>
+                                <% } %>
                                 <a href="/cart" class="flex items-center py-3 px-4 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 rounded-xl transition-colors">
                                     <div class="relative mr-3">
                                         <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,10 +110,14 @@
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Kids</a>
             
             <div class="border-t border-stone-200 my-4"></div>
-            
+            <% if (currentUser) { %>
+            <a href="/auth/me" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Profile</a>
+            <a href="/auth/logout" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Logout</a>
+            <% } else { %>
             <a href="/auth/signup" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Signup</a>
             <a href="/auth/login" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Login</a>
-            <a href="/auth/login" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Cart</a>
+            <% } %>
+            <a href="/cart" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Cart</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Orders</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Wishlist</a>
             <a href="#" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Contact Us</a>

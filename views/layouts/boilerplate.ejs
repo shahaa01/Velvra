@@ -17,14 +17,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
 
+    <!-- CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <!-- CSS -->
     <link rel="stylesheet" href="/css/output.css">
     <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/flash.css">
     <%- block('css') %>
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
 </head>
 <body>
     <!-- Navbar -->
     <%- include('../components/navbar.ejs') %>
+    <%- include('../components/flash.ejs') %>
 
     <%- body %>
 
@@ -32,7 +41,13 @@
     <%- include('../components/footer.ejs') %>
 
     <!-- JS block -->
+
+    <!-- CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script src="/js/navbar.js"></script>
+    <script src="/js/flash.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <%- block('script') %>
 </body>
 </html>
