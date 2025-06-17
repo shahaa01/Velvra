@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const colorSchema = new mongoose.Schema({
   name: { type: String, required: true },    // e.g., "Black"
-  hex: { type: String, required: true },     // e.g., "#000000"
+  hex: { type: String, required: true }      // e.g., "#000000"
 });
 
 const productSchema = new mongoose.Schema({
@@ -23,14 +23,18 @@ const productSchema = new mongoose.Schema({
   colors: [colorSchema],
 
   sizes: {
-    type: [String],
-    enum: ['XS', 'S', 'M', 'L', 'XL'],
-    default: ['S', 'M', 'L']
+    type: [mongoose.Schema.Types.Mixed], // supports both strings (e.g. 'M') and numbers (e.g. 42)
+    default: ['S', 'M', 'L', 'XL'],
+    validate: {
+      validator: function (arr) {
+        return Array.isArray(arr) && arr.length > 0;
+      },
+      message: 'At least one size must be provided.'
+    }
   },
 
   category: { type: String, required: true },    // e.g., "men", "women", etc.
   tags: [String],                                // e.g., ["t-shirt", "streetwear"]
-
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

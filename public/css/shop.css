@@ -1033,6 +1033,7 @@ body {
     box-shadow: 0 4px 20px rgba(26, 26, 26, 0.08);
     transition: all 0.4s var(--transition-luxury);
     cursor: pointer;
+    opacity: 1; /* Ensure products are always visible */
 }
 
 .product-card:hover {
@@ -1353,21 +1354,69 @@ body {
     margin-bottom: 1.5rem;
 }
 
-/* ===== LOAD MORE ===== */
+/* ===== LOAD MORE SECTION ===== */
 .load-more-section {
     text-align: center;
     margin-top: 4rem;
+    padding: 2rem 0;
+}
+
+.load-more-section button {
+    transition: all 0.3s var(--transition-luxury);
+}
+
+.load-more-section button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.load-more-section button:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .load-more-info {
     margin-top: 1rem;
     font-size: 0.875rem;
     color: var(--velvra-stone);
+    transition: all 0.3s var(--transition-luxury);
 }
 
 .load-more-info .count {
     font-weight: 600;
     color: var(--velvra-charcoal);
+}
+
+/* Loading animation for new products */
+.product-card.loading-in {
+    animation: slideInUp 0.6s var(--transition-luxury);
+    opacity: 1; /* Ensure products are visible */
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0.3;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth transition for results count updates */
+.results-count {
+    transition: all 0.3s var(--transition-luxury);
+}
+
+.results-count .count {
+    transition: all 0.3s var(--transition-luxury);
+}
+
+/* Hide load more section when no more products */
+.load-more-section.hidden {
+    display: none;
 }
 
 /* ===== FEATURES SECTION ===== */

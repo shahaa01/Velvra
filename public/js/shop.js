@@ -1057,3 +1057,316 @@ class ProductImageCarousel {
 document.addEventListener('DOMContentLoaded', () => {
     new ProductImageCarousel();
 });
+
+// ===== LOAD MORE FUNCTIONALITY =====
+class LoadMoreManager {
+    constructor() {
+        this.currentPage = 1;
+        this.isLoading = false;
+        this.hasMore = true;
+        this.loadMoreBtn = document.getElementById('loadMoreBtn');
+        this.loadMoreSection = document.getElementById('loadMoreSection');
+        this.productGrid = document.getElementById('productGrid');
+        this.resultsCount = document.querySelector('.results-count');
+        this.loadMoreInfo = document.querySelector('.load-more-info');
+        
+        this.init();
+    }
+
+    init() {
+        if (this.loadMoreBtn) {
+            this.currentPage = parseInt(this.loadMoreBtn.dataset.currentPage) || 1;
+            this.loadMoreBtn.addEventListener('click', () => this.loadMore());
+        }
+    }
+
+    async loadMore() {
+        if (this.isLoading || !this.hasMore) return;
+
+        this.isLoading = true;
+        this.updateButtonState();
+
+        try {
+            const nextPage = this.currentPage + 1;
+            const response = await fetch(`/shop/api/products?page=${nextPage}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to load products');
+            }
+
+            const data = await response.json();
+            
+            // Add new products to the grid
+            this.addProductsToGrid(data.products);
+            
+            // Update pagination state
+            this.currentPage = data.pagination.currentPage;
+            this.hasMore = data.pagination.hasMore;
+            
+            // Update UI elements
+            this.updateResultsCount(data.pagination);
+            this.updateLoadMoreInfo(data.pagination);
+            
+            // Hide load more button if no more products
+            if (!this.hasMore) {
+                this.hideLoadMoreButton();
+            }
+
+        } catch (error) {
+            console.error('Error loading more products:', error);
+            this.showError();
+        } finally {
+            this.isLoading = false;
+            this.updateButtonState();
+        }
+    }
+
+    addProductsToGrid(products) {
+        products.forEach((product, index) => {
+            const productCard = this.createProductCard(product);
+            
+            // Add loading animation class
+            productCard.classList.add('loading-in');
+            
+            // Append to grid
+            this.productGrid.appendChild(productCard);
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                productCard.classList.remove('loading-in');
+                // Ensure final state is visible
+                productCard.style.opacity = '1';
+                
+                // Reinitialize carousel for this product card
+                this.initializeProductCardFeatures(productCard);
+            }, 600 + (index * 100)); // Wait for animation to complete
+        });
+    }
+
+    initializeProductCardFeatures(productCard) {
+        // Reinitialize image carousel if needed
+        const images = productCard.querySelectorAll('.product-image');
+        if (images.length > 1) {
+            // Add carousel functionality
+            this.setupCarouselForCard(productCard, images);
+        }
+        
+        // Add wishlist functionality
+        const wishlistBtn = productCard.querySelector('.wishlist-btn');
+        if (wishlistBtn) {
+            wishlistBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // Add wishlist functionality here if needed
+                wishlistBtn.classList.toggle('active');
+            });
+        }
+        
+        // Add color option functionality
+        const colorOptions = productCard.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Remove selected from siblings
+                colorOptions.forEach(sibling => sibling.classList.remove('selected'));
+                // Add selected to clicked option
+                option.classList.add('selected');
+            });
+        });
+    }
+
+    setupCarouselForCard(card, images) {
+        let currentIndex = 0;
+        
+        // Mouse enter - start carousel
+        card.addEventListener('mouseenter', () => {
+            this.startCarouselForCard(card, images, currentIndex);
+        });
+
+        // Mouse leave - stop carousel and reset to first image
+        card.addEventListener('mouseleave', () => {
+            this.stopCarouselForCard(card, images);
+            this.showImageForCard(card, images, 0);
+            currentIndex = 0;
+        });
+
+        // Add click handlers for manual navigation
+        images.forEach((image, index) => {
+            image.addEventListener('click', (e) => {
+                this.showImageForCard(card, images, index);
+                currentIndex = index;
+            });
+        });
+    }
+
+    startCarouselForCard(card, images, currentIndex) {
+        if (card.carouselInterval) return;
+        
+        card.carouselInterval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % images.length;
+            this.showImageForCard(card, images, currentIndex);
+        }, 2000);
+    }
+
+    stopCarouselForCard(card, images) {
+        if (card.carouselInterval) {
+            clearInterval(card.carouselInterval);
+            card.carouselInterval = null;
+        }
+    }
+
+    showImageForCard(card, images, index) {
+        // Hide all images
+        images.forEach(img => {
+            img.classList.remove('active');
+        });
+        
+        // Show selected image
+        images[index].classList.add('active');
+        
+        // Update counter
+        const counter = card.querySelector('.image-counter');
+        if (counter) {
+            const currentImageSpan = counter.querySelector('.current-image');
+            if (currentImageSpan) {
+                currentImageSpan.textContent = index + 1;
+            }
+        }
+    }
+
+    createProductCard(product) {
+        const article = document.createElement('article');
+        article.className = 'product-card';
+        
+        // Create wishlist button
+        const wishlistBtn = document.createElement('button');
+        wishlistBtn.className = 'wishlist-btn';
+        wishlistBtn.innerHTML = `
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+        `;
+        
+        // Create sale badge if applicable
+        let saleBadge = '';
+        if (product.salePercentage && product.salePercentage > 0) {
+            saleBadge = `<div class="sale-badge">${product.salePercentage}%</div>`;
+        }
+        
+        // Create image container
+        let imageContainer = '';
+        if (product.images && product.images.length > 0) {
+            const images = product.images.map((img, i) => 
+                `<img src="${img}" alt="${product.name}" class="product-image ${i === 0 ? 'active' : ''}" data-index="${i}">`
+            ).join('');
+            
+            const imageCounter = product.images.length > 1 ? 
+                `<div class="image-counter">
+                    <span class="current-image">1</span>
+                    <span class="separator">/</span>
+                    <span class="total-images">${product.images.length}</span>
+                </div>` : '';
+            
+            imageContainer = `
+                <figure class="product-image-container">
+                    <a href="/product/${product._id}" class="product-link">
+                        ${images}
+                    </a>
+                    ${imageCounter}
+                </figure>
+            `;
+        } else {
+            imageContainer = `
+                <figure class="product-image-container">
+                    <div style="position: absolute; inset: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                        No Image Available
+                    </div>
+                </figure>
+            `;
+        }
+        
+        // Create color options
+        const colorOptions = product.colors.map(color => 
+            `<button class="color-option selected" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
+        ).join('');
+        
+        // Create price display
+        const currentPrice = product.salePrice || product.price;
+        const originalPrice = product.sale ? `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
+        const saleBadgeInline = product.sale ? `<span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">${product.salePercentage}% OFF</span>` : '';
+        
+        // Set the innerHTML first
+        article.innerHTML = `
+            ${saleBadge}
+            ${imageContainer}
+            <div class="product-info">
+                <p class="product-brand">${product.brand}</p>
+                <h3 class="product-name">${product.name}</h3>
+                <div class="color-options">
+                    ${colorOptions}
+                </div>
+                <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
+                    <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${currentPrice}</span>
+                    ${originalPrice}
+                    ${saleBadgeInline}
+                </div>
+            </div>
+        `;
+        
+        // Append the wishlist button to the beginning of the article
+        article.insertBefore(wishlistBtn, article.firstChild);
+        
+        return article;
+    }
+
+    updateResultsCount(pagination) {
+        if (this.resultsCount) {
+            this.resultsCount.innerHTML = `Showing <span class="count">${pagination.startItem}–${pagination.endItem}</span> of <span class="count">${pagination.totalProducts}</span> items`;
+        }
+    }
+
+    updateLoadMoreInfo(pagination) {
+        if (this.loadMoreInfo) {
+            this.loadMoreInfo.innerHTML = `Showing <span class="count">${pagination.endItem}</span> of <span class="count">${pagination.totalProducts}</span> products`;
+        }
+    }
+
+    updateButtonState() {
+        if (this.loadMoreBtn) {
+            if (this.isLoading) {
+                this.loadMoreBtn.textContent = 'Loading...';
+                this.loadMoreBtn.disabled = true;
+            } else {
+                this.loadMoreBtn.textContent = 'Load More Products';
+                this.loadMoreBtn.disabled = false;
+            }
+        }
+    }
+
+    hideLoadMoreButton() {
+        if (this.loadMoreBtn) {
+            this.loadMoreBtn.style.display = 'none';
+        }
+        
+        // Show a message that all products have been loaded
+        if (this.loadMoreInfo) {
+            this.loadMoreInfo.innerHTML = `<span style="color: var(--velvra-gold); font-weight: 600;">✓ All ${this.loadMoreInfo.querySelector('.count').textContent} products loaded</span>`;
+        }
+    }
+
+    showError() {
+        if (this.loadMoreBtn) {
+            this.loadMoreBtn.textContent = 'Error loading products. Try again.';
+            setTimeout(() => {
+                this.loadMoreBtn.textContent = 'Load More Products';
+            }, 3000);
+        }
+    }
+}
+
+// Initialize load more functionality
+document.addEventListener('DOMContentLoaded', () => {
+    new LoadMoreManager();
+});

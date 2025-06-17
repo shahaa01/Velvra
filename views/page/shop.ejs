@@ -43,7 +43,7 @@
     <div class="sort-bar-content">
         <!-- Results Count -->
         <div class="results-count">
-            Showing <span class="count">1–12</span> of <span class="count">84</span> items
+            Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> items
         </div>
         
         <!-- Sort Controls -->
@@ -512,12 +512,14 @@
         </div>
 
         <!-- Load More Button -->
-        <div class="load-more-section">
-            <button class="premium-btn-secondary">
-                Load More Products
-            </button>
+        <div class="load-more-section" id="loadMoreSection">
+            <% if (pagination.hasMore) { %>
+                <button class="premium-btn-secondary" id="loadMoreBtn" data-current-page="<%= pagination.currentPage %>">
+                    Load More Products
+                </button>
+            <% } %>
             <p class="load-more-info">
-                Showing <span class="count">6</span> of <span class="count">84</span> products
+                Showing <span class="count"><%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> products
             </p>
         </div>
     </section>
