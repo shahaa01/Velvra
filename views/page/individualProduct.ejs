@@ -353,71 +353,71 @@
             </div>
         </div>
 
-        <!-- You May Also Like Section -->
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-            <div class="mb-12 text-center">
-                <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
-                <p class="text-velvra-stone max-w-2xl mx-auto">Discover more pieces from our curated collection of premium menswear</p>
-            </div>
-            
-            <div class="relative">
-                <!-- Scroll Buttons -->
-                <button id="scrollLeft" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 bg-white rounded-full shadow-xl border border-gray-100 flex items-center justify-center z-20 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-                <button id="scrollRight" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 bg-white rounded-full shadow-xl border border-gray-100 flex items-center justify-center z-20 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
+<!-- Enhanced You May Also Like Section -->
+<!-- Enhanced You May Also Like Section -->
+<!-- Replace the entire "You May Also Like" section starting from the comment to the closing </div> -->
+<div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="mb-12 text-center">
+        <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
+        <p class="text-velvra-stone max-w-2xl mx-auto">Discover more pieces from our curated collection of premium menswear</p>
+    </div>
+    
+    <div class="relative">
+        <!-- Gradient Fade Indicators -->
+        <div class="scroll-fade-left absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-velvra-pearl to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300"></div>
+        <div class="scroll-fade-right absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-velvra-pearl to-transparent z-10 pointer-events-none"></div>
 
-                <!-- Related Products -->
-                <div id="relatedProducts" class="related-products flex space-x-6 overflow-x-auto pb-4">
+        <!-- Related Products Container -->
+        <div id="relatedProducts" class="related-products-scroll flex gap-6 overflow-x-auto pb-4 scroll-smooth" data-product-id="<%= product._id %>">
+            <!-- Initial products - only render first 4 -->
+            <% for(let i = 0; i < Math.min(4, similarProducts.length); i++) { %>
+                <% const simProduct = similarProducts[i]; %>
+                <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
+                    <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
                     
-                    <!-- Product 1 -->
-                <% for(let product of similarProducts) { %>
-                    <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-                        <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
-                        
-                        <% if(product.salePercentage) { %>
-                            <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= product.salePercentage %>% Off</div>
-                        <% } %>
-                        <figure class="aspect-[4/5] relative overflow-hidden">
-                            <% for(let image of product.images) { %>
-                            <a href="/product/<%= product._id %>">
-                                <img src="<%= image %>" alt="<%= product.name %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
-                            </a>
-                            <% } %>
-                        </figure>
-
-                        <div class="p-6">
-                            <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= product.name %></p>
-                            <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= product.description %></h3>
-                            
-                            <div class="color-options">
-                                <% for(let color of product.colors) { %>
-                                    <button class="color-option" style="background-color: <%= color.hex %>" data-color="<%= color.name %>"></button>
-                                <% } %>
-                            </div>
-                            
-                            <div class="flex items-baseline space-x-2">
-                                <span class="text-xl font-semibold text-velvra-charcoal">₹<%= product.salePrice %></span>
-                                <span class="text-sm text-velvra-stone line-through">₹<%= product.price %></span>
-                            </div>
-                        </div>
-                    </article>
+                    <% if(simProduct.salePercentage) { %>
+                        <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= simProduct.salePercentage %>% Off</div>
                     <% } %>
+                    <figure class="aspect-[4/5] relative overflow-hidden">
+                        <a href="/product/<%= simProduct._id %>">
+                            <img src="<%= simProduct.images[0] %>" alt="<%= simProduct.name %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                        </a>
+                    </figure>
 
-                </div>
-            </div>
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= simProduct.brand || 'VELVRA' %></p>
+                        <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= simProduct.name %></h3>
+                        
+                        <div class="color-options flex gap-2 mb-4">
+                            <% for(let j = 0; j < Math.min(3, simProduct.colors.length); j++) { %>
+                                <% const color = simProduct.colors[j]; %>
+                                <button class="color-option w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-all duration-200" style="background-color: <%= color.hex %>" data-color="<%= color.name %>"></button>
+                            <% } %>
+                        </div>
+                        
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-xl font-semibold text-velvra-charcoal">₹<%= simProduct.salePrice || simProduct.price %></span>
+                            <% if(simProduct.sale) { %>
+                                <span class="text-sm text-velvra-stone line-through">₹<%= simProduct.price %></span>
+                            <% } %>
+                        </div>
+                    </div>
+                </article>
+            <% } %>
+            
+            <!-- Loader Sentinel - This triggers the infinite scroll -->
+            <div class="loader-sentinel flex-shrink-0 w-20" data-loading="false" style="min-height: 400px; background: transparent;"></div>
         </div>
-    </main>
+    </div>
+</div>
+
+<!-- Add this script tag at the bottom of individualProduct.ejs before closing </section> -->
+</main>
+<script src="/js/infiniteScroll.js"></script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>
 

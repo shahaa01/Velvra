@@ -24,7 +24,6 @@
 html, body {
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
 }
 
 body {
@@ -481,6 +480,3 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.footer {
-    display: none;
-}

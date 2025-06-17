@@ -649,3 +649,301 @@ document.querySelectorAll('.product-card').forEach(card => {
     card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.320, 1)';
     observer.observe(card);
 });
+
+// Infinite Horizontal Scroll Implementation
+class InfiniteHorizontalScroll {
+    constructor() {
+        this.container = document.getElementById('relatedProducts');
+        this.sentinel = document.querySelector('.loader-sentinel');
+        this.leftFade = document.querySelector('.scroll-fade-left');
+        this.rightFade = document.querySelector('.scroll-fade-right');
+        this.isLoading = false;
+        this.currentPage = 1;
+        this.hasMoreProducts = true;
+        this.productId = window.location.pathname.split('/').pop();
+        
+        this.init();
+    }
+    
+    init() {
+        // Set up intersection observer for infinite scroll
+        this.setupIntersectionObserver();
+        
+        // Set up scroll event for fade indicators
+        this.setupScrollIndicators();
+        
+        // Set up touch events for mobile
+        this.setupTouchEvents();
+        
+        // Initialize wishlist buttons
+        this.initializeWishlistButtons();
+    }
+    
+    setupIntersectionObserver() {
+        const options = {
+            root: this.container,
+            rootMargin: '0px 200px 0px 0px', // Trigger 200px before reaching the end
+            threshold: 0.1
+        };
+        
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !this.isLoading && this.hasMoreProducts) {
+                    this.loadMoreProducts();
+                }
+            });
+        }, options);
+        
+        this.observer.observe(this.sentinel);
+    }
+    
+    setupScrollIndicators() {
+        const updateIndicators = () => {
+            const scrollLeft = this.container.scrollLeft;
+            const scrollWidth = this.container.scrollWidth;
+            const clientWidth = this.container.clientWidth;
+            
+            // Show/hide fade indicators
+            if (scrollLeft > 50) {
+                this.leftFade.classList.add('active');
+            } else {
+                this.leftFade.classList.remove('active');
+            }
+            
+            if (scrollLeft < scrollWidth - clientWidth - 50) {
+                this.rightFade.classList.add('active');
+            } else {
+                this.rightFade.classList.remove('active');
+            }
+        };
+        
+        this.container.addEventListener('scroll', updateIndicators);
+        
+        // Initial check
+        setTimeout(updateIndicators, 100);
+    }
+    
+    setupTouchEvents() {
+        let isScrolling = false;
+        let startX = 0;
+        let scrollLeft = 0;
+        
+        this.container.addEventListener('touchstart', (e) => {
+            isScrolling = true;
+            startX = e.touches[0].pageX - this.container.offsetLeft;
+            scrollLeft = this.container.scrollLeft;
+        }, { passive: true });
+        
+        this.container.addEventListener('touchmove', (e) => {
+            if (!isScrolling) return;
+            const x = e.touches[0].pageX - this.container.offsetLeft;
+            const walk = (x - startX) * 1.5; // Scroll speed multiplier
+            this.container.scrollLeft = scrollLeft - walk;
+        }, { passive: true });
+        
+        this.container.addEventListener('touchend', () => {
+            isScrolling = false;
+        }, { passive: true });
+    }
+    
+    async loadMoreProducts() {
+        if (this.isLoading || !this.hasMoreProducts) return;
+        
+        this.isLoading = true;
+        this.sentinel.setAttribute('data-loading', 'true');
+        
+        // Show skeleton loaders
+        this.showSkeletonLoaders();
+        
+        try {
+            // Fetch next page of products
+            const response = await fetch(`/product/api/similar-products/${this.productId}?page=${this.currentPage + 1}&limit=4`);
+            if (!response.ok) throw new Error('Failed to load products');
+            
+            const data = await response.json();
+            
+            // Remove skeleton loaders
+            this.hideSkeletonLoaders();
+            
+            if (data.products.length > 0) {
+                // Create and append new product cards
+                const fragment = document.createDocumentFragment();
+                data.products.forEach(product => {
+                    const card = this.createProductCard(product);
+                    fragment.appendChild(card);
+                });
+                
+                // Insert new products before the sentinel
+                this.container.insertBefore(fragment, this.sentinel);
+                
+                // Update pagination state
+                this.currentPage++;
+                this.hasMoreProducts = data.pagination.hasMore;
+                
+                // Reinitialize wishlist buttons for new products
+                this.initializeWishlistButtons();
+                
+                // Update scroll indicators
+                this.container.dispatchEvent(new Event('scroll'));
+            } else {
+                this.hasMoreProducts = false;
+            }
+            
+            if (!this.hasMoreProducts) {
+                this.observer.disconnect();
+                // Hide right fade indicator
+                this.rightFade.classList.remove('active');
+            }
+        } catch (error) {
+            console.error('Error loading more products:', error);
+            this.hideSkeletonLoaders();
+        } finally {
+            this.isLoading = false;
+            this.sentinel.setAttribute('data-loading', 'false');
+        }
+    }
+    
+    showSkeletonLoaders() {
+        const skeletonHTML = `
+            <div class="skeleton-card">
+                <div class="skeleton-image skeleton-loader"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line short skeleton-loader"></div>
+                    <div class="skeleton-line medium skeleton-loader"></div>
+                    <div class="skeleton-line skeleton-loader"></div>
+                    <div class="skeleton-price skeleton-loader"></div>
+                </div>
+            </div>
+        `;
+        
+        for (let i = 0; i < 4; i++) {
+            const skeleton = document.createElement('div');
+            skeleton.className = 'skeleton-wrapper flex-shrink-0 w-80';
+            skeleton.innerHTML = skeletonHTML;
+            this.container.insertBefore(skeleton, this.sentinel);
+        }
+    }
+    
+    hideSkeletonLoaders() {
+        const skeletons = this.container.querySelectorAll('.skeleton-wrapper');
+        skeletons.forEach((skeleton, index) => {
+            setTimeout(() => {
+                skeleton.style.opacity = '0';
+                skeleton.style.transform = 'scale(0.95)';
+                skeleton.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => skeleton.remove(), 300);
+            }, index * 50);
+        });
+    }
+    
+    createProductCard(product) {
+        const article = document.createElement('article');
+        article.className = 'product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500';
+        article.style.opacity = '0';
+        
+        // Build color options HTML
+        const colorOptionsHTML = product.colors.slice(0, 3).map(color => `
+            <button class="color-option w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-all duration-200" 
+                    style="background-color: ${color.hex}" 
+                    data-color="${color.name}"></button>
+        `).join('');
+        
+        article.innerHTML = `
+            <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
+            
+            ${product.salePercentage ? `<div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale ${product.salePercentage}% Off</div>` : ''}
+            
+            <figure class="aspect-[4/5] relative overflow-hidden">
+                <a href="/product/${product._id}">
+                    <img src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                </a>
+            </figure>
+
+            <div class="p-6">
+                <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2">${product.brand}</p>
+                <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2">${product.name}</h3>
+                
+                <div class="color-options flex gap-2 mb-4">
+                    ${colorOptionsHTML}
+                </div>
+                
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-xl font-semibold text-velvra-charcoal">₹${product.salePrice || product.price}</span>
+                    ${product.sale ? `<span class="text-sm text-velvra-stone line-through">₹${product.price}</span>` : ''}
+                </div>
+            </div>
+        `;
+        
+        // Fade in the card
+        requestAnimationFrame(() => {
+            article.style.opacity = '1';
+            article.style.transition = 'opacity 0.3s ease-out';
+        });
+        
+        return article;
+    }
+    
+    initializeWishlistButtons() {
+        const wishlistButtons = this.container.querySelectorAll('.wishlist-btn');
+        wishlistButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                button.classList.toggle('active');
+                this.createFloatingHeart(button);
+            });
+        });
+    }
+    
+    createFloatingHeart(button) {
+        const heart = document.createElement('div');
+        heart.className = 'floating-heart';
+        heart.innerHTML = `
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+        `;
+        
+        button.appendChild(heart);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            heart.style.animation = 'float 1s ease-out forwards';
+        });
+        
+        // Remove after animation
+        setTimeout(() => heart.remove(), 1000);
+    }
+}
+
+// Initialize infinite scroll
+document.addEventListener('DOMContentLoaded', () => {
+    new InfiniteHorizontalScroll();
+});
+
+// Add floating heart animation if not already present
+if (!document.querySelector('style[data-heart-animation]')) {
+    const heartAnimation = document.createElement('style');
+    heartAnimation.setAttribute('data-heart-animation', 'true');
+    heartAnimation.textContent = `
+        @keyframes floatingHeart {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-50px) scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) scale(0.5);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(heartAnimation);
+}
