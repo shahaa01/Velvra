@@ -449,10 +449,30 @@
                 <% } %>
                 
                 <figure class="product-image-container">
-                    <% for(let image of product.images) {%>
-                    <a href="/product/<%= product._id %>" class="product-link">
-                        <img src="<%= image %>" alt="Premium Wool Coat" class="product-image">
-                    </a>
+                    <% if(product.images && product.images.length > 0) { %>
+                        <!-- Image carousel container -->
+                        <a href="/product/<%= product._id %>" class="product-link">
+                            <% for(let i = 0; i < product.images.length; i++) { %>
+                                <img src="<%= product.images[i] %>" 
+                                     alt="<%= product.name %>" 
+                                     class="product-image <%= i === 0 ? 'active' : '' %>"
+                                     data-index="<%= i %>">
+                            <% } %>
+                        </a>
+                        
+                        <!-- Image counter (only show if multiple images) -->
+                        <% if(product.images.length > 1) { %>
+                            <div class="image-counter">
+                                <span class="current-image">1</span>
+                                <span class="separator">/</span>
+                                <span class="total-images"><%= product.images.length %></span>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <!-- Fallback when no images -->
+                        <div style="position: absolute; inset: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                            No Image Available
+                        </div>
                     <% } %>
                 </figure>
 
@@ -466,15 +486,27 @@
                         <% } %>
                     </div>
                     
-                    <div class="price-container">
-                        <span class="price-current"> &#8377; <%= product.price %></span>
-                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
+                        <!-- Current or Sale Price -->
+                        <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">
+                          ₹<%= product.salePrice || product.price %>
+                        </span>
+                      
+                        <% if (product.sale) { %>
+                          <!-- Original Price -->
+                          <span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">
+                            ₹<%= product.price %>
+                          </span>
+                      
+                          <!-- Sale Percentage Badge (hidden on small screens) -->
+                          <span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">
+                            <%= product.salePercentage %>% OFF
+                          </span>
+                        <% } %>
+                      </div>
+                      
+                      
                 </div>
-                <button type="button" 
-                        class="quick-add-mobile" 
-                        data-quick-add-flag="false" 
-                        data-logged-in="<%= currentUser ? 'true' : 'false' %>"
-                        data-product-id="<%= product._id %>">Quick Add</button>
             </article>
             <% } %>
         </div>

@@ -92,9 +92,9 @@
                             <% product.name %>
                         </h1>
                         <div class="flex items-baseline space-x-4">
-                            <span class="text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice %></span>
-                            <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
+                            <span class="text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice || product.price %></span>
                             <% if(product.sale) { %>
+                            <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
                             <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= product.salePercentage %>% OFF</span>
                             <% } %>
                         </div>

@@ -821,10 +821,6 @@ styleEl.textContent = `
     }
     
     /* Only apply hover effect when not scrolling */
-    body:not(.is-scrolling) .use-css-hover:hover .product-image {
-        opacity: 0;
-    }
-    
     body:not(.is-scrolling) .use-css-hover:hover .product-image-secondary {
         opacity: 1;
     }
@@ -835,3 +831,110 @@ styleEl.textContent = `
     }
 `;
 document.head.appendChild(styleEl);
+
+// ===== IMAGE CAROUSEL FUNCTIONALITY =====
+class ProductImageCarousel {
+    constructor() {
+        this.carousels = new Map();
+        this.init();
+    }
+
+    init() {
+        // Only initialize carousels for product cards with multiple images
+        document.querySelectorAll('.product-card').forEach(card => {
+            const images = card.querySelectorAll('.product-image');
+            const counter = card.querySelector('.image-counter');
+            
+            if (images.length > 1) {
+                // Only create carousel for multiple images
+                const carousel = {
+                    card,
+                    images: Array.from(images),
+                    counter,
+                    currentIndex: 0,
+                    interval: null,
+                    isHovering: false
+                };
+                
+                this.carousels.set(card, carousel);
+                this.setupCarousel(carousel);
+                
+                // Ensure first image is active on initialization
+                this.showImage(carousel, 0);
+            }
+            // For single images, do nothing - let the link work naturally
+        });
+    }
+
+    setupCarousel(carousel) {
+        const { card, images, counter } = carousel;
+
+        // Only add carousel event listeners if there are multiple images
+        if (images.length > 1) {
+            // Mouse enter - start carousel
+            card.addEventListener('mouseenter', () => {
+                carousel.isHovering = true;
+                this.startCarousel(carousel);
+            });
+
+            // Mouse leave - stop carousel and reset to first image
+            card.addEventListener('mouseleave', () => {
+                carousel.isHovering = false;
+                this.stopCarousel(carousel);
+                this.showImage(carousel, 0);
+            });
+
+            // Add click handlers for manual navigation
+            images.forEach((image, index) => {
+                image.addEventListener('click', (e) => {
+                    this.showImage(carousel, index);
+                });
+            });
+        }
+    }
+
+    startCarousel(carousel) {
+        if (carousel.interval) return;
+        
+        carousel.interval = setInterval(() => {
+            if (!carousel.isHovering) return;
+            
+            const nextIndex = (carousel.currentIndex + 1) % carousel.images.length;
+            this.showImage(carousel, nextIndex);
+        }, 2000); // Change image every 2 seconds
+    }
+
+    stopCarousel(carousel) {
+        if (carousel.interval) {
+            clearInterval(carousel.interval);
+            carousel.interval = null;
+        }
+    }
+
+    showImage(carousel, index) {
+        const { images, counter } = carousel;
+        
+        // Hide all images
+        images.forEach(img => {
+            img.classList.remove('active');
+        });
+        
+        // Show selected image
+        images[index].classList.add('active');
+        
+        // Update counter
+        if (counter) {
+            const currentImageSpan = counter.querySelector('.current-image');
+            if (currentImageSpan) {
+                currentImageSpan.textContent = index + 1;
+            }
+        }
+        
+        carousel.currentIndex = index;
+    }
+}
+
+// Initialize image carousels
+document.addEventListener('DOMContentLoaded', () => {
+    new ProductImageCarousel();
+});
