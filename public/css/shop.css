@@ -592,6 +592,11 @@ body {
     margin-bottom: 1.5rem;
     padding: 0.5rem 0;
     overflow: visible;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .range-track {
@@ -627,7 +632,7 @@ body {
 .range-thumb {
     position: absolute;
     top: 50%;
-transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     width: 1.5rem;
     height: 1.5rem;
     background: linear-gradient(135deg, white, #fafafa);
@@ -637,6 +642,8 @@ transform: translate(-50%, -50%);
     transition: all 0.3s var(--transition-luxury);
     cursor: grab;
     z-index: 3;
+    user-select: none;
+    touch-action: none;
 }
 
 .range-thumb:active {
@@ -666,10 +673,10 @@ transform: translate(-50%, -50%);
     white-space: nowrap;
     box-shadow: 0 8px 32px rgba(26, 26, 26, 0.2);
     backdrop-filter: var(--velvra-blur);
-max-width: 80px;
-text-align: center;
-overflow: hidden;
-text-overflow: ellipsis;
+    max-width: 80px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .price-tooltip::after {
@@ -2176,4 +2183,35 @@ select:focus {
 .quick-add-mobile.added {
     background-color: var(--velvra-gold);
     color: var(--velvra-charcoal);
+}
+
+/* Mobile improvements for range slider */
+@media (max-width: 768px) {
+    .range-slider-container {
+        height: 2.5rem;
+        padding: 0.75rem 0;
+    }
+    
+    .range-thumb {
+        width: 1.75rem;
+        height: 1.75rem;
+        touch-action: none;
+    }
+    
+    .range-thumb:active {
+        transform: translateY(-50%) scale(1.15);
+    }
+    
+    .price-tooltip {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* Prevent text selection during dragging */
+.range-slider-container {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }

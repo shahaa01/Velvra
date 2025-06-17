@@ -226,25 +226,33 @@ const rangeProgress = document.getElementById('rangeProgress');
 const minThumb = document.getElementById('minThumb');
 const maxThumb = document.getElementById('maxThumb');
 
+// Range slider state
+let isSliderDragging = false;
+let activeThumb = null;
+const RANGE_MAX = 2000;
+const RANGE_MIN = 0;
+
 function updateRangeSlider() {
     const min = parseInt(minRange.value);
     const max = parseInt(maxRange.value);
-    const range = 2000;
+    
+    // Calculate percentages (0-100)
+    const minPercent = ((min - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
+    const maxPercent = ((max - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
     
     // Update progress bar
-    const leftPercent = (min / range) * 100;
-    const rightPercent = 100 - (max / range) * 100;
+    rangeProgress.style.left = minPercent + '%';
+    rangeProgress.style.right = (100 - maxPercent) + '%';
     
-    rangeProgress.style.left = leftPercent + '%';
-    rangeProgress.style.right = rightPercent + '%';
-    
-    // Update thumb positions
-    minThumb.style.left = leftPercent + '%';
-    maxThumb.style.left = (max / range) * 100 + '%';
+    // Update thumb positions (account for thumb width)
+    minThumb.style.left = `calc(${minPercent}% - 0.75rem)`;
+    maxThumb.style.left = `calc(${maxPercent}% - 0.75rem)`;
     
     // Update tooltips
-    minThumb.querySelector('.price-tooltip').textContent = `${min}`;
-    maxThumb.querySelector('.price-tooltip').textContent = `${max}`;
+    const minTooltip = minThumb.querySelector('.price-tooltip');
+    const maxTooltip = maxThumb.querySelector('.price-tooltip');
+    if (minTooltip) minTooltip.textContent = `₹${min}`;
+    if (maxTooltip) maxTooltip.textContent = `₹${max}`;
     
     // Update input values
     minPrice.value = min;
@@ -254,39 +262,150 @@ function updateRangeSlider() {
     state.filters.price = { min, max };
 }
 
-// Range slider event listeners
+// Mouse/Touch event handlers for thumb dragging
+function startDragging(e, thumb) {
+    e.preventDefault();
+    e.stopPropagation();
+    isSliderDragging = true;
+    activeThumb = thumb;
+    thumb.style.cursor = 'grabbing';
+    
+    // Add event listeners for dragging
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', stopDragging);
+    document.addEventListener('touchmove', handleDrag, { passive: false });
+    document.addEventListener('touchend', stopDragging);
+}
+
+function handleDrag(e) {
+    if (!isSliderDragging || !activeThumb) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const container = document.querySelector('.range-slider-container');
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    
+    // Calculate position relative to container
+    let percent = ((clientX - rect.left) / rect.width) * 100;
+    percent = Math.max(0, Math.min(100, percent));
+    
+    // Convert percentage to value
+    const value = Math.round((percent / 100) * (RANGE_MAX - RANGE_MIN) + RANGE_MIN);
+    
+    // Update the appropriate range input
+    if (activeThumb === minThumb) {
+        const maxValue = parseInt(maxRange.value);
+        const newValue = Math.min(value, maxValue - 10);
+        minRange.value = newValue;
+    } else if (activeThumb === maxThumb) {
+        const minValue = parseInt(minRange.value);
+        const newValue = Math.max(value, minValue + 10);
+        maxRange.value = newValue;
+    }
+    
+    updateRangeSlider();
+}
+
+function stopDragging() {
+    if (!isSliderDragging) return;
+    
+    isSliderDragging = false;
+    if (activeThumb) {
+        activeThumb.style.cursor = 'grab';
+        activeThumb = null;
+    }
+    
+    // Remove event listeners
+    document.removeEventListener('mousemove', handleDrag);
+    document.removeEventListener('mouseup', stopDragging);
+    document.removeEventListener('touchmove', handleDrag);
+    document.removeEventListener('touchend', stopDragging);
+}
+
+// Range input event listeners
 minRange?.addEventListener('input', (e) => {
-    if (parseInt(e.target.value) >= parseInt(maxRange.value)) {
-        e.target.value = parseInt(maxRange.value) - 10;
+    const minValue = parseInt(e.target.value);
+    const maxValue = parseInt(maxRange.value);
+    
+    if (minValue >= maxValue) {
+        e.target.value = maxValue - 10;
     }
     updateRangeSlider();
 });
 
 maxRange?.addEventListener('input', (e) => {
-    if (parseInt(e.target.value) <= parseInt(minRange.value)) {
-        e.target.value = parseInt(minRange.value) + 10;
+    const maxValue = parseInt(e.target.value);
+    const minValue = parseInt(minRange.value);
+    
+    if (maxValue <= minValue) {
+        e.target.value = minValue + 10;
     }
     updateRangeSlider();
 });
 
 // Price input event listeners
 minPrice?.addEventListener('change', (e) => {
-    const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, 2000));
-    if (value >= parseInt(maxPrice.value)) {
-        e.target.value = parseInt(maxPrice.value) - 10;
-        return;
+    const value = Math.max(RANGE_MIN, Math.min(parseInt(e.target.value) || RANGE_MIN, RANGE_MAX));
+    const maxValue = parseInt(maxPrice.value);
+    
+    if (value >= maxValue) {
+        e.target.value = maxValue - 10;
+        minRange.value = maxValue - 10;
+    } else {
+        minRange.value = value;
     }
-    minRange.value = value;
     updateRangeSlider();
 });
 
 maxPrice?.addEventListener('change', (e) => {
-    const value = Math.max(0, Math.min(parseInt(e.target.value) || 2000, 2000));
-    if (value <= parseInt(minPrice.value)) {
-        e.target.value = parseInt(minPrice.value) + 10;
-        return;
+    const value = Math.max(RANGE_MIN, Math.min(parseInt(e.target.value) || RANGE_MAX, RANGE_MAX));
+    const minValue = parseInt(minPrice.value);
+    
+    if (value <= minValue) {
+        e.target.value = minValue + 10;
+        maxRange.value = minValue + 10;
+    } else {
+        maxRange.value = value;
     }
-    maxRange.value = value;
+    updateRangeSlider();
+});
+
+// Add drag event listeners to thumbs
+minThumb?.addEventListener('mousedown', (e) => startDragging(e, minThumb));
+maxThumb?.addEventListener('mousedown', (e) => startDragging(e, maxThumb));
+minThumb?.addEventListener('touchstart', (e) => startDragging(e, minThumb), { passive: false });
+maxThumb?.addEventListener('touchstart', (e) => startDragging(e, maxThumb), { passive: false });
+
+// Click on track to set value
+document.querySelector('.range-slider-container')?.addEventListener('click', (e) => {
+    if (isSliderDragging || e.target.classList.contains('range-thumb')) return;
+    
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = (clickX / rect.width) * 100;
+    const value = Math.round((percent / 100) * (RANGE_MAX - RANGE_MIN) + RANGE_MIN);
+    
+    // Determine which thumb to update based on click position
+    const minValue = parseInt(minRange.value);
+    const maxValue = parseInt(maxRange.value);
+    const minPercent = ((minValue - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
+    const maxPercent = ((maxValue - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
+    
+    if (percent < (minPercent + maxPercent) / 2) {
+        // Click closer to min thumb
+        const newValue = Math.min(value, maxValue - 10);
+        minRange.value = newValue;
+    } else {
+        // Click closer to max thumb
+        const newValue = Math.max(value, minValue + 10);
+        maxRange.value = newValue;
+    }
+    
     updateRangeSlider();
 });
 
