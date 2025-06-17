@@ -6,15 +6,23 @@ class VelvraState {
             categories: [],
             colors: [],
             sizes: [],
-            brands: []
+            brands: [],
+            discounts: []
         };
         this.sortBy = 'featured';
         this.viewMode = 'grid';
         this.wishlist = JSON.parse(localStorage.getItem('velvra-wishlist') || '[]');
+        this.currentPage = 1;
+        this.isFiltering = false;
+        this.filterTimeout = null;
+        this.pageCategory = window.location.pathname.includes('/men') ? 'men' : 
+                           window.location.pathname.includes('/women') ? 'women' : null;
     }
 
     updateFilter(type, value) {
-        if (Array.isArray(this.filters[type])) {
+        if (type === 'price') {
+            this.filters.price = value;
+        } else if (Array.isArray(this.filters[type])) {
             const index = this.filters[type].indexOf(value);
             if (index > -1) {
                 this.filters[type].splice(index, 1);
@@ -24,17 +32,259 @@ class VelvraState {
         } else {
             this.filters[type] = value;
         }
-        this.applyFilters();
+        
+        // Reset to first page when filters change
+        this.currentPage = 1;
+        
+        // Debounce filter application
+        clearTimeout(this.filterTimeout);
+        this.filterTimeout = setTimeout(() => {
+            this.applyFilters();
+        }, 300);
     }
 
-    applyFilters() {
-        // Simulate filtering (in real app, this would filter products)
-        console.log('Filters applied:', this.filters);
-        // Add loading animation
-        document.getElementById('productGrid').classList.add('loading');
-        setTimeout(() => {
-            document.getElementById('productGrid').classList.remove('loading');
-        }, 800);
+    async applyFilters() {
+        if (this.isFiltering) return;
+        this.isFiltering = true;
+
+        const productGrid = document.getElementById('productGrid');
+        const loadMoreSection = document.getElementById('loadMoreSection');
+        
+        // Add loading state
+        productGrid.classList.add('loading');
+        
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            params.append('page', this.currentPage);
+            
+            if (this.filters.price.min > 0) params.append('minPrice', this.filters.price.min);
+            if (this.filters.price.max < 2000) params.append('maxPrice', this.filters.price.max);
+            if (this.filters.categories.length > 0) params.append('categories', this.filters.categories.join(','));
+            if (this.filters.colors.length > 0) params.append('colors', this.filters.colors.join(','));
+            if (this.filters.brands.length > 0) params.append('brands', this.filters.brands.join(','));
+            if (this.filters.discounts.length > 0) params.append('discounts', this.filters.discounts.join(','));
+            if (this.filters.sizes.length > 0) params.append('sizes', this.filters.sizes.join(','));
+            if (this.pageCategory) params.append('category', this.pageCategory);
+            
+            // Fetch filtered products
+            const response = await fetch(`/shop/api/products?${params.toString()}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
+            }
+            
+            const data = await response.json();
+            
+            // Update product grid
+            this.renderProducts(data.products);
+            
+            // Update pagination
+            this.updatePagination(data.pagination);
+            
+            // Update results count
+            this.updateResultsCount(data.pagination);
+            
+            // Update load more section
+            this.updateLoadMoreSection(data.pagination);
+            
+            // Reset LoadMoreManager
+            if (window.loadMoreManager) {
+                window.loadMoreManager.reset();
+            }
+            
+        } catch (error) {
+            console.error('Error applying filters:', error);
+            // Show error message
+            productGrid.innerHTML = '<div class="empty-state"><p>Error loading products. Please try again.</p></div>';
+        } finally {
+            // Remove loading state
+            setTimeout(() => {
+                productGrid.classList.remove('loading');
+            }, 300);
+            this.isFiltering = false;
+        }
+    }
+
+    renderProducts(products) {
+        const productGrid = document.getElementById('productGrid');
+        
+        if (products.length === 0) {
+            productGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="100" height="100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">No products found</h3>
+                    <p class="empty-state-description">Try adjusting your filters to see more results.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Create product cards
+        productGrid.innerHTML = products.map((product, index) => {
+            const saleBadge = product.salePercentage && product.salePercentage > 0 ? 
+                `<div class="sale-badge">${product.salePercentage}%</div>` : '';
+            
+            const images = product.images && product.images.length > 0 ? 
+                product.images.map((img, i) => 
+                    `<img src="${img}" alt="${product.name}" class="product-image ${i === 0 ? 'active' : ''}" data-index="${i}">`
+                ).join('') : 
+                '<div style="position: absolute; inset: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">No Image Available</div>';
+            
+            const imageCounter = product.images && product.images.length > 1 ? 
+                `<div class="image-counter">
+                    <span class="current-image">1</span>
+                    <span class="separator">/</span>
+                    <span class="total-images">${product.images.length}</span>
+                </div>` : '';
+            
+            const colorOptions = product.colors.map(color => 
+                `<button class="color-option ${product.colors.indexOf(color) === 0 ? 'selected' : ''}" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
+            ).join('');
+            
+            const currentPrice = product.salePrice || product.price;
+            const originalPrice = product.sale ? 
+                `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
+            const saleBadgeInline = product.sale ? 
+                `<span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">${product.salePercentage}% OFF</span>` : '';
+            
+            return `
+                <article class="product-card">
+                    <button class="wishlist-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
+                    ${saleBadge}
+                    <figure class="product-image-container">
+                        <a href="/product/${product._id}" class="product-link">
+                            ${images}
+                        </a>
+                        ${imageCounter}
+                    </figure>
+                    <div class="product-info">
+                        <p class="product-brand">${product.brand}</p>
+                        <h3 class="product-name">${product.name}</h3>
+                        <div class="color-options">
+                            ${colorOptions}
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
+                            <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${currentPrice}</span>
+                            ${originalPrice}
+                            ${saleBadgeInline}
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join('');
+        
+        // Add fade-in animation to new products
+        const newProducts = productGrid.querySelectorAll('.product-card');
+        newProducts.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+        
+        // Reinitialize product features
+        this.initializeProductFeatures();
+    }
+
+    initializeProductFeatures() {
+        // Reinitialize wishlist
+        this.updateWishlistUI();
+        
+        // Reinitialize image carousels
+        document.querySelectorAll('.product-card').forEach(card => {
+            const images = card.querySelectorAll('.product-image');
+            if (images.length > 1) {
+                this.setupCarouselForCard(card, images);
+            }
+        });
+        
+        // Reinitialize color options
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const siblings = option.parentElement.querySelectorAll('.color-option');
+                siblings.forEach(sibling => sibling.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+    }
+
+    setupCarouselForCard(card, images) {
+        let currentIndex = 0;
+        let interval = null;
+        
+        card.addEventListener('mouseenter', () => {
+            interval = setInterval(() => {
+                images[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % images.length;
+                images[currentIndex].classList.add('active');
+                
+                const counter = card.querySelector('.image-counter');
+                if (counter) {
+                    counter.querySelector('.current-image').textContent = currentIndex + 1;
+                }
+            }, 2000);
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            clearInterval(interval);
+            images.forEach(img => img.classList.remove('active'));
+            images[0].classList.add('active');
+            currentIndex = 0;
+            
+            const counter = card.querySelector('.image-counter');
+            if (counter) {
+                counter.querySelector('.current-image').textContent = '1';
+            }
+        });
+    }
+
+    updatePagination(pagination) {
+        this.currentPage = pagination.currentPage;
+    }
+
+    updateResultsCount(pagination) {
+        const resultsCount = document.querySelector('.results-count');
+        if (resultsCount) {
+            resultsCount.innerHTML = `Showing <span class="count">${pagination.startItem}–${pagination.endItem}</span> of <span class="count">${pagination.totalProducts}</span> items`;
+        }
+    }
+
+    updateLoadMoreSection(pagination) {
+        const loadMoreSection = document.getElementById('loadMoreSection');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadMoreInfo = document.querySelector('.load-more-info');
+        
+        if (!loadMoreSection) return;
+        
+        if (pagination.hasMore) {
+            if (loadMoreBtn) {
+                loadMoreBtn.style.display = 'inline-block';
+            }
+            if (loadMoreInfo) {
+                loadMoreInfo.innerHTML = `Showing <span class="count">${pagination.endItem}</span> of <span class="count">${pagination.totalProducts}</span> products`;
+            }
+        } else {
+            if (loadMoreBtn) {
+                loadMoreBtn.style.display = 'none';
+            }
+            if (loadMoreInfo && pagination.totalProducts > 0) {
+                loadMoreInfo.innerHTML = `<span style="color: var(--velvra-gold); font-weight: 600;">✓ All ${pagination.totalProducts} products loaded</span>`;
+            }
+        }
     }
 
     toggleWishlist(productId) {
@@ -179,13 +429,13 @@ document.querySelectorAll('.filter-toggle').forEach(toggle => {
         if (isAnimating) return;
         
         const panel = toggle.nextElementSibling;
-        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        const icategorypanded = toggle.getAttribute('aria-expanded') === 'true';
         
         // Lock during animation
         isAnimating = true;
         
         // 🛠 Fixed: Ensure only one section is open at a time on mobile
-        if (window.innerWidth <= 768 && !isExpanded) {
+        if (window.innerWidth <= 768 && !icategorypanded) {
             // Close all other panels first
             document.querySelectorAll('.filter-panel.active').forEach(otherPanel => {
                 if (otherPanel !== panel) {
@@ -196,11 +446,11 @@ document.querySelectorAll('.filter-toggle').forEach(toggle => {
         }
         
         // Toggle current panel
-        toggle.setAttribute('aria-expanded', !isExpanded);
+        toggle.setAttribute('aria-expanded', !icategorypanded);
         panel.classList.toggle('active');
         
         // 🛠 Fixed: Smooth scroll to expanded section on mobile
-        if (!isExpanded && window.innerWidth <= 768) {
+        if (!icategorypanded && window.innerWidth <= 768) {
             setTimeout(() => {
                 toggle.scrollIntoView({ 
                     behavior: 'smooth', 
@@ -308,6 +558,11 @@ function handleDrag(e) {
     }
     
     updateRangeSlider();
+    // Trigger filter update immediately after drag
+    state.updateFilter('price', { 
+        min: parseInt(minRange.value), 
+        max: parseInt(maxRange.value) 
+    });
 }
 
 function stopDragging() {
@@ -414,7 +669,7 @@ updateRangeSlider();
 
 // ===== FILTER INTERACTIONS =====
 
-// Category checkboxes
+// category checkboxes
 document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', (e) => {
         const category = e.target.dataset.category;
@@ -434,9 +689,65 @@ document.querySelectorAll('.color-swatch').forEach(swatch => {
 // Size options
 document.querySelectorAll('.size-option').forEach(size => {
     size.addEventListener('click', (e) => {
-        const sizeValue = e.target.dataset.size;
-        e.target.classList.toggle('selected');
+        e.preventDefault();
+        e.stopPropagation();
+        const sizeValue = e.currentTarget.dataset.size;
+        
+        // Toggle selected class
+        e.currentTarget.classList.toggle('selected');
+        
+        // Update filter state
         state.updateFilter('sizes', sizeValue);
+    });
+});
+
+document.querySelectorAll('.discount-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const discount = e.target.dataset.discount;
+        
+        // Toggle selected class on parent
+        const discountItem = e.target.closest('.discount-item');
+        if (discountItem) {
+            discountItem.classList.toggle('selected');
+        }
+        
+        // Update filter state
+        state.updateFilter('discounts', discount);
+    });
+});
+
+// Also add click handler for the discount item label
+document.querySelectorAll('.discount-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        // If clicking on the checkbox itself, let the checkbox handler handle it
+        if (e.target.classList.contains('discount-checkbox')) {
+            return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const checkbox = item.querySelector('.discount-checkbox');
+        if (checkbox) {
+            // Toggle checkbox state
+            checkbox.checked = !checkbox.checked;
+            
+            // Trigger change event
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
+        }
+    });
+});
+
+// Brand filter
+document.querySelectorAll('.brand-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const brand = e.target.dataset.brand;
+        state.updateFilter('brands', brand);
     });
 });
 
@@ -1060,8 +1371,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== LOAD MORE FUNCTIONALITY =====
 class LoadMoreManager {
-    constructor() {
-        this.currentPage = 1;
+    constructor(state) {
+        this.state = state;
         this.isLoading = false;
         this.hasMore = true;
         this.loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -1075,9 +1386,20 @@ class LoadMoreManager {
 
     init() {
         if (this.loadMoreBtn) {
-            this.currentPage = parseInt(this.loadMoreBtn.dataset.currentPage) || 1;
+            // Remove any existing event listeners
+            const newBtn = this.loadMoreBtn.cloneNode(true);
+            this.loadMoreBtn.parentNode.replaceChild(newBtn, this.loadMoreBtn);
+            this.loadMoreBtn = newBtn;
+            
+            // Add new event listener
             this.loadMoreBtn.addEventListener('click', () => this.loadMore());
         }
+    }
+
+    reset() {
+        this.isLoading = false;
+        this.hasMore = true;
+        this.init();
     }
 
     async loadMore() {
@@ -1087,8 +1409,24 @@ class LoadMoreManager {
         this.updateButtonState();
 
         try {
-            const nextPage = this.currentPage + 1;
-            const response = await fetch(`/shop/api/products?page=${nextPage}`);
+            // Increment the page number
+            this.state.currentPage++;
+            
+            // Build query parameters from the state's filters
+            const params = new URLSearchParams();
+            params.append('page', this.state.currentPage);
+            
+            // Append all existing filters from the state
+            if (this.state.filters.price.min > 0) params.append('minPrice', this.state.filters.price.min);
+            if (this.state.filters.price.max < 2000) params.append('maxPrice', this.state.filters.price.max);
+            if (this.state.filters.categories.length > 0) params.append('categories', this.state.filters.categories.join(','));
+            if (this.state.filters.colors.length > 0) params.append('colors', this.state.filters.colors.join(','));
+            if (this.state.filters.brands.length > 0) params.append('brands', this.state.filters.brands.join(','));
+            if (this.state.filters.discounts.length > 0) params.append('discounts', this.state.filters.discounts.join(','));
+            if (this.state.filters.sizes.length > 0) params.append('sizes', this.state.filters.sizes.join(','));
+            if (this.state.pageCategory) params.append('category', this.state.pageCategory);
+
+            const response = await fetch(`/shop/api/products?${params.toString()}`);
             
             if (!response.ok) {
                 throw new Error('Failed to load products');
@@ -1100,7 +1438,6 @@ class LoadMoreManager {
             this.addProductsToGrid(data.products);
             
             // Update pagination state
-            this.currentPage = data.pagination.currentPage;
             this.hasMore = data.pagination.hasMore;
             
             // Update UI elements
@@ -1115,6 +1452,8 @@ class LoadMoreManager {
         } catch (error) {
             console.error('Error loading more products:', error);
             this.showError();
+            // Reset page number on error
+            this.state.currentPage--;
         } finally {
             this.isLoading = false;
             this.updateButtonState();
@@ -1139,7 +1478,7 @@ class LoadMoreManager {
                 
                 // Reinitialize carousel for this product card
                 this.initializeProductCardFeatures(productCard);
-            }, 600 + (index * 100)); // Wait for animation to complete
+            }, 600 + (index * 100));
         });
     }
 
@@ -1289,8 +1628,8 @@ class LoadMoreManager {
         
         // Create color options
         const colorOptions = product.colors.map(color => 
-            `<button class="color-option selected" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
-        ).join('');
+                `<button class="color-option selected" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
+            ).join('');
         
         // Create price display
         const currentPrice = product.salePrice || product.price;
@@ -1368,5 +1707,57 @@ class LoadMoreManager {
 
 // Initialize load more functionality
 document.addEventListener('DOMContentLoaded', () => {
-    new LoadMoreManager();
+    // Store LoadMoreManager instance globally
+    window.loadMoreManager = new LoadMoreManager(state);
+});
+
+// Update the filter event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Brand filter
+    document.querySelector('.brand-list')?.addEventListener('change', (e) => {
+        if (e.target.classList.contains('brand-checkbox')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const brand = e.target.dataset.brand;
+            state.updateFilter('brands', brand);
+        }
+    });
+
+    // Size filter
+    document.querySelector('.size-grid')?.addEventListener('click', (e) => {
+        const sizeOption = e.target.closest('.size-option');
+        if (sizeOption) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sizeValue = sizeOption.dataset.size;
+            
+            // Toggle selected class
+            sizeOption.classList.toggle('selected');
+            
+            // Update filter state
+            state.updateFilter('sizes', sizeValue);
+        }
+    });
+
+    // Price range slider
+    const updatePriceFilter = () => {
+        const min = parseInt(minRange.value);
+        const max = parseInt(maxRange.value);
+        state.updateFilter('price', { min, max });
+    };
+
+    // Add event listeners for price inputs
+    minRange?.addEventListener('input', updatePriceFilter);
+    maxRange?.addEventListener('input', updatePriceFilter);
+    minPrice?.addEventListener('change', updatePriceFilter);
+    maxPrice?.addEventListener('change', updatePriceFilter);
+
+    // Add event listeners for price slider thumbs
+    minThumb?.addEventListener('mousedown', (e) => startDragging(e, minThumb));
+    maxThumb?.addEventListener('mousedown', (e) => startDragging(e, maxThumb));
+    minThumb?.addEventListener('touchstart', (e) => startDragging(e, minThumb), { passive: false });
+    maxThumb?.addEventListener('touchstart', (e) => startDragging(e, maxThumb), { passive: false });
+
+    // Initialize the state
+    state.applyFilters();
 });

@@ -941,6 +941,7 @@ body {
     cursor: pointer;
     transition: all 0.4s var(--transition-luxury);
     background: linear-gradient(135deg, white, #fafafa);
+    position: relative;
 }
 
 .discount-item:hover {
@@ -950,23 +951,20 @@ body {
     box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
 }
 
-.discount-item.selected {
-    border-color: var(--velvra-gold);
-    background: linear-gradient(135deg, var(--velvra-gold), #f4d03f);
-    color: white;
-    box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
-}
-
 .discount-checkbox {
     width: 1.125rem;
     height: 1.125rem;
     margin-right: 0.75rem;
     accent-color: var(--velvra-gold);
+    position: relative;
+    z-index: 2;
 }
 
 .discount-label {
     font-size: 0.875rem;
     font-weight: 500;
+    position: relative;
+    z-index: 2;
 }
 
 .discount-badge {
@@ -977,11 +975,22 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 0.375rem;
+    position: relative;
+    z-index: 2;
+}
+
+.discount-item.selected {
+    border-color: var(--velvra-gold);
+    background: linear-gradient(135deg, var(--velvra-gold), #f4d03f);
+}
+
+.discount-item.selected .discount-label,
+.discount-item.selected .discount-badge {
+    color: white;
 }
 
 .discount-item.selected .discount-badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(26, 26, 26, 0.1);
 }
 
 /* ===== PRODUCT GRID ===== */
@@ -1332,6 +1341,7 @@ body {
     grid-column: 1 / -1;
     text-align: center;
     padding: 5rem 2rem;
+    animation: fadeIn 0.6s ease;
 }
 
 .empty-state-icon {
@@ -2263,4 +2273,81 @@ select:focus {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* Loading state for filtered products */
+.product-grid.loading {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.product-grid.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+/* Smooth fade-in for filtered products */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced selected states for filters */
+.filter-checkbox:checked + .filter-option-label {
+    font-weight: 600;
+    color: var(--velvra-charcoal);
+}
+
+.brand-checkbox:checked + span {
+    font-weight: 600;
+    color: var(--velvra-gold);
+}
+
+.discount-checkbox:checked ~ .discount-label {
+    font-weight: 600;
+    color: white;
+}
+
+.discount-item.selected .discount-checkbox {
+    accent-color: var(--velvra-charcoal);
+}
+
+.discount-item.selected .discount-label,
+.discount-item.selected .discount-badge {
+    color: white;
+}
+
+/* Active filter indicators */
+.filter-section.has-active-filters .filter-toggle h3::after {
+    content: '•';
+    color: var(--velvra-gold);
+    margin-left: 0.5rem;
+    font-size: 1.2em;
+}
+
+/* Smooth transitions for filter changes */
+.product-card {
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* Mobile optimizations for filters */
+@media (max-width: 768px) {
+    .filter-panel {
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .filter-panel.active {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
