@@ -34,11 +34,11 @@
                         <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"></path>
                         </svg>
-                        <span class="absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                        <span class="cart-count absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center"><%= numberOfCartItems.items.length %></span>
                     </div>
                 </a>
                     
-                    <!-- Profile Dropdown -->
+                    <!-- Dashboard Dropdown -->
                     <div class="relative group">
                         <button class="text-stone-700 hover:text-stone-900 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,11 +46,11 @@
                             </svg>
                         </button>
                         
-                        <!-- Dropdown Menu -->
+                        <!-- Profile Menu -->
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
                             <div class="py-2">
                                 <% if (currentUser) { %>
-                                    <a href="/auth/me" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Profile</a>
+                                    <a href="/dashboard" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Dashboard</a>
                                     <a href="/auth/logout" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Logout</a>
                                 <% } else { %>
                                 <a href="/auth/signup" class="block px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors">Signup</a>
@@ -61,7 +61,7 @@
                                         <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"></path>
                                         </svg>
-                                        <span class="absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                                        <span class="cart-count absolute -top-2 -right-2 bg-velvra-gold text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center"><%= numberOfCartItems.items.length %></span>
                                     </div>
                                     Shopping Cart
                                 </a>                                
@@ -111,7 +111,7 @@
             
             <div class="border-t border-stone-200 my-4"></div>
             <% if (currentUser) { %>
-            <a href="/auth/me" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Profile</a>
+            <a href="/dashboard" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Dashboard</a>
             <a href="/auth/logout" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Logout</a>
             <% } else { %>
             <a href="/auth/signup" class="block py-2 text-stone-700 hover:text-stone-900 hover:bg-stone-50 px-2 rounded transition-colors">Signup</a>

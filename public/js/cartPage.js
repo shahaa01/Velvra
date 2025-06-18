@@ -157,6 +157,13 @@ class VelvraCart {
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
 
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
+
         } catch (error) {
             console.error('Error updating quantity:', error);
             this.showErrorMessage(error.message || 'Failed to update quantity');
@@ -287,6 +294,13 @@ class VelvraCart {
 
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
+
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
 
             // Remove from DOM after animation completes
             setTimeout(() => {

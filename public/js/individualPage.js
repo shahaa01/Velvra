@@ -253,14 +253,6 @@ function initializeEventListeners() {
             if (data.action === 'added') {
                 addToCartBtn.classList.add('in-cart');
                 addToCartBtn.querySelector('.cartText').textContent = '✔️ Added to Cart';            
-                // Show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Added!',
-                    text: 'Item has been added to your cart.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
             } else {
                 addToCartBtn.classList.remove('in-cart');
                 addToCartBtn.querySelector('.cartText').textContent = 'Add to Cart';
@@ -270,17 +262,14 @@ function initializeEventListeners() {
                     icon: 'success',
                     title: 'Removed!',
                     text: 'Item has been removed from your cart.',
-                    timer: 1500,
+                    timer: 800,
                     showConfirmButton: false
                 });
             }
 
-            // Update cart count if element exists
-            const cartCount = document.querySelector('.cart-count');
-            if (cartCount) {
-                cartCount.textContent = data.cartCount;
-                cartCount.classList.add('animate-bounce');
-                setTimeout(() => cartCount.classList.remove('animate-bounce'), 1000);
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate(data);
             }
 
         } catch (error) {
@@ -332,29 +321,18 @@ function initializeEventListeners() {
             buyNowBtn.disabled = true;
             buyNowBtn.textContent = 'Processing...';
 
-            // Add to cart and redirect to checkout
-            const response = await fetch('/cart/toggle', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    productId: buyNowBtn.dataset.productId,
-                    size: productState.selectedSize,
-                    color: productState.selectedColor,
-                    quantity: productState.quantity
-                })
+            // Redirect to buy now checkout with product details
+            const params = new URLSearchParams({
+                productId: buyNowBtn.dataset.productId,
+                size: productState.selectedSize,
+                color: productState.selectedColor,
+                quantity: productState.quantity
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to add item to cart');
-            }
-
-            // Redirect to checkout
-            window.location.href = '/checkout';
+            window.location.href = `/payment/buyNow?${params.toString()}`;
 
         } catch (error) {
-            console.error('Cart operation failed:', error);
+            console.error('Buy now failed:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Oops!',

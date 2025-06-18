@@ -3,13 +3,23 @@ let basePrice = 24500;
 let discount = 0;
 let addressSaved = false;
 
+// Check if this is a buy now order
+const urlParams = new URLSearchParams(window.location.search);
+const isBuyNow = urlParams.has('productId') && urlParams.has('size') && urlParams.has('color') && urlParams.has('quantity');
+
 function updateQuantity(change) {
+    // Only allow quantity updates for cart orders, not buy now
+    if (isBuyNow) return;
+    
     quantity = Math.max(1, quantity + change);
     document.getElementById('quantity').textContent = quantity;
     updatePrices();
 }
 
 function updatePrices() {
+    // Only update prices for cart orders, not buy now
+    if (isBuyNow) return;
+    
     const subtotal = basePrice * quantity;
     const total = subtotal - discount;
     
@@ -186,7 +196,16 @@ function updateAddressList(addresses) {
     }
 
     addressList.innerHTML = addresses.map((address) => `
-        <div class="p-4 border ${address.defaultShipping ? 'border-gold-500 bg-gold-50' : 'border-gray-200'} rounded-xl transition-all duration-300">
+        <div class="address-card p-4 border ${address.defaultShipping ? 'border-gold-500 bg-gold-50 default-shipping' : 'border-gray-200'} rounded-xl transition-all duration-300 cursor-pointer"
+             id="address-${address._id}"
+             data-address-id="${address._id}"
+             data-name="${address.name}"
+             data-phone="${address.phone}"
+             data-street="${address.street}"
+             data-city="${address.city}"
+             data-state="${address.state}"
+             data-postal-code="${address.postalCode}"
+             onclick="selectAddress('${address._id}')">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
@@ -201,7 +220,7 @@ function updateAddressList(addresses) {
                         ${address.city}, ${address.state} ${address.postalCode}
                     </p>
                 </div>
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2" onclick="event.stopPropagation()">
                     <button onclick="editAddress('${address._id}')" class="text-sm text-gray-500 hover:text-gray-700 touch-scale">
                         Edit
                     </button>
@@ -297,6 +316,12 @@ async function loadAddresses() {
             updateAddressList(data.addresses);
             if (data.addresses.length > 0) {
                 addressSaved = true;
+                
+                // Auto-select default address
+                const defaultAddress = data.addresses.find(addr => addr.defaultShipping);
+                if (defaultAddress) {
+                    selectAddress(defaultAddress._id);
+                }
             }
         }
     } catch (error) {
@@ -319,13 +344,32 @@ document.getElementById('applyBtn').addEventListener('click', () => {
     const code = couponInput.value.trim().toUpperCase();
     
     if (code === 'VELVRA20') {
-        discount = Math.floor(basePrice * quantity * 0.2);
+        if (isBuyNow) {
+            // For buy now, get the price from the page
+            const subtotalElement = document.getElementById('subtotal');
+            const subtotalText = subtotalElement.textContent.replace('₹', '').replace(',', '');
+            const currentSubtotal = parseInt(subtotalText);
+            discount = Math.floor(currentSubtotal * 0.2);
+        } else {
+            discount = Math.floor(basePrice * quantity * 0.2);
+        }
+        
         document.getElementById('discountAmount').textContent = discount.toLocaleString();
         document.getElementById('discountRow').classList.remove('hidden');
         message.textContent = 'Coupon applied successfully!';
         message.className = 'mt-3 text-sm text-green-600 fade-in';
         message.classList.remove('hidden');
-        updatePrices();
+        
+        if (!isBuyNow) {
+            updatePrices();
+        } else {
+            // Update total for buy now
+            const subtotalElement = document.getElementById('subtotal');
+            const subtotalText = subtotalElement.textContent.replace('₹', '').replace(',', '');
+            const currentSubtotal = parseInt(subtotalText);
+            const total = currentSubtotal - discount;
+            document.getElementById('totalPrice').textContent = `₹${total.toLocaleString()}`;
+        }
     } else if (code) {
         message.textContent = 'Invalid coupon code';
         message.className = 'mt-3 text-sm text-red-600 fade-in';
@@ -339,13 +383,15 @@ document.querySelectorAll('.touch-scale').forEach(el => {
 });
 
 // Quantity Controls
-document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
-    button.addEventListener('click', async function() {
-        const cartItemId = this.dataset.cartItemId;
-        const change = this.classList.contains('increase-btn') ? 1 : -1;
-        await updateQuantity(cartItemId, change);
+if (!isBuyNow) {
+    document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            const cartItemId = this.dataset.cartItemId;
+            const change = this.classList.contains('increase-btn') ? 1 : -1;
+            await updateQuantity(cartItemId, change);
+        });
     });
-});
+}
 
 async function updateQuantity(cartItemId, change) {
     try {
@@ -412,4 +458,18 @@ function updateCartUI(cart) {
     // Update cart totals
     document.getElementById('subtotal').textContent = `₹${cart.total.toLocaleString()}`;
     document.getElementById('totalPrice').textContent = `₹${cart.total.toLocaleString()}`;
+}
+
+// Function to select address
+function selectAddress(addressId) {
+    // Remove active state from all address cards
+    document.querySelectorAll('.address-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Add active state to selected card
+    const selectedCard = document.getElementById(`address-${addressId}`);
+    if (selectedCard) {
+        selectedCard.classList.add('active');
+    }
 }

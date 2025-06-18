@@ -1,84 +1,253 @@
 let selectedPayment = null;
+let selectedAddress = null;
 let codConfirmed = false;
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    let addresses = window.userAddresses || [];
+    if (!addresses.length) {
+        // Fallback to DOM if window.userAddresses is not available
+        const addressCards = document.querySelectorAll('.address-card');
+        addresses = Array.from(addressCards).map(card => ({
+            _id: card.dataset.addressId,
+            defaultShipping: card.classList.contains('default-shipping'),
+        }));
+    }
+    if (addresses.length === 1) {
+        selectedAddress = addresses[0]._id || addresses[0].id;
+        selectAddress(selectedAddress);
+    } else if (addresses.length > 1) {
+        const defaultAddr = addresses.find(addr => addr.defaultShipping);
+        if (defaultAddr) {
+            selectedAddress = defaultAddr._id || defaultAddr.id;
+            selectAddress(selectedAddress);
+        } else {
+            selectedAddress = addresses[0]._id || addresses[0].id;
+            selectAddress(selectedAddress);
+        }
+    }
+});
 
 function selectPayment(method) {
     selectedPayment = method;
     
-    // Update UI
+    // Remove active state from all payment cards
     document.querySelectorAll('.payment-card').forEach(card => {
-        card.classList.remove('selected');
+        card.classList.remove('active');
         card.querySelector('.payment-check').classList.add('hidden');
     });
     
+    // Add active state to selected card
     const selectedCard = document.querySelector(`input[value="${method}"]`).closest('.payment-card');
-    selectedCard.classList.add('selected');
+    selectedCard.classList.add('active');
     selectedCard.querySelector('.payment-check').classList.remove('hidden');
     
-    // Show benefit for digital payments
-    const benefitEl = document.getElementById('paymentBenefit');
-    if (method !== 'cod') {
-        benefitEl.classList.remove('hidden');
-        benefitEl.classList.add('slide-up');
+    // Show/hide payment benefit
+    const benefitDiv = document.getElementById('paymentBenefit');
+    if (method === 'cod') {
+        benefitDiv.classList.add('hidden');
     } else {
-        benefitEl.classList.add('hidden');
+        benefitDiv.classList.remove('hidden');
     }
-    
-    // Update button state
-    // updateConfirmButton();
 }
 
-// function updateConfirmButton() {
-//     const btn = document.getElementById('confirmBtn');
-//     if (selectedPayment) {
-//         btn.classList.remove('opacity-50');
-//         btn.disabled = false;
-//     } else {
-//         btn.classList.add('opacity-50');
-//         btn.disabled = true;
-//     }
-// }
-
-function processPayment() {
-    if (!selectedPayment) return;
+function selectAddress(addressId) {
+    selectedAddress = addressId;
     
-    if (selectedPayment === 'cod' && !codConfirmed) {
-        showCodModal();
+    // Remove active state from all address cards
+    document.querySelectorAll('.address-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Add active state to selected card
+    const selectedCard = document.getElementById(`address-${addressId}`);
+    selectedCard.classList.add('active');
+}
+
+// Process payment and create order
+async function processPayment() {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const originalText = confirmBtn.innerHTML;
+    
+    // Validate payment method
+    if (!selectedPayment) {
+        showNotification('Please select a payment method', 'error');
         return;
     }
     
-    const btn = document.getElementById('confirmBtn');
-    btn.innerHTML = '<span class="loading-spinner"></span> Processing...';
-    btn.disabled = true;
+    // Check if there are any addresses available
+    const addressCards = document.querySelectorAll('.address-card');
+    if (addressCards.length === 0) {
+        showNotification('Please add a shipping address first', 'error');
+        return;
+    }
     
-    // Simulate payment processing
-    setTimeout(() => {
-        btn.innerHTML = '<svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Payment Successful!';
-        btn.classList.remove('gold-gradient');
-        btn.classList.add('bg-green-500');
+    // If no address is selected, auto-select the first/default one
+    if (!selectedAddress) {
+        const defaultAddress = document.querySelector('.address-card.default-shipping');
+        if (defaultAddress) {
+            selectedAddress = defaultAddress.dataset.addressId;
+            selectAddress(selectedAddress);
+        } else {
+            selectedAddress = addressCards[0].dataset.addressId;
+            selectAddress(selectedAddress);
+        }
+    }
+    
+    // Show loading state
+    confirmBtn.innerHTML = '<span class="relative z-10">Processing...</span>';
+    confirmBtn.disabled = true;
+    
+    try {
+        // Get address data
+        let shippingAddress;
+        if (typeof selectedAddress === 'string') {
+            // Address ID was selected, get the address data
+            const addressCard = document.getElementById(`address-${selectedAddress}`);
+            shippingAddress = {
+                name: addressCard.dataset.name,
+                phone: addressCard.dataset.phone,
+                street: addressCard.dataset.street,
+                city: addressCard.dataset.city,
+                state: addressCard.dataset.state,
+                postalCode: addressCard.dataset.postalCode
+            };
+        } else {
+            // Address object was already selected
+            shippingAddress = selectedAddress;
+        }
         
-        // Redirect after success
+        // Determine if this is a buy now order or cart order
+        const urlParams = new URLSearchParams(window.location.search);
+        const isBuyNow = urlParams.has('productId') && urlParams.has('size') && urlParams.has('color') && urlParams.has('quantity');
+        
+        let response;
+        if (isBuyNow) {
+            // Buy Now order
+            response = await fetch('/payment/create-buyNow-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    paymentMethod: selectedPayment,
+                    shippingAddress: shippingAddress,
+                    productId: urlParams.get('productId'),
+                    size: urlParams.get('size'),
+                    color: urlParams.get('color'),
+                    quantity: urlParams.get('quantity')
+                })
+            });
+        } else {
+            // Cart order
+            response = await fetch('/payment/create-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    paymentMethod: selectedPayment,
+                    shippingAddress: shippingAddress
+                })
+            });
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Order created successfully!', 'success');
+            
+            // Redirect based on payment method
+            if (selectedPayment === 'cod') {
+                // For COD, redirect to order confirmation
+                setTimeout(() => {
+                    window.location.href = `/dashboard/orders`;
+                }, 1500);
+            } else {
+                // For digital payments, redirect to payment gateway
+                setTimeout(() => {
+                    window.location.href = `/payment/gateway/${result.order._id}`;
+                }, 1500);
+            }
+        } else {
+            showNotification(result.error || 'Failed to create order', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error creating order:', error);
+        showNotification('An error occurred while creating your order', 'error');
+    } finally {
+        // Reset button state
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+    }
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
+    
+    // Set background color based on type
+    if (type === 'success') {
+        notification.className += ' bg-green-500 text-white';
+    } else if (type === 'error') {
+        notification.className += ' bg-red-500 text-white';
+    } else {
+        notification.className += ' bg-blue-500 text-white';
+    }
+    
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
         setTimeout(() => {
-            btn.innerHTML = 'Redirecting to order...';
-        }, 1500);
-    }, 2000);
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
 function toggleAccordion(index) {
-    const contents = document.querySelectorAll('.accordion-content');
+    const accordionItems = document.querySelectorAll('.accordion-content');
     const arrows = document.querySelectorAll('.accordion-arrow');
     
-    contents[index].classList.toggle('open');
-    arrows[index].classList.toggle('rotate-180');
+    // Toggle the clicked item
+    const item = accordionItems[index];
+    const arrow = arrows[index];
+    
+    if (item.style.maxHeight) {
+        item.style.maxHeight = null;
+        arrow.style.transform = 'rotate(0deg)';
+    } else {
+        // Close all other items
+        accordionItems.forEach((otherItem, otherIndex) => {
+            if (otherIndex !== index) {
+                otherItem.style.maxHeight = null;
+                arrows[otherIndex].style.transform = 'rotate(0deg)';
+            }
+        });
+        
+        // Open the clicked item
+        item.style.maxHeight = item.scrollHeight + 'px';
+        arrow.style.transform = 'rotate(180deg)';
+    }
 }
 
 function showCodModal() {
-    document.getElementById('codModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
+    document.getElementById('codModal').classList.remove('hidden');
 }
 
 function closeCodModal() {
-    document.getElementById('codModal').classList.remove('active');
-    document.body.style.overflow = '';
+    document.getElementById('codModal').classList.add('hidden');
 }
 
 function confirmCod() {
@@ -87,32 +256,18 @@ function confirmCod() {
     processPayment();
 }
 
-// Initialize
-// updateConfirmButton();
-
-// Add touch feedback
-document.querySelectorAll('.touch-scale').forEach(el => {
-    el.addEventListener('touchstart', () => el.classList.add('scale-95'));
-    el.addEventListener('touchend', () => el.classList.remove('scale-95'));
-});
-
-// Prevent double tap zoom on mobile
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
-    }
-    lastTouchEnd = now;
-}, false);
-
-// Add visual feedback for payment selection
-document.querySelectorAll('.payment-card').forEach(card => {
-    card.addEventListener('click', function() {
-        this.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-            this.style.transform = '';
-        }, 100);
+// Add touch scale effect
+document.addEventListener('DOMContentLoaded', function() {
+    const touchElements = document.querySelectorAll('.touch-scale');
+    
+    touchElements.forEach(element => {
+        element.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
+        
+        element.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
     });
 });
 

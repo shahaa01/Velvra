@@ -4,6 +4,18 @@ const Cart = require('../models/cart');
 const Product = require('../models/product');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
 
+// Get cart count
+router.get('/count', isLoggedIn, async (req, res) => {
+    try {
+        const cart = await Cart.findOne({ user: req.user._id });
+        const count = cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching cart count:', error);
+        res.status(500).json({ error: 'Failed to fetch cart count' });
+    }
+});
+
 // Get cart
 router.get('/', isLoggedIn, async (req, res) => {
     try {

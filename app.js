@@ -76,6 +76,7 @@ app.use('/seller', require('./routes/sellerRoute'));
 app.use('/cart', cartRoutes);
 app.use('/address', addressRoutes);
 app.use('/payment', require('./routes/paymentRoutes'));
+app.use('/dashboard', require('./routes/dashboard'));
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

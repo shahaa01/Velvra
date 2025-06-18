@@ -90,6 +90,18 @@ input:focus {
     border-color: #D4AF37;
 }
 
+/* Address card active state */
+.address-card.active {
+    border-color: #D4AF37;
+    background-color: #FEF7E0;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.address-card:hover {
+    border-color: #D4AF37;
+    background-color: #FEF7E0;
+}
+
 .loading-dots::after {
     content: '';
     animation: dots 1.5s steps(4) infinite;
