@@ -74,6 +74,9 @@
                             <button class="trackOrder text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]" data-order-id="<%= order._id %>" data-order-status="<%= order.orderStatus %>">
                                 Track Order
                             </button>
+                            <button onclick="downloadInvoice('<%= order._id %>')" class="text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                Download Invoice
+                            </button>
                             <% if (order.orderStatus === 'delivered') { %>
                                 <button class="rateProduct text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
                                     Rate Product
@@ -126,6 +129,93 @@ document.querySelectorAll('.trackOrder').forEach(btn => {
         showOrderTracking(orderId, orderStatus);
     });
 });
+
+// Function to download invoice
+async function downloadInvoice(orderId) {
+    try {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Generating...';
+        button.disabled = true;
+
+        // Make the request to download the PDF
+        const response = await fetch(`/dashboard/orders/${orderId}/invoice`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/pdf',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate invoice');
+        }
+
+        // Get the blob from the response
+        const blob = await response.blob();
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `invoice-${orderId}.pdf`;
+        
+        // Trigger the download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Show success message
+        showNotification('Invoice downloaded successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error downloading invoice:', error);
+        showNotification('Failed to download invoice. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        const button = event.target;
+        button.textContent = 'Download Invoice';
+        button.disabled = false;
+    }
+}
+
+// Function to show notifications
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
+    
+    // Set background color based on type
+    if (type === 'success') {
+        notification.className += ' bg-green-500 text-white';
+    } else if (type === 'error') {
+        notification.className += ' bg-red-500 text-white';
+    } else {
+        notification.className += ' bg-blue-500 text-white';
+    }
+    
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
 
 function showOrderTracking(orderId, orderStatus) {
     // Helper function to determine if a step is completed, current, or pending

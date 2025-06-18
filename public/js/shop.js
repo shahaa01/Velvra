@@ -17,6 +17,11 @@ class VelvraState {
         this.filterTimeout = null;
         this.pageCategory = window.location.pathname.includes('/men') ? 'men' : 
                            window.location.pathname.includes('/women') ? 'women' : null;
+        
+        // Store search query if on search page
+        this.isSearchPage = window.location.pathname.includes('/search/products');
+        const urlParams = new URLSearchParams(window.location.search);
+        this.searchQuery = urlParams.get('q');
     }
 
     updateFilter(type, value) {
@@ -55,9 +60,10 @@ class VelvraState {
         
         try {
             // Build query parameters
+            // Build query parameters
             const params = new URLSearchParams();
             params.append('page', this.currentPage);
-            
+
             if (this.filters.price.min > 0) params.append('minPrice', this.filters.price.min);
             if (this.filters.price.max < 10000) params.append('maxPrice', this.filters.price.max);
             if (this.filters.categories.length > 0) params.append('categories', this.filters.categories.join(','));
@@ -66,9 +72,16 @@ class VelvraState {
             if (this.filters.discounts.length > 0) params.append('discounts', this.filters.discounts.join(','));
             if (this.filters.sizes.length > 0) params.append('sizes', this.filters.sizes.join(','));
             if (this.pageCategory) params.append('category', this.pageCategory);
-            
+
+            // Determine which endpoint to use
+            let endpoint = '/shop/api/products';
+            if (this.isSearchPage && this.searchQuery) {
+                endpoint = '/search/api/products';
+                params.append('q', this.searchQuery);
+            }
+
             // Fetch filtered products
-            const response = await fetch(`/shop/api/products?${params.toString()}`);
+            const response = await fetch(`${endpoint}?${params.toString()}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch products');
@@ -1461,7 +1474,14 @@ class LoadMoreManager {
             if (this.state.filters.sizes.length > 0) params.append('sizes', this.state.filters.sizes.join(','));
             if (this.state.pageCategory) params.append('category', this.state.pageCategory);
 
-            const response = await fetch(`/shop/api/products?${params.toString()}`);
+            // Determine which endpoint to use
+            let endpoint = '/shop/api/products';
+            if (this.state.isSearchPage && this.state.searchQuery) {
+                endpoint = '/search/api/products';
+                params.append('q', this.state.searchQuery);
+            }
+
+            const response = await fetch(`${endpoint}?${params.toString()}`);
             
             if (!response.ok) {
                 throw new Error('Failed to load products');
@@ -1794,5 +1814,9 @@ document.addEventListener('DOMContentLoaded', () => {
     maxThumb?.addEventListener('touchstart', (e) => startDragging(e, maxThumb), { passive: false });
 
     // Initialize the state
+// Only apply filters if NOT on a search results page
+const isSearchPage = window.location.pathname.includes('/search/products');
+if (!isSearchPage) {
     state.applyFilters();
+}
 });

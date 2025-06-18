@@ -47,8 +47,113 @@ const renderShop = async (req, res) => {
 };
 
 // Helper function to build filter query
-const buildFilterQuery = (filters) => {
+// const buildFilterQuery = (filters) => {
+//     const andConditions = [];
+    
+//     // Price filter
+//     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+//         andConditions.push({
+//             $or: [
+//                 {
+//                     salePrice: {
+//                         $gte: filters.minPrice || 0,
+//                         $lte: filters.maxPrice || Number.MAX_VALUE
+//                     }
+//                 },
+//                 {
+//                     salePrice: { $exists: false }, // For products without a salePrice
+//                     price: {
+//                         $gte: filters.minPrice || 0,
+//                         $lte: filters.maxPrice || Number.MAX_VALUE
+//                     }
+//                 }
+//             ]
+//         });
+//     }
+    
+//     // Category filter (using tags)
+//     if (filters.categories && filters.categories.length > 0) {
+//         andConditions.push({ tags: { $in: filters.categories } });
+//     }
+    
+//     // Color filter
+//     if (filters.colors && filters.colors.length > 0) {
+//         andConditions.push({ 'colors.name': { $in: filters.colors } });
+//     }
+    
+//     // Brand filter
+//     if (filters.brands && filters.brands.length > 0) {
+//         andConditions.push({ brand: { $in: filters.brands } });
+//     }
+    
+//     // Size filter
+//     if (filters.sizes && filters.sizes.length > 0) {
+//         andConditions.push({ sizes: { $in: filters.sizes } });
+//     }
+    
+//     // Discount filter
+//     if (filters.discounts && filters.discounts.length > 0) {
+//         const discountConditions = filters.discounts.map(discount => {
+//             const discountValue = parseInt(discount);
+//             // Only add condition if discountValue is a valid number
+//             if (!isNaN(discountValue)) {
+//                 return { sale: true, salePercentage: { $gte: discountValue } };
+//             }
+//             return null; // Return null for invalid values
+//         }).filter(condition => condition !== null); // Filter out nulls
+        
+//         if (discountConditions.length > 0) {
+//             // Combine all discount conditions with an OR, and then push as one AND condition
+//             andConditions.push({ $or: discountConditions });
+//         }
+//     }
+    
+//     // Specific category (men/women)
+//     if (filters.category) {
+//         andConditions.push({ category: filters.category });
+//     }
+    
+//     // If there are conditions, combine them with $and
+//     if (andConditions.length > 0) {
+//         return { $and: andConditions };
+//     } else {
+//         // If no filters, return an empty query (matches all documents)
+//         return {};
+//     }
+// };
+
+// Add this function after the buildFilterQuery function in shopRoute.js
+
+// Helper function to handle search queries
+const handleSearchQuery = (searchQuery) => {
+    if (!searchQuery) return null;
+    
+    // Create regex for partial matching
+    const searchRegex = new RegExp(searchQuery.split(' ').join('|'), 'i');
+    
+    return {
+        $or: [
+            { name: searchRegex },
+            { brand: searchRegex },
+            { category: searchRegex },
+            { tags: { $in: [searchRegex] } },
+            { description: searchRegex }
+        ]
+    };
+};
+
+// Update the existing buildFilterQuery function to include search
+const buildFilterQuery = (filters, searchQuery) => {
     const andConditions = [];
+    
+    // Add search conditions if search query exists
+    const searchConditions = handleSearchQuery(searchQuery);
+    if (searchConditions) {
+        andConditions.push(searchConditions);
+    }
+    
+    // ... rest of your existing filter conditions (price, category, etc.)
+    // Keep all your existing filter code here
     
     // Price filter
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -61,7 +166,7 @@ const buildFilterQuery = (filters) => {
                     }
                 },
                 {
-                    salePrice: { $exists: false }, // For products without a salePrice
+                    salePrice: { $exists: false },
                     price: {
                         $gte: filters.minPrice || 0,
                         $lte: filters.maxPrice || Number.MAX_VALUE
@@ -95,15 +200,13 @@ const buildFilterQuery = (filters) => {
     if (filters.discounts && filters.discounts.length > 0) {
         const discountConditions = filters.discounts.map(discount => {
             const discountValue = parseInt(discount);
-            // Only add condition if discountValue is a valid number
             if (!isNaN(discountValue)) {
                 return { sale: true, salePercentage: { $gte: discountValue } };
             }
-            return null; // Return null for invalid values
-        }).filter(condition => condition !== null); // Filter out nulls
+            return null;
+        }).filter(condition => condition !== null);
         
         if (discountConditions.length > 0) {
-            // Combine all discount conditions with an OR, and then push as one AND condition
             andConditions.push({ $or: discountConditions });
         }
     }
@@ -117,7 +220,6 @@ const buildFilterQuery = (filters) => {
     if (andConditions.length > 0) {
         return { $and: andConditions };
     } else {
-        // If no filters, return an empty query (matches all documents)
         return {};
     }
 };

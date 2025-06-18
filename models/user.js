@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: [true, 'Last name is required'],
+    required: false,
     trim: true,
     minlength: 2,
     maxlength: 50
@@ -67,6 +67,23 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+\@.+\..+/, 'Please enter a valid email']
   },
+  // Google OAuth fields
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  googleProfile: {
+    picture: String,
+    locale: String,
+    verified_email: Boolean
+  },
+  // Authentication method
+  authMethod: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
   addresses: [addressSchema],
   createdAt: {
     type: Date,
@@ -78,8 +95,73 @@ const userSchema = new mongoose.Schema({
 userSchema.plugin(passportLocalMongoose, { 
   usernameField: 'email',
   usernameUnique: true,
-  usernameLowerCase: true
+  usernameLowerCase: true,
+  // Disable username field for Google OAuth users
+  usernameQueryFields: ['email', 'googleId']
 });
+
+// Pre-save middleware to ensure username is always set
+userSchema.pre('save', function(next) {
+  // If username is not set or is null, set it to email
+  if (!this.username || this.username === null) {
+    this.username = this.email;
+  }
+  next();
+});
+
+// Static method to find or create Google user
+userSchema.statics.findOrCreateGoogleUser = async function(profile, req) {
+  try {
+    // First, try to find user by Google ID
+    let user = await this.findOne({ googleId: profile.id });
+    
+    if (user) {
+      return { user, isNew: false };
+    }
+    
+    // If not found by Google ID, try to find by email
+    user = await this.findOne({ email: profile.emails[0].value });
+    
+    if (user) {
+      // User exists but doesn't have Google ID, link the accounts
+      user.googleId = profile.id;
+      user.googleProfile = {
+        picture: profile.photos[0]?.value,
+        locale: profile._json.locale,
+        verified_email: profile._json.email_verified
+      };
+      user.authMethod = 'google';
+      // Ensure username is set
+      if (!user.username) {
+        user.username = user.email;
+      }
+      await user.save();
+      return { user, isNew: false };
+    }
+    
+    // Create new user
+    const newUser = new this({
+      googleId: profile.id,
+      firstName: profile.name.givenName || profile.displayName.split(' ')[0] || 'User',
+      lastName: profile.name.familyName || profile.displayName.split(' ').slice(1).join(' ') || '',
+      email: profile.emails[0].value,
+      googleProfile: {
+        picture: profile.photos[0]?.value,
+        locale: profile._json.locale,
+        verified_email: profile._json.email_verified
+      },
+      authMethod: 'google',
+      // Explicitly set username to email
+      username: profile.emails[0].value
+    });
+    
+    await newUser.save();
+    return { user: newUser, isNew: true };
+  } catch (error) {
+    console.error('Error in findOrCreateGoogleUser:', error);
+    throw error;
+  }
+};
 
 // Method to add a new address
 userSchema.methods.addAddress = async function(addressData) {

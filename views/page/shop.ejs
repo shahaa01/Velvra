@@ -10,29 +10,58 @@
                 <ol>
                     <li><a href="/home">Home</a></li>
                     <li class="separator">/</li>
-                    <li><a href="/shop">Shop</a></li>
-                    <li class="separator">/</li>
-                    <li class="current"><%= heroTitle %></li>
+                    <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                        <li><a href="/shop">Shop</a></li>
+                        <li class="separator">/</li>
+                        <li class="current">Search Results</li>
+                    <% } else { %>
+                        <li><a href="/shop">Shop</a></li>
+                        <li class="separator">/</li>
+                        <li class="current"><%= heroTitle %></li>
+                    <% } %>
                 </ol>
             </nav>
             
             <!-- Hero Text -->
-            <h1 class="hero-title">
-                <%= heroTitle %><br>
-                <span class="hero-subtitle">Collection</span>
-            </h1>
-            <p class="hero-description">
-                <%= heroDescription %>
-            </p>
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                <h1 class="hero-title">
+                    Search Results<br>
+                    <span class="hero-subtitle">for "<%= searchQuery %>"</span>
+                </h1>
+                <p class="hero-description">
+                    <% if (hasResults) { %>
+                        Found <strong><%= totalProducts %></strong> products matching your search
+                    <% } else { %>
+                        No products found matching your search. Try different keywords or browse our categories.
+                    <% } %>
+                </p>
+            <% } else { %>
+                <h1 class="hero-title">
+                    <%= heroTitle %><br>
+                    <span class="hero-subtitle">Collection</span>
+                </h1>
+                <p class="hero-description">
+                    <%= heroDescription %>
+                </p>
+            <% } %>
             
             <!-- CTA Buttons -->
             <div class="hero-buttons">
-                <button class="premium-btn-primary">
-                    Explore New Arrivals
-                </button>
-                <button class="premium-btn-secondary">
-                    View Lookbook
-                </button>
+                <% if (typeof isSearch !== 'undefined' && isSearch && !hasResults) { %>
+                    <button class="premium-btn-primary" onclick="window.location.href='/shop'">
+                        Browse All Products
+                    </button>
+                    <button class="premium-btn-secondary" onclick="window.location.href='/shop/men'">
+                        Shop Men's Collection
+                    </button>
+                <% } else { %>
+                    <button class="premium-btn-primary">
+                        Explore New Arrivals
+                    </button>
+                    <button class="premium-btn-secondary">
+                        View Lookbook
+                    </button>
+                <% } %>
             </div>
         </div>
     </div>
@@ -43,7 +72,11 @@
     <div class="sort-bar-content">
         <!-- Results Count -->
         <div class="results-count">
-            Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> items
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> results
+            <% } else { %>
+                Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> items
+            <% } %>
         </div>
         
         <!-- Sort Controls -->
@@ -437,8 +470,13 @@
 
         <!-- Collection Header -->
         <div class="collection-header">
-            <p class="collection-season">Spring/Summer <%= new Date().getFullYear() %></p>
-            <h2 class="collection-title">Curated For You</h2>
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                <p class="collection-season">Search Results</p>
+                <h2 class="collection-title">Results for "<%= searchQuery %>"</h2>
+            <% } else { %>
+                <p class="collection-season">Spring/Summer <%= new Date().getFullYear() %></p>
+                <h2 class="collection-title">Curated For You</h2>
+            <% } %>
         </div>
 
         <!-- Product Grid -->

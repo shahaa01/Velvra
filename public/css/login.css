@@ -51,3 +51,97 @@ input:focus {
 .animate-spin {
    animation: spin 1s linear infinite;
 }
+
+/* Google OAuth Button Styling */
+.social-auth-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.social-auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.social-auth-button:active {
+    transform: translateY(0);
+}
+
+/* Google button specific styling */
+.social-auth-button[href*="google"] {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e5e7eb;
+}
+
+.social-auth-button[href*="google"]:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-color: #d1d5db;
+}
+
+/* Facebook button styling */
+.social-auth-button[href*="facebook"] {
+    background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+    border: 1px solid #1877f2;
+}
+
+.social-auth-button[href*="facebook"]:hover {
+    background: linear-gradient(135deg, #166fe5 0%, #1877f2 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(24, 119, 242, 0.3);
+}
+
+/* Loading state for social buttons */
+.social-auth-button.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.social-auth-button.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced button interactions */
+.social-auth-button svg {
+    transition: transform 0.2s ease;
+}
+
+.social-auth-button:hover svg {
+    transform: scale(1.1);
+}
+
+/* Focus states for accessibility */
+.social-auth-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .social-auth-button {
+        padding: 12px 16px;
+    }
+    
+    .social-auth-button:hover {
+        transform: none;
+    }
+    
+    .social-auth-button:active {
+        transform: scale(0.98);
+    }
+}

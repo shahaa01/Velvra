@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const { isLoggedIn, isNotLoggedIn, validateSignup, validateLogin } = require('../middlewares/authMiddleware');
-const { renderSignup, renderLogin, signup, login, logout, getCurrentUser } = require('../controllers/authController');
+const { renderSignup, renderLogin, signup, login, logout, googleAuth, googleCallback, getCurrentUser } = require('../controllers/authController');
 
 // Signup routes
 router.route('/signup')
@@ -17,6 +17,10 @@ router.route('/login')
         failureRedirect: '/auth/login',
         keepSessionInfo: true
     }), login);
+
+// Google OAuth routes
+router.get('/google', isNotLoggedIn, googleAuth);
+router.get('/google/callback', isNotLoggedIn, googleCallback);
 
 // Logout route
 router.get('/logout', isLoggedIn, logout);

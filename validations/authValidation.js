@@ -9,7 +9,8 @@ const signupSchema = Joi.object({
     lastName: Joi.string()
         .min(2)
         .max(50)
-        .required()
+        .optional()
+        .allow('')
         .trim(),
     email: Joi.string()
         .email()

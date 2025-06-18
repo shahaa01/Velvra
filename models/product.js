@@ -40,4 +40,11 @@ const productSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+productSchema.index({
+  name: 'text',
+  brand: 'text',
+  description: 'text',
+  tags: 'text'
+});
+
 module.exports = mongoose.model('Product', productSchema);

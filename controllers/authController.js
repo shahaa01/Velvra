@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const passport = require('passport');
 
 // Render signup page
 const renderSignup = (req, res) => {
@@ -33,7 +34,7 @@ const signup = async (req, res) => {
         const user = await User.register(new User({
             email,
             firstName,
-            lastName
+            lastName: lastName || '' // Provide fallback for empty lastName
         }), password);
 
         console.log('User registered successfully:', user._id);
@@ -76,6 +77,67 @@ const logout = (req, res) => {
     });
 };
 
+// Google OAuth authentication
+const googleAuth = (req, res) => {
+    console.log('Google OAuth initiated');
+    console.log('Environment variables check:', {
+        clientID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set',
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8080/auth/google/callback'
+    });
+    
+    // Store the intended destination for after Google auth
+    if (req.query.redirect) {
+        req.session.returnTo = req.query.redirect;
+    }
+    
+    passport.authenticate('google', {
+        scope: ['profile', 'email']
+    })(req, res);
+};
+
+// Google OAuth callback
+const googleCallback = (req, res) => {
+    console.log('Google OAuth callback received');
+    console.log('Query params:', req.query);
+    console.log('User object:', req.user);
+    
+    passport.authenticate('google', { 
+        failureRedirect: '/auth/login',
+        failureFlash: 'Google authentication failed. Please try again.'
+    })(req, res, (err) => {
+        if (err) {
+            console.error('Google OAuth callback error:', err);
+            req.flash('error', `Google authentication error: ${err.message}`);
+            return res.redirect('/auth/login');
+        }
+        
+        try {
+            console.log('Google OAuth successful, user:', req.user);
+            
+            // Check if this is a new user by looking at the user object flag
+            const isNewUser = req.user.isNewGoogleUser;
+            
+            if (isNewUser) {
+                req.flash('success', `Welcome to Velvra, ${req.user.firstName}! Your account has been created successfully.`);
+                // Clear the flag after using it
+                delete req.user.isNewGoogleUser;
+            } else {
+                req.flash('success', `Welcome back, ${req.user.firstName}!`);
+            }
+            
+            // Redirect to the intended destination or home
+            const redirectUrl = req.session.returnTo || '/home';
+            delete req.session.returnTo;
+            res.redirect(redirectUrl);
+        } catch (error) {
+            console.error('Google callback processing error:', error);
+            req.flash('error', 'Error during Google authentication');
+            res.redirect('/auth/login');
+        }
+    });
+};
+
 // Get current user info
 const getCurrentUser = (req, res) => {
     if (!req.user) {
@@ -85,7 +147,9 @@ const getCurrentUser = (req, res) => {
         id: req.user._id,
         email: req.user.email,
         firstName: req.user.firstName,
-        lastName: req.user.lastName
+        lastName: req.user.lastName || '', // Provide fallback for empty lastName
+        authMethod: req.user.authMethod,
+        googleProfile: req.user.googleProfile
     });
 };
 
@@ -95,5 +159,7 @@ module.exports = {
     signup,
     login,
     logout,
+    googleAuth,
+    googleCallback,
     getCurrentUser
 }; 

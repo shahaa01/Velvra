@@ -2351,3 +2351,160 @@ select:focus {
         -webkit-overflow-scrolling: touch;
     }
 }
+/* Add these styles to your existing search.css file */
+
+/* Enhanced Search Suggestions */
+#search-suggestions,
+#mobile-search-suggestions {
+    max-height: 480px;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    margin-top: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+}
+
+/* Custom scrollbar for suggestions */
+#search-suggestions::-webkit-scrollbar,
+#mobile-search-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-suggestions::-webkit-scrollbar-track,
+#mobile-search-suggestions::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+
+#search-suggestions::-webkit-scrollbar-thumb,
+#mobile-search-suggestions::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+#search-suggestions::-webkit-scrollbar-thumb:hover,
+#mobile-search-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.suggestion-item {
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.suggestion-item:hover {
+    background-color: #f9fafb;
+}
+
+.suggestion-item.bg-stone-100 {
+    background-color: #f3f4f6;
+}
+
+/* Highlight animation */
+.suggestion-item mark {
+    background: linear-gradient(120deg, #fde68a 0%, #fbbf24 100%);
+    color: #92400e;
+    padding: 0 0.125rem;
+    border-radius: 2px;
+    font-weight: 600;
+    animation: highlight 0.3s ease-out;
+}
+
+@keyframes highlight {
+    from {
+        background-size: 0% 100%;
+    }
+    to {
+        background-size: 100% 100%;
+    }
+}
+
+/* Loading spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Category headers in suggestions */
+.suggestion-item:first-child {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.suggestion-item:last-child {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    border-bottom: none;
+}
+
+/* Focus styles for accessibility */
+#search-input:focus,
+#mobile-search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(245, 191, 36, 0.1);
+    border-color: #f59e0b;
+    background-color: white;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    #mobile-search-suggestions {
+        position: fixed;
+        left: 1rem;
+        right: 1rem;
+        top: 4.5rem;
+        max-height: calc(100vh - 6rem);
+        z-index: 9999;
+    }
+    
+    .suggestion-item {
+        padding: 1rem;
+    }
+    
+    .suggestion-item:active {
+        background-color: #e5e7eb;
+    }
+}
+
+/* Smooth transitions */
+#search-suggestions.hidden,
+#mobile-search-suggestions.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Error and no results states */
+.search-error,
+.search-no-results {
+    padding: 1.5rem;
+    text-align: center;
+    color: #6b7280;
+}
+
+.search-error {
+    color: #ef4444;
+}
+
+/* View all results link */
+.view-all-results {
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.view-all-results:hover {
+    background-color: #f3f4f6;
+}

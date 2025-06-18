@@ -246,7 +246,7 @@ html.dark .text-gray-600 {
                     </div>
                     <div>
                         <h1 class="naam font-playfair text-2xl md:text-3xl font-bold mb-1">
-                            <span id="greeting">Good Morning</span>, <%= user.firstName %>
+                            <span id="greeting">Good Morning</span>, <%= getFirstName(user) %>
                         </h1>
                         <p class="text-gray-600 dark:text-gray-400 mb-4">Ready to discover amazing products?</p>
                         <a href="/shop" class="inline-flex items-center space-x-2 bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-black px-6 py-3 rounded-lg font-semibold hover:from-[#B8941F] hover:to-[#D4AF37] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -832,7 +832,7 @@ html.dark .text-gray-600 {
         setNotificationData(<%- JSON.stringify(notifications || []) %>, <%= unreadCount || 0 %>);
         
         // Set user data from backend
-        setUserData('<%= user.firstName %>', '<%= user.email %>');
+        setUserData('<%= getFirstName(user) %>', '<%= user.email %>');
     </script>
 </body>
 </html>
