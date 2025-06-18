@@ -16,6 +16,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/user');
 const { localStore } = require('./middlewares/index');
 const swal = require('sweetalert2');
+const fileUpload = require('express-fileupload');
 
 const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
@@ -32,6 +33,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(methodOverride('_method'));
+app.use(fileUpload());
 
 // Add EJS helper functions for safe name display
 app.locals.getDisplayName = function(user) {

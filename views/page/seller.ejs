@@ -287,75 +287,169 @@
                 </div>
                 
                 <!-- Form -->
-                <form id="sellerForm" class="bg-white p-8 lg:p-12 rounded-lg shadow-xl reveal">
+                <form id="sellerForm" class="bg-white p-8 lg:p-12 rounded-lg shadow-xl reveal" method="POST" action="/seller" enctype="multipart/form-data">
+                    <% if (errors && errors.length > 0) { %>
+                        <div class="mb-4">
+                            <% errors.forEach(function(error) { %>
+                                <div class="text-red-600 text-sm font-medium mb-1"><%= error %></div>
+                            <% }); %>
+                        </div>
+                    <% } %>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Brand Name -->
                         <div class="form-group relative">
-                            <input type="text" id="brandName" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required>
+                            <input type="text" id="brandName" name="brandName" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.brandName || '' %>">
                             <label for="brandName" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Brand Name *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Brand name is required</span>
                         </div>
                         
                         <!-- Instagram Handle -->
                         <div class="form-group relative">
-                            <input type="text" id="instagram" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" ">
+                            <input type="text" id="instagram" name="instagram" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " value="<%= old.instagram || '' %>">
                             <label for="instagram" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Instagram Handle / Website</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Please enter a valid Instagram handle or website URL</span>
                         </div>
                         
                         <!-- Contact Person -->
                         <div class="form-group relative">
-                            <input type="text" id="contactPerson" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required>
+                            <input type="text" id="contactPerson" name="contactPerson" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.contactPerson || '' %>">
                             <label for="contactPerson" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Contact Person *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Contact person name is required</span>
                         </div>
                         
                         <!-- Phone Number -->
                         <div class="form-group relative">
-                            <input type="tel" id="phone" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required>
+                            <input type="tel" id="phone" name="phone" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.phone || '' %>">
                             <label for="phone" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Phone Number *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Please enter a valid phone number</span>
                         </div>
                         
                         <!-- Email -->
                         <div class="form-group relative">
-                            <input type="email" id="email" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required>
+                            <input type="email" id="email" name="email" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.email || '' %>">
                             <label for="email" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Email Address *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Please enter a valid email address</span>
                         </div>
                         
                         <!-- Business Type -->
                         <div class="form-group relative">
-                            <select id="businessType" class="form-input w-full py-3 text-velvra-charcoal appearance-none" required>
+                            <select id="businessType" name="businessType" class="form-input w-full py-3 text-velvra-charcoal appearance-none" required>
                                 <option value="">Select Business Type *</option>
-                                <option value="boutique">Physical Boutique</option>
-                                <option value="instagram">Instagram Seller</option>
-                                <option value="both">Both Boutique & Instagram</option>
-                                <option value="brand">Fashion Brand</option>
-                                <option value="designer">Independent Designer</option>
+                                <option value="boutique" <%= old.businessType === 'boutique' ? 'selected' : '' %>>Physical Boutique</option>
+                                <option value="instagram" <%= old.businessType === 'instagram' ? 'selected' : '' %>>Instagram Seller</option>
+                                <option value="both" <%= old.businessType === 'both' ? 'selected' : '' %>>Both Boutique & Instagram</option>
+                                <option value="brand" <%= old.businessType === 'brand' ? 'selected' : '' %>>Fashion Brand</option>
+                                <option value="designer" <%= old.businessType === 'designer' ? 'selected' : '' %>>Independent Designer</option>
                             </select>
                             <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 w-5 h-5 text-velvra-stone pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
+                            <span class="error-message">Please select a business type</span>
+                        </div>
+                        
+                        <!-- Owner's Full Legal Name -->
+                        <div class="form-group relative">
+                            <input type="text" id="ownerName" name="ownerName" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.ownerName || '' %>">
+                            <label for="ownerName" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Owner's Full Legal Name *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">Owner's legal name is required</span>
+                        </div>
+                        
+                        <!-- PAN/VAT Number -->
+                        <div class="form-group relative">
+                            <input type="text" id="panVatNumber" name="panVatNumber" class="form-input w-full py-3 text-velvra-charcoal" placeholder=" " required value="<%= old.panVatNumber || '' %>">
+                            <label for="panVatNumber" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">PAN/VAT Number *</label>
+                            <svg class="success-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="error-message">PAN/VAT number is required</span>
+                        </div>
+                        
+                        <!-- PAN/VAT Document Upload -->
+                        <div class="form-group md:col-span-2">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="panVatDocument" name="panVatDocument" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" required>
+                                <label for="panVatDocument" class="file-upload-label">
+                                    <div class="text-center">
+                                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        <p class="text-sm text-gray-600">
+                                            <span class="font-medium">Upload your PAN/VAT registration document *</span>
+                                        </p>
+                                        <p class="text-xs text-gray-500 mt-1">PDF, JPEG, PNG, or other image formats (max 5MB)</p>
+                                        <p class="file-name text-sm text-green-600 mt-2 hidden"></p>
+                                    </div>
+                                </label>
+                            </div>
+                            <span class="error-message">Please upload your PAN/VAT registration document</span>
+                            <p class="text-sm text-velvra-stone mt-2 italic">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                This must match the information on your PAN/VAT registration document.
+                            </p>
                         </div>
                         
                         <!-- Location -->
-                        <div class="form-group relative md:col-span-2">
-                            <select id="location" class="form-input w-full py-3 text-velvra-charcoal appearance-none" required>
-                                <option value="">Select Location *</option>
-                                <option value="kathmandu">Kathmandu</option>
-                                <option value="pokhara">Pokhara</option>
+                        <div class="form-group relative">
+                            <select id="location" name="location" class="form-input w-full py-3 text-velvra-charcoal appearance-none" required>
+                                <option value="">Select Province *</option>
+                                <option value="kathmandu" <%= old.location === 'kathmandu' ? 'selected' : '' %>>Bagmati Province (Kathmandu)</option>
+                                <option value="pokhara" <%= old.location === 'pokhara' ? 'selected' : '' %>>Gandaki Province (Pokhara)</option>
                             </select>
                             <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 w-5 h-5 text-velvra-stone pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
+                            <span class="error-message">Please select a location</span>
+                        </div>
+                        
+                        <!-- City/Neighborhood -->
+                        <div class="form-group relative">
+                            <select id="city" name="city" class="form-input w-full py-3 text-velvra-charcoal appearance-none" required <%= !old.location ? 'disabled' : '' %>>
+                                <option value="">Select City/Area *</option>
+                                <% if (old.location === 'kathmandu') { %>
+                                    <option value="kathmandu" <%= old.city === 'kathmandu' ? 'selected' : '' %>>Kathmandu</option>
+                                    <option value="lalitpur" <%= old.city === 'lalitpur' ? 'selected' : '' %>>Lalitpur</option>
+                                    <option value="bhaktapur" <%= old.city === 'bhaktapur' ? 'selected' : '' %>>Bhaktapur</option>
+                                <% } else if (old.location === 'pokhara') { %>
+                                    <option value="pokhara" <%= old.city === 'pokhara' ? 'selected' : '' %>>Pokhara</option>
+                                    <option value="lekhnath" <%= old.city === 'lekhnath' ? 'selected' : '' %>>Lekhnath</option>
+                                <% } %>
+                            </select>
+                            <svg class="absolute right-0 top-1/2 transform -translate-y-1/2 w-5 h-5 text-velvra-stone pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            <span class="error-message">Please select a city/area</span>
                         </div>
                         
                         <!-- Message -->
                         <div class="form-group relative md:col-span-2">
-                            <textarea id="message" rows="4" class="form-input w-full py-3 text-velvra-charcoal resize-none" placeholder=" "></textarea>
+                            <textarea id="message" name="message" rows="4" class="form-input w-full py-3 text-velvra-charcoal resize-none" placeholder=" "><%= old.message || '' %></textarea>
                             <label for="message" class="form-label absolute top-3 left-0 text-velvra-stone pointer-events-none">Tell us about your brand (optional)</label>
                         </div>
                     </div>
                     
                     <!-- Submit Button -->
                     <div class="mt-8 text-center">
-                        <button type="submit" class="btn-primary px-12 py-4 text-lg font-medium uppercase tracking-wider rounded-sm w-full md:w-auto">
+                        <button type="submit" class="btn-primary px-12 py-4 text-lg font-medium uppercase tracking-wider rounded-sm w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
                             Apply to Become a Seller
                         </button>
                         <p class="text-sm text-velvra-stone mt-4">

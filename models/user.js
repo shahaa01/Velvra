@@ -96,7 +96,12 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  role: {
+    type: String,
+    enum: ['user', 'seller', 'admin'],
+    default: 'user',
+  },
 });
 
 // Apply passport-local-mongoose plugin with email as username field
