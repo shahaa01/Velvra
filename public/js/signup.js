@@ -91,10 +91,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         switch (fieldName) {
             case 'firstName':
-            case 'lastName':
                 if (value.length < 2) {
                     isValid = false;
-                    errorMessage = 'Name must be at least 2 characters long';
+                    errorMessage = 'First name must be at least 2 characters long';
+                }
+                break;
+                
+            case 'lastName':
+                // lastName is optional, but if provided, it must be at least 2 characters
+                if (value.length > 0 && value.length < 2) {
+                    isValid = false;
+                    errorMessage = 'Last name must be at least 2 characters long';
                 }
                 break;
                 
@@ -137,3 +144,4 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
 });
+

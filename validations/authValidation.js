@@ -11,7 +11,17 @@ const signupSchema = Joi.object({
         .max(50)
         .optional()
         .allow('')
-        .trim(),
+        .trim()
+        .custom((value, helpers) => {
+            // If lastName is provided, it must be at least 2 characters
+            if (value && value.length > 0 && value.length < 2) {
+                return helpers.error('any.invalid');
+            }
+            return value;
+        }, 'lastName validation')
+        .messages({
+            'any.invalid': 'Last name must be at least 2 characters long'
+        }),
     email: Joi.string()
         .email()
         .required()

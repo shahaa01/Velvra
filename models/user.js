@@ -56,7 +56,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
     trim: true,
-    minlength: 2,
+    validate: {
+      validator: function(value) {
+        if (value && value.length > 0 && value.length < 2) {
+          return false;
+        }
+        return true;
+      },
+      message: 'Last name must be at least 2 characters long'
+    },
     maxlength: 50
   },
   email: {
