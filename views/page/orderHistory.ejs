@@ -82,9 +82,13 @@
                                     Rate Product
                                 </button>
                             <% } %>
-                            <button class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                                Buy Again
-                            </button>
+                            <% if (order.product && order.product.inStock === false) { %>
+                                <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
+                            <% } else { %>
+                                <button class="text-sm font-medium text-gray-600 hover:text-gray-900">
+                                    Buy Again
+                                </button>
+                            <% } %>
                         </div>
                     </div>
                 <% }); %>

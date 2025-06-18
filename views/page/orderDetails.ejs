@@ -182,7 +182,9 @@
                                 Rate Products
                             </button>
                         <% } %>
-                        <% if (order.orderStatus !== 'cancelled') { %>
+                        <% if (order.product && order.product.inStock === false) { %>
+                            <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
+                        <% } else if (order.orderStatus !== 'cancelled') { %>
                             <button class="w-full action-btn secondary py-3 rounded-lg font-medium">
                                 Buy Again
                             </button>

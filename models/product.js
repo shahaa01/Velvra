@@ -1,3 +1,4 @@
+const { boolean } = require('joi');
 const mongoose = require('mongoose');
 
 const colorSchema = new mongoose.Schema({
@@ -33,8 +34,24 @@ const productSchema = new mongoose.Schema({
     }
   },
 
+  stock: {
+    type: Number,
+    required: true
+  },
+
+  inStock : {
+    type: Boolean,
+    required: true
+  },
+
   category: { type: String, required: true },    // e.g., "men", "women", etc.
   tags: [String],                                // e.g., ["t-shirt", "streetwear"]
+
+  seller: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Seller',
+    required: true
+  },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

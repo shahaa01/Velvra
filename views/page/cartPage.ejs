@@ -186,16 +186,24 @@
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <span class="text-xl font-bold">₹<%= (item.product.salePrice || item.product.price).toLocaleString() %></span>
+                                            <span class="text-xl font-bold">
+                                              ₹<%= (item.product.salePrice || item.product.price).toLocaleString() %>
+                                            </span>
                                             <% if(item.product.sale) {%>
-                                            <span class="text-sm text-gray-500 line-through ml-2">₹<%= item.product.price.toLocaleString() %></span>
+                                            <span class="text-sm text-gray-500 line-through ml-2">
+                                              ₹<%= item.product.price.toLocaleString() %>
+                                            </span>
                                             <% } %>
                                         </div>
+                                        <% if (!item.product.inStock) { %>
+                                          <span class="text-[#D4AF37] font-light text-lg italic ml-4">Out of Stock</span>
+                                        <% } else { %>
                                         <div class="quantity-controls-mobile">
                                             <button class="quantity-btn-mobile decrease-btn" data-cart-id="<%= item._id %>">−</button>
                                             <input type="number" value="<%= item.quantity %>" class="quantity-input-mobile" data-cart-id="<%= item._id %>" readonly>
                                             <button class="quantity-btn-mobile increase-btn" data-cart-id="<%= item._id %>">+</button>
                                         </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>

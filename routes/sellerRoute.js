@@ -33,8 +33,6 @@ router.route('/')
         sellerController.handleSellerRegistration
     );
 
-router.get('/dashboard', isLoggedIn, (req, res) => {
-    res.render('page/sellerDashboard', { user: req.user });
-});
+router.get('/dashboard', isLoggedIn, sellerController.getSellerDashboard);
 
 module.exports = router

@@ -4,7 +4,7 @@ const Cart = require('../models/cart');
 module.exports.localStore = async (req, res, next) => {
     if (req.user && req.user._id) {
         res.locals.numberOfCartItems = await Cart.findOne({user: req.user._id}, {items : 1});
-        console.log(res.locals.numberOfCartItems);
+        res.locals.userRole = req.user.role;
     } else {
         res.locals.numberOfCartItems = { items: [] };
     }

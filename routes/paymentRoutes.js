@@ -159,6 +159,7 @@ router.post('/create-buyNow-order', isLoggedIn, async (req, res) => {
         // Create order item
         const orderItem = {
             product: product._id,
+            seller: product.seller,
             quantity: parseInt(quantity),
             size: size,
             color: color,
@@ -212,6 +213,7 @@ router.post('/create-order', isLoggedIn, async (req, res) => {
         // Create order items from cart
         const orderItems = cart.items.map(item => ({
             product: item.product._id,
+            seller: item.product.seller,
             quantity: item.quantity,
             size: item.size,
             color: item.color,

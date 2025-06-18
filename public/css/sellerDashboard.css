@@ -1,4 +1,6 @@
-
+body {
+    padding-top: var(--navbar-height);
+}
 /* Custom styles for premium feel */
 .luxury-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -82,5 +84,39 @@
     .luxury-card {
         margin-bottom: 1rem;
     }
+}
+
+/* Add focus and contrast improvements for accessibility */
+button:focus, .btn-gold:focus, .luxury-card:focus {
+    outline: 2px solid #D4AF37;
+    outline-offset: 2px;
+}
+
+input[readonly] {
+    background: #f3f4f6;
+    color: #222;
+    border: 1px solid #e5e7eb;
+}
+.dark input[readonly] {
+    background: #23272f;
+    color: #fff;
+    border: 1px solid #374151;
+}
+
+/* Improve contrast for action buttons */
+button, .btn-gold {
+    transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+
+button:hover, .btn-gold:hover {
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+}
+
+/* Modal field label contrast */
+label {
+    color: #222;
+}
+.dark label {
+    color: #eee;
 }
     

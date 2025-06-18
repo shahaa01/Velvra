@@ -1,8 +1,27 @@
 // Dark mode toggle
-document.getElementById('darkModeToggle')?.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-});
+const darkModeBtn = document.getElementById('darkModeToggle');
+if (darkModeBtn) {
+    const icon = darkModeBtn.querySelector('svg');
+    function updateIcon(isDark) {
+        if (icon) {
+            icon.innerHTML = isDark
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+        }
+    }
+    // Initial state
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    }
+    updateIcon(isDark);
+    darkModeBtn.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const nowDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('darkMode', nowDark);
+        updateIcon(nowDark);
+    });
+}
 
 // Load dark mode preference
 if (localStorage.getItem('darkMode') === 'true') {
@@ -67,14 +86,19 @@ document.querySelectorAll('button').forEach(btn => {
    if (btn.textContent.includes('Process') || btn.textContent.includes('View') || btn.textContent.includes('Review')) {
        btn.addEventListener('click', function(e) {
            e.preventDefault();
-           
            // Create modal overlay
            const modal = document.createElement('div');
            modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 transition-opacity duration-300';
+           // Example: get seller name from a data attribute or fallback
+           const sellerName = btn.getAttribute('data-seller') || 'Himalayan Boutique';
            modal.innerHTML = `
                <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
                    <h3 class="font-playfair text-xl font-bold text-gray-900 dark:text-white mb-4">Order Action</h3>
                    <p class="text-gray-600 dark:text-gray-400 mb-6">This action would ${this.textContent.toLowerCase()} the order in a real application.</p>
+                   <div class="mb-4">
+                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Seller</label>
+                       <input type="text" class="w-full border rounded p-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white" value="${sellerName}" readonly />
+                   </div>
                    <div class="flex gap-3">
                        <button class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" onclick="this.closest('.fixed').remove()">
                            Cancel
@@ -85,15 +109,12 @@ document.querySelectorAll('button').forEach(btn => {
                    </div>
                </div>
            `;
-           
            document.body.appendChild(modal);
-           
            // Trigger animation
            requestAnimationFrame(() => {
                modal.classList.add('opacity-100');
                modal.querySelector('.bg-white').classList.add('scale-100');
            });
-           
            // Close on backdrop click
            modal.addEventListener('click', function(e) {
                if (e.target === modal) {

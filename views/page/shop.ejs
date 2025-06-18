@@ -548,9 +548,12 @@
                             <%= product.salePercentage %>% OFF
                           </span>
                         <% } %>
+                    </div>
+                    <% if (!product.inStock) { %>
+                      <div class="mt-2 text-center">
+                        <span class="block text-[#D4AF37] font-light text-lg tracking-wide italic">Out of Stock</span>
                       </div>
-                      
-                      
+                    <% } %>
                 </div>
             </article>
             <% } %>
