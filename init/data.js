@@ -638,7 +638,467 @@ const sampleProducts = [
     "tags": ["dress", "wrap", "midi", "formal"],
     "createdAt": "2025-03-18T11:25:00.000Z",
     "updatedAt": "2025-06-10T15:50:00.000Z"
-  }
+  },
+
+  {
+      name: "Velvra Architectural Wool Coat",
+      brand: "Velvra",
+      description: "A sculptural masterpiece in virgin wool, featuring precise tailoring and an oversized silhouette that redefines contemporary outerwear.",
+      price: 42000,
+      salePrice: 42000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1544966503-7cc5ac882d5c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1544441893-675973e31985?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Charcoal", hex: "#36454f" },
+        { name: "Ivory", hex: "#fffff0" },
+        { name: "Camel", hex: "#c19a6b" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "women",
+      tags: ["coat", "wool", "premium", "editorial", "outerwear"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Maison Lumière Silk Midi Dress",
+      brand: "Maison Lumière",
+      description: "Fluid silk crepe dress with minimalist draping and an asymmetrical hemline. Modern elegance distilled to its purest form.",
+      price: 28000,
+      salePrice: 19600,
+      sale: true,
+      salePercentage: 30,
+      images: [
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1583496661160-fb5886a13804?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Sage", hex: "#9caf88" },
+        { name: "Midnight", hex: "#191970" }
+      ],
+      sizes: ["XS", "S", "M", "L"],
+      category: "women",
+      tags: ["dress", "silk", "midi", "minimalist", "editorial"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Studio Oversized Hoodie",
+      brand: "Velvra",
+      description: "Luxury streetwear reimagined in premium cotton fleece. Oversized fit with architectural details and tonal embroidery.",
+      price: 16000,
+      salePrice: 16000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Stone", hex: "#928e85" },
+        { name: "Black", hex: "#000000" },
+        { name: "Cream", hex: "#f5f5dc" }
+      ],
+      sizes: ["S", "M", "L", "XL"],
+      category: "unisex",
+      tags: ["hoodie", "streetwear", "premium", "oversized", "cotton"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Noiré Tailored Blazer",
+      brand: "Noiré",
+      description: "Sharp-shouldered blazer in Italian wool-silk blend. Contemporary power dressing with subtle feminine undertones.",
+      price: 35000,
+      salePrice: 24500,
+      sale: true,
+      salePercentage: 30,
+      images: [
+        "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1616847220575-5d4ad0bb52a9?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Navy", hex: "#000080" },
+        { name: "Pinstripe Grey", hex: "#708090" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "women",
+      tags: ["blazer", "tailored", "formalwear", "wool", "professional"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Deconstructed Denim Jacket",
+      brand: "Velvra",
+      description: "Classic trucker jacket reimagined with raw edges and asymmetrical seaming. Premium Japanese selvedge denim meets avant-garde design.",
+      price: 22000,
+      salePrice: 22000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Indigo", hex: "#4b0082" },
+        { name: "Washed Black", hex: "#2f2f2f" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "unisex",
+      tags: ["denim", "jacket", "deconstructed", "selvedge", "streetwear"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Maison Lumière Leather Ankle Boots",
+      brand: "Maison Lumière",
+      description: "Hand-crafted Italian leather boots with architectural heel and minimalist silhouette. Modern luxury grounded in artisanal tradition.",
+      price: 32000,
+      salePrice: 25600,
+      sale: true,
+      salePercentage: 20,
+      images: [
+        "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799139507-2a76f79a2f4d?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Black", hex: "#000000" },
+        { name: "Cognac", hex: "#9f4a00" },
+        { name: "Taupe", hex: "#483c32" }
+      ],
+      sizes: ["36", "37", "38", "39", "40", "41"],
+      category: "women",
+      tags: ["boots", "leather", "luxury", "italian", "ankle"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Cashmere Turtleneck",
+      brand: "Velvra",
+      description: "Ultra-fine Mongolian cashmere in a relaxed fit. The perfect foundation piece for modern layering and effortless sophistication.",
+      price: 18000,
+      salePrice: 14400,
+      sale: true,
+      salePercentage: 20,
+      images: [
+        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1596783074918-c84cb06531ca?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Oatmeal", hex: "#f0e68c" },
+        { name: "Charcoal", hex: "#36454f" },
+        { name: "Ivory", hex: "#fffff0" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "women",
+      tags: ["turtleneck", "cashmere", "luxury", "basics", "layering"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Noiré Wide-Leg Trousers",
+      brand: "Noiré",
+      description: "High-waisted trousers in virgin wool crepe with flowing wide legs. Timeless elegance meets contemporary proportions.",
+      price: 24000,
+      salePrice: 24000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1566479179817-0dc17b12d02d?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Black", hex: "#000000" },
+        { name: "Camel", hex: "#c19a6b" },
+        { name: "Navy", hex: "#000080" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "women",
+      tags: ["trousers", "wide-leg", "wool", "high-waisted", "editorial"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Minimalist T-Shirt",
+      brand: "Velvra",
+      description: "Premium Pima cotton tee with perfect drape and subtle texture. Elevated basics that form the foundation of a modern wardrobe.",
+      price: 9000,
+      salePrice: 6300,
+      sale: true,
+      salePercentage: 30,
+      images: [
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1583743814966-8936f37f4efa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "White", hex: "#ffffff" },
+        { name: "Black", hex: "#000000" },
+        { name: "Stone Grey", hex: "#928e85" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "unisex",
+      tags: ["t-shirt", "cotton", "basics", "minimalist", "pima"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Maison Lumière Silk Scarf",
+      brand: "Maison Lumière",
+      description: "Hand-rolled silk twill scarf featuring abstract geometric patterns. A sophisticated accent piece for the discerning wardrobe.",
+      price: 12000,
+      salePrice: 12000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1596467173082-b33b2a25f5c6?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1616847220575-5d4ad0bb52a9?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Emerald", hex: "#50c878" },
+        { name: "Burgundy", hex: "#800020" }
+      ],
+      sizes: ["One Size"],
+      category: "women",
+      tags: ["scarf", "silk", "accessories", "luxury", "geometric"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Structured Shoulder Bag",
+      brand: "Velvra",
+      description: "Architectural leather handbag with clean lines and minimal hardware. Contemporary craftsmanship meets timeless functionality.",
+      price: 38000,
+      salePrice: 30400,
+      sale: true,
+      salePercentage: 20,
+      images: [
+        "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799139507-2a76f79a2f4d?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Black", hex: "#000000" },
+        { name: "Tan", hex: "#d2b48c" }
+      ],
+      sizes: ["One Size"],
+      category: "women",
+      tags: ["handbag", "leather", "structured", "luxury", "accessories"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Noiré Silk Slip Dress",
+      brand: "Noiré",
+      description: "Bias-cut silk charmeuse dress with delicate spaghetti straps. Understated sensuality in its most refined form.",
+      price: 26000,
+      salePrice: 15600,
+      sale: true,
+      salePercentage: 40,
+      images: [
+        "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1583496661160-fb5886a13804?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Champagne", hex: "#f7e7ce" },
+        { name: "Black", hex: "#000000" },
+        { name: "Deep Rose", hex: "#c21807" }
+      ],
+      sizes: ["XS", "S", "M", "L"],
+      category: "women",
+      tags: ["dress", "silk", "slip", "bias-cut", "evening"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Men's Merino Crew Neck",
+      brand: "Velvra",
+      description: "Extra-fine merino wool sweater with a perfect fit. Sophisticated comfort for the modern gentleman's wardrobe.",
+      price: 20000,
+      salePrice: 20000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Navy", hex: "#000080" },
+        { name: "Heather Grey", hex: "#d3d3d3" },
+        { name: "Forest Green", hex: "#228b22" }
+      ],
+      sizes: ["S", "M", "L", "XL"],
+      category: "men",
+      tags: ["sweater", "merino", "crew-neck", "luxury", "wool"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Maison Lumière Pleated Midi Skirt",
+      brand: "Maison Lumière",
+      description: "Knife-pleated skirt in luxurious wool gabardine. Classic tailoring with a contemporary edge and fluid movement.",
+      price: 21000,
+      salePrice: 21000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1616847220575-5d4ad0bb52a9?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1566479179817-0dc17b12d02d?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Camel", hex: "#c19a6b" },
+        { name: "Black", hex: "#000000" }
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      category: "women",
+      tags: ["skirt", "pleated", "midi", "wool", "tailored"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Leather Chelsea Boots",
+      brand: "Velvra",
+      description: "Italian calfskin Chelsea boots with refined proportions and subtle elastic goring. Timeless style with contemporary comfort.",
+      price: 35000,
+      salePrice: 28000,
+      sale: true,
+      salePercentage: 20,
+      images: [
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1620799139507-2a76f79a2f4d?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Black", hex: "#000000" },
+        { name: "Cognac Brown", hex: "#9f4a00" }
+      ],
+      sizes: ["40", "41", "42", "43", "44", "45"],
+      category: "men",
+      tags: ["boots", "chelsea", "leather", "italian", "luxury"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Noiré Asymmetric Hem Top",
+      brand: "Noiré",
+      description: "Fluid viscose top with dramatic asymmetric hemline and subtle draping. Modern femininity with architectural undertones.",
+      price: 15000,
+      salePrice: 10500,
+      sale: true,
+      salePercentage: 30,
+      images: [
+        "https://images.unsplash.com/photo-1596783074918-c84cb06531ca?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1583743814966-8936f37f4efa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Sage Green", hex: "#9caf88" },
+        { name: "Black", hex: "#000000" }
+      ],
+      sizes: ["XS", "S", "M", "L"],
+      category: "women",
+      tags: ["top", "asymmetric", "viscose", "draping", "contemporary"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Velvra Tailored Chinos",
+      brand: "Velvra",
+      description: "Precision-cut chinos in premium cotton twill with refined details. Smart-casual sophistication for the discerning wardrobe.",
+      price: 17000,
+      salePrice: 17000,
+      sale: false,
+      salePercentage: 0,
+      images: [
+        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Khaki", hex: "#c3b091" },
+        { name: "Navy", hex: "#000080" },
+        { name: "Stone", hex: "#928e85" }
+      ],
+      sizes: ["30", "32", "34", "36", "38"],
+      category: "men",
+      tags: ["chinos", "cotton", "tailored", "smart-casual", "trousers"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      name: "Maison Lumière Statement Earrings",
+      brand: "Maison Lumière",
+      description: "Sculptural gold-plated earrings with geometric forms. Bold yet refined pieces that elevate any ensemble.",
+      price: 14000,
+      salePrice: 11200,
+      sale: true,
+      salePercentage: 20,
+      images: [
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1616847220575-5d4ad0bb52a9?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1609205807107-171bd2ba5cdf?w=800&h=1000&fit=crop",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop"
+      ],
+      colors: [
+        { name: "Gold", hex: "#ffd700" },
+        { name: "Silver", hex: "#c0c0c0" }
+      ],
+      sizes: ["One Size"],
+      category: "women",
+      tags: ["earrings", "jewelry", "gold-plated", "statement", "sculptural"],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 ]
 
 module.exports = sampleProducts;

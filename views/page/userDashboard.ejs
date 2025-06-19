@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra - My Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        :root {
+            --velvra-black: #0A0A0A;
+            --velvra-white: #FEFEFE;
+            --velvra-gold: #D4AF37;
+            --velvra-cream: #F5F5DC;
+            --velvra-gray: #F8F8F8;
+            --emerald: #10B981;
+            --amber: #F59E0B;
+            --ruby: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--velvra-white);
+            color: var(--velvra-black);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Elegant Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .gold-shimmer {
+            background: linear-gradient(90deg, transparent 0%, var(--velvra-gold) 50%, transparent 100%);
+            background-size: 1000px 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        /* Premium Hover Effects */
+        .luxury-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .luxury-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .luxury-card:hover::before {
+            left: 100%;
+        }
+
+        .luxury-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Gold Button Style */
+        .btn-gold {
+            background: linear-gradient(135deg, var(--velvra-gold), #B8941F);
+            color: var(--velvra-black);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--velvra-gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--velvra-gold);
+            border-radius: 4px;
+        }
+
+html.dark body{
+    background-color: var(--velvra-black);
+    color: white;
+}
+
+html.dark .luxury-card {
+    background-color: #1A1A1A;
+    border-color: #333;
+    color: white;
+}
+
+html.dark .text-gray-600 {
+    color: #A0A0A0;
+}
+
+
+        /* Mobile First Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Image Glow */
+        .profile-glow {
+            animation: pulse-gold 2s infinite;
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #D4AF37;
+            color: black;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            line-height: 1;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .notification-item {
+            transition: all 0.2s ease;
+        }
+        
+        .notification-item:hover {
+            transform: translateX(2px);
+        }
+    </style>
+</head>
+<body>
+    <%
+    // Helper functions
+    function getStatusColor(status) {
+        switch(status) {
+            case 'pending': return 'bg-gray-100 text-gray-700';
+            case 'confirmed': return 'bg-blue-100 text-blue-700';
+            case 'processing': return 'bg-amber-100 text-amber-700';
+            case 'shipped': return 'bg-purple-100 text-purple-700';
+            case 'delivered': return 'bg-emerald-100 text-emerald-700';
+            case 'cancelled': return 'bg-red-100 text-red-700';
+            default: return 'bg-gray-100 text-gray-700';
+        }
+    }
+    
+    function getOrderProgress(status) {
+        switch(status) {
+            case 'pending': return 10;
+            case 'confirmed': return 25;
+            case 'processing': return 50;
+            case 'shipped': return 75;
+            case 'delivered': return 100;
+            default: return 0;
+        }
+    }
+    %>
+    <main class="dashboard-container min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+        <!-- Welcome Section -->
+        <section class="welcome-section mb-8 animate-fadeInUp">
+            <div class="flex flex-col md:flex-row items-center justify-between bg-gradient-to-r p-6 md:p-8 rounded-2xl luxury-card">
+                <div class="flex items-center space-x-4 md:space-x-6 mb-4 md:mb-0">
+                    <div class="relative">
+                        <img src="https://i.pravatar.cc/150?img=3" alt="Profile" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-[#D4AF37] profile-glow object-cover">
+                        <button class="absolute bottom-0 right-0 bg-[#D4AF37] text-black p-2 rounded-full hover:bg-[#B8941F] transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div>
+                        <h1 class="naam font-playfair text-2xl md:text-3xl font-bold mb-1">
+                            <span id="greeting">Good Morning</span>, <%= getFirstName(user) %>
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Ready to discover amazing products?</p>
+                        <a href="/shop" class="inline-flex items-center space-x-2 bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-black px-6 py-3 rounded-lg font-semibold hover:from-[#B8941F] hover:to-[#D4AF37] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                            <span>Go Shopping</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="notificationBtn" class="relative p-3 rounded-full hover:bg-gray-100 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <% if (unreadCount > 0) { %>
+                            <span class="notification-badge"><%= unreadCount %></span>
+                        <% } %>
+                    </button>
+                    <button id="darkModeToggle" class="p-3 rounded-full hover:bg-gray-100 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Executive Summary Cards -->
+        <section class="summary-cards mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Order Analytics Card -->
+                <div class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.1s">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-[#F5F5DC] rounded-lg">
+                            <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-playfair text-2xl font-bold mb-1"><%= stats.totalOrders %></h3>
+                    <p class="text-gray-600 text-sm">Total Orders</p>
+                    <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="mr-2"><%= stats.activeOrders %> Processing</span>
+                        <span class="text-[#D4AF37]">• <%= stats.shippedOrders %> Shipped</span>
+                    </div>
+                </div>
+
+                <!-- Financial Overview Card -->
+                <div class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.2s">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-[#F5F5DC] rounded-lg">
+                            <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-sm font-medium text-amber-600">This Month</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-1">₹ <%= stats.thisMonthSpent.toLocaleString() %></h3>
+                    <p class="text-gray-600 text-sm">Total Spent</p>
+                    <div class="mt-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <% const monthlyProgress = stats.totalSpent > 0 ? (stats.thisMonthSpent / stats.totalSpent * 100) : 0 %>
+                            <div class="bg-gradient-to-r from-[#D4AF37] to-[#B8941F] h-2 rounded-full" style="width: <%= Math.min(monthlyProgress, 100) %>%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wishlist Metrics Card -->
+                <div class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.3s">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-[#F5F5DC] rounded-lg">
+                            <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-playfair text-2xl font-bold mb-1"><%= cart ? cart.items.length : 0 %></h3>
+                    <p class="text-gray-600 text-sm">Cart Items</p>
+                    <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="mr-2">Total: ₹<%= cart ? cart.total.toLocaleString() : '0' %></span>
+                    </div>
+                </div>
+
+                <!-- Engagement Stats Card -->
+                <div class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.4s">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-[#F5F5DC] rounded-lg">
+                            <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="font-playfair text-2xl font-bold mb-1"><%= stats.deliveredOrders %></h3>
+                    <p class="text-gray-600 text-sm">Delivered Orders</p>
+                    <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="mr-2">Ready to Review</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- Left Column - Orders & Wishlist -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Advanced Order Management -->
+                <section class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.5s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-playfair text-xl font-bold">Recent Orders</h2>
+                        <a href="/dashboard/orders" class="viewAllOrder text-[#D4AF37] hover:text-[#B8941F] font-medium text-sm transition-colors">
+                            View All Orders →
+                        </a>
+                    </div>
+                    
+                    <!-- Order Timeline -->
+                    <div class="space-y-4">
+                        <% if (orders && orders.length > 0) { %>
+                            <% orders.forEach(order => { %>
+                                <div class="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='/dashboard/orders/<%= order._id %>'">
+                                    <% if (order.items && order.items.length > 0 && order.items[0].product && order.items[0].product.images && order.items[0].product.images.length > 0) { %>
+                                        <img src="<%= order.items[0].product.images[0] %>" alt="Product" class="w-16 h-16 rounded-lg object-cover">
+                                    <% } else { %>
+                                        <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                    <% } %>
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h4 class="font-semibold">
+                                                    <% if (order.items && order.items.length > 0) { %>
+                                                        <%= order.items[0].product ? order.items[0].product.name : 'Product' %>
+                                                        <% if (order.items.length > 1) { %>
+                                                            +<%= order.items.length - 1 %> more
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        Order Items
+                                                    <% } %>
+                                                </h4>
+                                                <p class="text-sm text-gray-600">Order #<%= order.orderNumber %></p>
+                                                <p class="text-xs text-gray-500 font-mono mt-1">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                                            </div>
+                                            <span class="px-3 py-1 <%= getStatusColor(order.orderStatus) %> text-xs font-medium rounded-full">
+                                                <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                            </span>
+                                        </div>
+                                        <div class="mt-3 flex items-center space-x-4">
+                                            <% if (order.orderStatus === 'delivered') { %>
+                                                <button class="rateProduct text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">Rate Product</button>
+                                            <% } %>
+                                            <button class="trackOrder text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]" data-order-id="<%= order._id %>" data-order-status="<%= order.orderStatus %>">
+                                                Track Order
+                                            </button>
+                                        </div>
+                                        <% if (order.orderStatus === 'shipped' || order.orderStatus === 'processing') { %>
+                                            <div class="mt-3 flex items-center justify-between">
+                                                <div class="flex-1 mr-4">
+                                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                                        <% const progress = getOrderProgress(order.orderStatus) %>
+                                                        <div class="bg-gradient-to-r from-[#D4AF37] to-[#B8941F] h-2 rounded-full" style="width: <%= progress %>%"></div>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        <% if (order.orderStatus === 'shipped') { %>
+                                                            Expected delivery: <%= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString() %>
+                                                        <% } else { %>
+                                                            Processing your order
+                                                        <% } %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-gray-500">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                                <p class="text-lg font-medium mb-2">No Orders Yet</p>
+                                <p class="text-sm">Start shopping to see your orders here</p>
+                                <a href="/shop" class="inline-block mt-4 btn-gold px-6 py-2 rounded-lg text-sm font-medium">
+                                    Start Shopping
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </section>
+
+                <!-- Processing Orders Section -->
+                <section class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.6s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-playfair text-xl font-bold">Processing Orders</h2>
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                            <%= stats.activeOrders %> Active
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <% 
+                        const processingOrders = orders.filter(order => order.orderStatus === 'processing');
+                        if (processingOrders.length > 0) { 
+                        %>
+                            <% processingOrders.forEach(order => { %>
+                                <div class="flex items-start space-x-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+                                    <% if (order.items && order.items.length > 0 && order.items[0].product && order.items[0].product.images && order.items[0].product.images.length > 0) { %>
+                                        <img src="<%= order.items[0].product.images[0] %>" alt="Product" class="w-16 h-16 rounded-lg object-cover">
+                                    <% } else { %>
+                                        <div class="w-16 h-16 bg-amber-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </div>
+                                    <% } %>
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h4 class="font-semibold text-amber-900">
+                                                    <% if (order.items && order.items.length > 0) { %>
+                                                        <%= order.items[0].product ? order.items[0].product.name : 'Product' %>
+                                                        <% if (order.items.length > 1) { %>
+                                                            +<%= order.items.length - 1 %> more
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        Order Items
+                                                    <% } %>
+                                                </h4>
+                                                <p class="text-sm text-amber-700">Order #<%= order.orderNumber %></p>
+                                                <p class="text-xs text-amber-600 font-mono mt-1">Processing since <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                                                <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                                                    Processing
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="w-full bg-amber-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full" style="width: 50%"></div>
+                                            </div>
+                                            <p class="text-xs text-amber-600 mt-1">Preparing your order for shipping</p>
+                                        </div>
+                                        <div class="mt-3 flex items-center space-x-4">
+                                            <button class="trackOrder text-sm font-medium text-amber-700 hover:text-amber-800" data-order-id="<%= order._id %>" data-order-status="<%= order.orderStatus %>">
+                                                Track Order
+                                            </button>
+                                            <button class="text-sm font-medium text-amber-700 hover:text-amber-800">
+                                                Contact Support
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-amber-600">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                <p class="text-lg font-medium mb-2">No Processing Orders</p>
+                                <p class="text-sm">All your orders are either shipped or delivered!</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </section>
+
+                <!-- Shipped Orders Section -->
+                <section class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.7s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-playfair text-xl font-bold">Shipped Orders</h2>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                            <%= stats.shippedOrders %> In Transit
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <% 
+                        const shippedOrders = orders.filter(order => order.orderStatus === 'shipped');
+                        if (shippedOrders.length > 0) { 
+                        %>
+                            <% shippedOrders.forEach(order => { %>
+                                <div class="flex items-start space-x-4 p-4 rounded-lg bg-purple-50 border border-purple-200">
+                                    <% if (order.items && order.items.length > 0 && order.items[0].product && order.items[0].product.images && order.items[0].product.images.length > 0) { %>
+                                        <img src="<%= order.items[0].product.images[0] %>" alt="Product" class="w-16 h-16 rounded-lg object-cover">
+                                    <% } else { %>
+                                        <div class="w-16 h-16 bg-purple-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                            </svg>
+                                        </div>
+                                    <% } %>
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h4 class="font-semibold text-purple-900">
+                                                    <% if (order.items && order.items.length > 0) { %>
+                                                        <%= order.items[0].product ? order.items[0].product.name : 'Product' %>
+                                                        <% if (order.items.length > 1) { %>
+                                                            +<%= order.items.length - 1 %> more
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        Order Items
+                                                    <% } %>
+                                                </h4>
+                                                <p class="text-sm text-purple-700">Order #<%= order.orderNumber %></p>
+                                                <p class="text-xs text-purple-600 font-mono mt-1">Shipped on <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <svg class="w-4 h-4 text-purple-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                </svg>
+                                                <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                                    In Transit
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="w-full bg-purple-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style="width: 75%"></div>
+                                            </div>
+                                            <p class="text-xs text-purple-600 mt-1">Expected delivery: <%= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString() %></p>
+                                        </div>
+                                        <div class="mt-3 flex items-center space-x-4">
+                                            <button class="trackOrder text-sm font-medium text-purple-700 hover:text-purple-800" data-order-id="<%= order._id %>" data-order-status="<%= order.orderStatus %>">
+                                                Track Order
+                                            </button>
+                                            <button class="text-sm font-medium text-purple-700 hover:text-purple-800">
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-purple-600">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                                <p class="text-lg font-medium mb-2">No Shipped Orders</p>
+                                <p class="text-sm">Your orders are being processed or have been delivered!</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </section>
+
+                <!-- Intelligent Wishlist System -->
+                <section class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.8s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-playfair text-xl font-bold">Wishlist</h2>
+                        <div class="flex items-center space-x-2">
+                            <select class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
+                                <option>All Categories</option>
+                                <option>Handbags</option>
+                                <option>Shoes</option>
+                                <option>Accessories</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Wishlist Item 1 -->
+                        <div class="group cursor-pointer">
+                            <div class="relative overflow-hidden rounded-lg">
+                                <img src="https://images.unsplash.com/photo-1605733513597-a8f8341084e6?w=300&h=400&fit=crop" alt="Product" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                                <div class="absolute top-2 right-2">
+                                    <span class="bg-ruby text-white text-xs px-2 py-1 rounded-full font-medium">
+                                        -20%
+                                    </span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                                        <button class="w-full btn-gold py-2 px-4 rounded-lg text-sm font-medium">
+                                            Quick Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h4 class="font-medium text-sm line-clamp-1">Premium Leather Boots</h4>
+                                <div class="flex items-center justify-between mt-1">
+                                    <p class="text-sm">
+                                        <span class="text-gray-400 line-through">₨ 45,000</span>
+                                        <span class="font-semibold text-[#D4AF37] ml-1">₨ 36,000</span>
+                                    </p>
+                                    <button class="text-gray-400 hover:text-[#D4AF37]">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wishlist Item 2 -->
+                        <div class="group cursor-pointer">
+                            <div class="relative overflow-hidden rounded-lg">
+                                <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&h=400&fit=crop" alt="Product" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                                <div class="absolute top-2 right-2">
+                                    <span class="bg-emerald-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                        New
+                                    </span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                                        <button class="w-full btn-gold py-2 px-4 rounded-lg text-sm font-medium">
+                                            Quick Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h4 class="font-medium text-sm line-clamp-1">Designer Crossbody Bag</h4>
+                                <div class="flex items-center justify-between mt-1">
+                                    <p class="text-sm font-semibold">₨ 58,000</p>
+                                    <button class="text-gray-400 hover:text-[#D4AF37]">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wishlist Item 3 -->
+                        <div class="group cursor-pointer">
+                            <div class="relative overflow-hidden rounded-lg">
+                                <img src="https://images.unsplash.com/photo-1609803384069-19f0a2b1a13a?w=300&h=400&fit=crop" alt="Product" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                                        <button class="w-full btn-gold py-2 px-4 rounded-lg text-sm font-medium">
+                                            Quick Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h4 class="font-medium text-sm line-clamp-1">Luxury Watch Collection</h4>
+                                <div class="flex items-center justify-between mt-1">
+                                    <p class="text-sm font-semibold">₨ 125,000</p>
+                                    <button class=" wishlist text-[#D4AF37]">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column - Recommendations & Account -->
+            <div class="space-y-6">
+                <!-- AI-Powered Style Recommendations -->
+ 
+
+                <!-- VIP Rewards & Benefits -->
+                <!-- <section class="luxury-card bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A] text-white rounded-xl p-6 animate-fadeInUp relative overflow-hidden" style="animation-delay: 0.8s">
+                    <div class="absolute top-0 right-0 opacity-10">
+                        <svg class="w-32 h-32" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-playfair text-xl font-bold">VIP Elite Status</h2>
+                            <span class="px-3 py-1 bg-[#D4AF37] text-black text-xs font-bold rounded-full">GOLD</span>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-300">Points Balance</span>
+                                <span class="font-bold text-[#D4AF37]">12,450</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-300">Next Tier</span>
+                                <span class="text-sm">2,550 points to Platinum</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-gray-700 rounded-full h-2 mb-4">
+                            <div class="bg-gradient-to-r from-[#D4AF37] to-[#FFD700] h-2 rounded-full" style="width: 83%"></div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2 text-sm">
+                                <svg class="w-4 h-4 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Free Express Shipping</span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-sm">
+                                <svg class="w-4 h-4 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Early Access to Sales</span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-sm">
+                                <svg class="w-4 h-4 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Personal Style Advisor</span>
+                            </div>
+                        </div>
+                    </div>
+                </section> -->
+
+                <!-- Quick Actions -->
+                <section class="luxury-card bg-white border border-gray-100 rounded-xl p-6 animate-fadeInUp" style="animation-delay: 1.0s">
+                    <h3 class="font-playfair text-lg font-bold mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <a href="/shop" class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-[#D4AF37] rounded-lg group-hover:bg-[#B8941F] transition-colors">
+                                    <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium">Go Shopping</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-[#D4AF37] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                        <button class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Order History</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <button class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Customer Support</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <button class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Account Settings</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button id="fabButton" class="fixed bottom-6 right-6 w-14 h-14 bg-[#D4AF37] rounded-full shadow-lg flex items-center justify-center hover:bg-[#B8941F] transition-all duration-300 hover:scale-110 z-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+        </button>
+    </main>
+    
+    <!-- External JavaScript -->
+    <script src="/js/userDashboard.js"></script>
+    
+    <!-- Initialize data from EJS -->
+    <script>
+        // Set notification data from backend
+        setNotificationData(<%- JSON.stringify(notifications || []) %>, <%= unreadCount || 0 %>);
+        
+        // Set user data from backend
+        setUserData('<%= getFirstName(user) %>', '<%= user.email %>');
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Admin - Dashboard Overview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Velvra Admin</h1>
+            <p class="text-gray-400 text-sm mt-1">Premium Marketplace</p>
+        </div>
+        
+        <nav class="mt-8">
+            <a href="#" class="sidebar-link flex items-center px-6 py-3 bg-purple-600 text-white">
+                <i class="fas fa-dashboard w-5"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="users.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-users w-5"></i>
+                <span class="ml-3">User Management</span>
+            </a>
+            <a href="sellers.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-store w-5"></i>
+                <span class="ml-3">Seller Management</span>
+            </a>
+            <a href="products.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-box w-5"></i>
+                <span class="ml-3">Products</span>
+            </a>
+            <a href="orders.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-shopping-cart w-5"></i>
+                <span class="ml-3">Orders</span>
+            </a>
+            <a href="inventory.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-warehouse w-5"></i>
+                <span class="ml-3">Inventory</span>
+            </a>
+            <a href="content.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-file-alt w-5"></i>
+                <span class="ml-3">Content Manager</span>
+            </a>
+            <a href="promotions.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-tag w-5"></i>
+                <span class="ml-3">Promotions</span>
+            </a>
+            <a href="reports.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-chart-line w-5"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+            <a href="support.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-headset w-5"></i>
+                <span class="ml-3">Support</span>
+            </a>
+            <a href="finance.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-dollar-sign w-5"></i>
+                <span class="ml-3">Finance</span>
+            </a>
+            <a href="settings.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-cog w-5"></i>
+                <span class="ml-3">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button id="sidebarToggle" class="lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="search" placeholder="Search..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff" alt="Admin" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">Admin User</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="p-6">
+            <!-- Page Title -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
+                <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with Velvra today.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm font-medium flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i> 12.5%
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">$124,563</h3>
+                    <p class="text-gray-600 text-sm mt-1">Total Revenue</p>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-shopping-bag text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm font-medium flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i> 8.2%
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">3,426</h3>
+                    <p class="text-gray-600 text-sm mt-1">Total Orders</p>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-red-500 text-sm font-medium flex items-center">
+                            <i class="fas fa-arrow-down mr-1"></i> 3.1%
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">18,925</h3>
+                    <p class="text-gray-600 text-sm mt-1">Site Visitors</p>
+                </div>
+
+                <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-store text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm font-medium flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i> 15.3%
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">245</h3>
+                    <p class="text-gray-600 text-sm mt-1">New Sellers</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Sales Chart -->
+                <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800">Sales Overview</h3>
+                        <select class="text-sm border border-gray-300 rounded-lg px-3 py-1">
+                            <option>Last 7 days</option>
+                            <option>Last 30 days</option>
+                            <option>Last 3 months</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Distribution -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6">Category Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Top Sellers -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <img src="https://ui-avatars.com/api/?name=John+Doe&background=random" alt="Customer" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <p class="font-medium text-gray-800">John Doe</p>
+                                    <p class="text-sm text-gray-600">Order #12345</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">$256.00</p>
+                                <p class="text-xs text-green-600">Completed</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <img src="https://ui-avatars.com/api/?name=Jane+Smith&background=random" alt="Customer" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <p class="font-medium text-gray-800">Jane Smith</p>
+                                    <p class="text-sm text-gray-600">Order #12346</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">$128.50</p>
+                                <p class="text-xs text-yellow-600">Processing</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <img src="https://ui-avatars.com/api/?name=Mike+Johnson&background=random" alt="Customer" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <p class="font-medium text-gray-800">Mike Johnson</p>
+                                    <p class="text-sm text-gray-600">Order #12347</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">$89.99</p>
+                                <p class="text-xs text-blue-600">Shipped</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Sellers -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Sellers</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600 font-semibold">1</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Fashion Hub</p>
+                                    <p class="text-sm text-gray-600">245 sales</p>
+                                </div>
+                            </div>
+                            <p class="font-semibold text-gray-800">$45,230</p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600 font-semibold">2</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Style Central</p>
+                                    <p class="text-sm text-gray-600">198 sales</p>
+                                </div>
+                            </div>
+                            <p class="font-semibold text-gray-800">$38,945</p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600 font-semibold">3</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Trendy Boutique</p>
+                                    <p class="text-sm text-gray-600">176 sales</p>
+                                </div>
+                            </div>
+                            <p class="font-semibold text-gray-800">$32,120</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+                    borderColor: 'rgb(147, 51, 234)',
+                    backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Women', 'Men', 'Kids', 'Accessories'],
+                datasets: [{
+                    data: [35, 25, 20, 20],
+                    backgroundColor: [
+                        'rgb(147, 51, 234)',
+                        'rgb(59, 130, 246)',
+                        'rgb(251, 146, 60)',
+                        'rgb(34, 197, 94)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate loading state
+        window.addEventListener('load', function() {
+            // Add any initialization code here
+        });
+    </script>
+</body>
+</html>

@@ -10,29 +10,58 @@
                 <ol>
                     <li><a href="/home">Home</a></li>
                     <li class="separator">/</li>
-                    <li><a href="/shop">Shop</a></li>
-                    <li class="separator">/</li>
-                    <li class="current"><%= heroTitle %></li>
+                    <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                        <li><a href="/shop">Shop</a></li>
+                        <li class="separator">/</li>
+                        <li class="current">Search Results</li>
+                    <% } else { %>
+                        <li><a href="/shop">Shop</a></li>
+                        <li class="separator">/</li>
+                        <li class="current"><%= heroTitle %></li>
+                    <% } %>
                 </ol>
             </nav>
             
             <!-- Hero Text -->
-            <h1 class="hero-title">
-                <%= heroTitle %><br>
-                <span class="hero-subtitle">Collection</span>
-            </h1>
-            <p class="hero-description">
-                <%= heroDescription %>
-            </p>
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                <h1 class="hero-title">
+                    Search Results<br>
+                    <span class="hero-subtitle">for "<%= searchQuery %>"</span>
+                </h1>
+                <p class="hero-description">
+                    <% if (hasResults) { %>
+                        Found <strong><%= totalProducts %></strong> products matching your search
+                    <% } else { %>
+                        No products found matching your search. Try different keywords or browse our categories.
+                    <% } %>
+                </p>
+            <% } else { %>
+                <h1 class="hero-title">
+                    <%= heroTitle %><br>
+                    <span class="hero-subtitle">Collection</span>
+                </h1>
+                <p class="hero-description">
+                    <%= heroDescription %>
+                </p>
+            <% } %>
             
             <!-- CTA Buttons -->
             <div class="hero-buttons">
-                <button class="premium-btn-primary">
-                    Explore New Arrivals
-                </button>
-                <button class="premium-btn-secondary">
-                    View Lookbook
-                </button>
+                <% if (typeof isSearch !== 'undefined' && isSearch && !hasResults) { %>
+                    <button class="premium-btn-primary" onclick="window.location.href='/shop'">
+                        Browse All Products
+                    </button>
+                    <button class="premium-btn-secondary" onclick="window.location.href='/shop/men'">
+                        Shop Men's Collection
+                    </button>
+                <% } else { %>
+                    <button class="premium-btn-primary">
+                        Explore New Arrivals
+                    </button>
+                    <button class="premium-btn-secondary">
+                        View Lookbook
+                    </button>
+                <% } %>
             </div>
         </div>
     </div>
@@ -43,7 +72,11 @@
     <div class="sort-bar-content">
         <!-- Results Count -->
         <div class="results-count">
-            Showing <span class="count">1–12</span> of <span class="count">84</span> items
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> results
+            <% } else { %>
+                Showing <span class="count"><%= pagination.startItem %>–<%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> items
+            <% } %>
         </div>
         
         <!-- Sort Controls -->
@@ -138,27 +171,27 @@
                             <label>Min</label>
                             <div class="price-input-wrapper">
                                 <span class="price-symbol">&#8377;</span>
-                                <input type="number" class="price-input" id="minPrice" value="0" min="0" max="2000">
+                                <input type="number" class="price-input" id="minPrice" value="0" min="0" max="10000">
                             </div>
                         </div>
                         <div class="price-input-group">
                             <label>Max</label>
                             <div class="price-input-wrapper">
                                 <span class="price-symbol">&#8377;</span>
-                                <input type="number" class="price-input" id="maxPrice" value="2000" min="0" max="2000">
+                                <input type="number" class="price-input" id="maxPrice" value="10000" min="0" max="10000">
                             </div>
                         </div>
                     </div>
                     <div class="range-slider-container">
                         <div class="range-track"></div>
                         <div class="range-progress" id="rangeProgress"></div>
-                        <input type="range" class="range-input" id="minRange" min="0" max="2000" value="0" step="10">
-                        <input type="range" class="range-input" id="maxRange" min="0" max="2000" value="2000" step="10">
+                        <input type="range" class="range-input" id="minRange" min="0" max="10000" value="0" step="10">
+                        <input type="range" class="range-input" id="maxRange" min="0" max="10000" value="10000" step="10">
                         <div class="range-thumb" id="minThumb">
                             <div class="price-tooltip">&#8377;0</div>
                         </div>
                         <div class="range-thumb" id="maxThumb">
-                            <div class="price-tooltip">&#8377;2000</div>
+                            <div class="price-tooltip">&#8377;10000</div>
                         </div>
                     </div>
                 </div>
@@ -199,6 +232,13 @@
                             <div class="filter-option-content">
                                 <input type="checkbox" class="filter-checkbox" data-category="bottoms">
                                 <span class="filter-option-label">Bottoms</span>
+                            </div>
+                            <span class="filter-option-count">(93)</span>
+                        </label>
+                        <label class="filter-option">
+                            <div class="filter-option-content">
+                                <input type="checkbox" class="filter-checkbox" data-category="bottoms">
+                                <span class="filter-option-label">Shoes</span>
                             </div>
                             <span class="filter-option-count">(93)</span>
                         </label>
@@ -392,25 +432,25 @@
                 </button>
                 <div class="filter-panel active">
                     <div class="discount-options">
-                        <label class="discount-item">
+                        <label class="discount-item" data-discount="10">
                             <input type="checkbox" class="discount-checkbox" data-discount="10">
                             <span class="discount-label">10% off or more</span>
                             <span class="discount-badge">124 items</span>
                         </label>
-
-                        <label class="discount-item">
+                    
+                        <label class="discount-item" data-discount="20">
                             <input type="checkbox" class="discount-checkbox" data-discount="20">
                             <span class="discount-label">20% off or more</span>
                             <span class="discount-badge">89 items</span>
                         </label>
-
-                        <label class="discount-item">
+                    
+                        <label class="discount-item" data-discount="30">
                             <input type="checkbox" class="discount-checkbox" data-discount="30">
                             <span class="discount-label">30% off or more</span>
                             <span class="discount-badge">45 items</span>
                         </label>
-
-                        <label class="discount-item">
+                    
+                        <label class="discount-item" data-discount="50">
                             <input type="checkbox" class="discount-checkbox" data-discount="50">
                             <span class="discount-label">50% off or more</span>
                             <span class="discount-badge">12 items</span>
@@ -430,8 +470,13 @@
 
         <!-- Collection Header -->
         <div class="collection-header">
-            <p class="collection-season">Spring/Summer <%= new Date().getFullYear() %></p>
-            <h2 class="collection-title">Curated For You</h2>
+            <% if (typeof isSearch !== 'undefined' && isSearch) { %>
+                <p class="collection-season">Search Results</p>
+                <h2 class="collection-title">Results for "<%= searchQuery %>"</h2>
+            <% } else { %>
+                <p class="collection-season">Spring/Summer <%= new Date().getFullYear() %></p>
+                <h2 class="collection-title">Curated For You</h2>
+            <% } %>
         </div>
 
         <!-- Product Grid -->
@@ -449,10 +494,30 @@
                 <% } %>
                 
                 <figure class="product-image-container">
-                    <% for(let image of product.images) {%>
-                    <a href="/product/<%= product._id %>" class="product-link">
-                        <img src="<%= image %>" alt="Premium Wool Coat" class="product-image">
-                    </a>
+                    <% if(product.images && product.images.length > 0) { %>
+                        <!-- Image carousel container -->
+                        <a href="/product/<%= product._id %>" class="product-link">
+                            <% for(let i = 0; i < product.images.length; i++) { %>
+                                <img src="<%= product.images[i] %>" 
+                                     alt="<%= product.name %>" 
+                                     class="product-image <%= i === 0 ? 'active' : '' %>"
+                                     data-index="<%= i %>">
+                            <% } %>
+                        </a>
+                        
+                        <!-- Image counter (only show if multiple images) -->
+                        <% if(product.images.length > 1) { %>
+                            <div class="image-counter">
+                                <span class="current-image">1</span>
+                                <span class="separator">/</span>
+                                <span class="total-images"><%= product.images.length %></span>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <!-- Fallback when no images -->
+                        <div style="position: absolute; inset: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                            No Image Available
+                        </div>
                     <% } %>
                 </figure>
 
@@ -466,23 +531,43 @@
                         <% } %>
                     </div>
                     
-                    <div class="price-container">
-                        <span class="price-current"> &#8377; <%= product.price %></span>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
+                        <!-- Current or Sale Price -->
+                        <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">
+                          ₹<%= product.salePrice || product.price %>
+                        </span>
+                      
+                        <% if (product.sale) { %>
+                          <!-- Original Price -->
+                          <span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">
+                            ₹<%= product.price %>
+                          </span>
+                      
+                          <!-- Sale Percentage Badge (hidden on small screens) -->
+                          <span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">
+                            <%= product.salePercentage %>% OFF
+                          </span>
+                        <% } %>
                     </div>
+                    <% if (!product.inStock) { %>
+                      <div class="mt-2 text-center">
+                        <span class="block text-[#D4AF37] font-light text-lg tracking-wide italic">Out of Stock</span>
+                      </div>
+                    <% } %>
                 </div>
-                
-                <button type="button" class="quick-add-mobile" data-quick-add-flag="false">Quick Add</button>
             </article>
             <% } %>
         </div>
 
         <!-- Load More Button -->
-        <div class="load-more-section">
-            <button class="premium-btn-secondary">
-                Load More Products
-            </button>
+        <div class="load-more-section" id="loadMoreSection">
+            <% if (pagination.hasMore) { %>
+                <button class="premium-btn-secondary" id="loadMoreBtn" data-current-page="<%= pagination.currentPage %>">
+                    Load More Products
+                </button>
+            <% } %>
             <p class="load-more-info">
-                Showing <span class="count">6</span> of <span class="count">84</span> products
+                Showing <span class="count"><%= pagination.endItem %></span> of <span class="count"><%= pagination.totalProducts %></span> products
             </p>
         </div>
     </section>
