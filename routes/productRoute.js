@@ -71,6 +71,9 @@ router.route('/:id')
                 }
             }
 
+            // Compute top-level inStock property for EJS
+            reqProduct.inStock = reqProduct.colors && reqProduct.colors.some(c => c.inStock);
+
             res.render('page/individualProduct', {
                 title: "Premium " + reqProduct.name + " | Velvra",
                 product: reqProduct,

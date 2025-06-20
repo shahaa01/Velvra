@@ -33,6 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize all event listeners
     initializeEventListeners();
+
+    // Auto-select the first color if available
+    if (colorSelectors.length > 0) {
+        colorSelectors[0].click();
+    }
+
+    // Set quantity to 1 for in-stock, 0 for out-of-stock
+    let firstColorObj = window.productColors && window.productColors.length > 0 ? window.productColors[0] : null;
+    if (firstColorObj && firstColorObj.stock > 0) {
+        productState.quantity = 1;
+        quantityInput.value = 1;
+    } else {
+        productState.quantity = 0;
+        quantityInput.value = 0;
+    }
+    updateQuantityUI();
 });
 
 function initializeEventListeners() {
@@ -68,6 +84,7 @@ function initializeEventListeners() {
             // Update state and UI
             productState.selectedColor = color;
             selectedColorSpan.textContent = color;
+            updateQuantityUI();
         });
     });
 
@@ -95,23 +112,33 @@ function initializeEventListeners() {
         if (productState.quantity > 1) {
             productState.quantity--;
             quantityInput.value = productState.quantity;
+            updateQuantityUI();
         }
     });
 
     increaseBtn.addEventListener('click', () => {
-        if (productState.quantity < 10) {
+        const colorObj = getSelectedColorObj();
+        const maxStock = colorObj ? colorObj.stock : 0;
+        if (productState.quantity < maxStock) {
             productState.quantity++;
             quantityInput.value = productState.quantity;
+            updateQuantityUI();
+        } else {
+            showQuantityError('Sorry, we do not have more of this item in stock right now, try choosing different product');
         }
     });
 
     quantityInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
-        if (value >= 1 && value <= 10) {
+        const colorObj = getSelectedColorObj();
+        const maxStock = colorObj ? colorObj.stock : 0;
+        if (value >= 1 && value <= maxStock) {
             productState.quantity = value;
         } else {
+            showQuantityError('Sorry, we do not have more of this item in stock right now, try choosing different product');
             e.target.value = productState.quantity;
         }
+        updateQuantityUI();
     });
 
     // Wishlist Functionality
@@ -377,6 +404,9 @@ function initializeEventListeners() {
             }
         });
     });
+
+    // On load, set initial UI
+    updateQuantityUI();
 }
 
 // Utility Functions
@@ -427,6 +457,64 @@ if (!document.querySelector('style[data-heart-animation]')) {
         }
     `;
     document.head.appendChild(heartAnimation);
+}
+
+// --- Stock/Quantity Logic ---
+function getSelectedColorObj() {
+    return window.productColors.find(c => c.name === productState.selectedColor);
+}
+
+function updateQuantityUI() {
+    const colorObj = getSelectedColorObj();
+    const maxStock = colorObj ? colorObj.stock : 0;
+    quantityInput.max = maxStock;
+    if (productState.quantity > maxStock) {
+        productState.quantity = maxStock;
+        quantityInput.value = maxStock;
+    }
+    // Show stock left if less than 5
+    const stockMsg = document.getElementById('stockMessage');
+    if (colorObj && colorObj.stock < 5 && colorObj.stock > 0) {
+        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${colorObj.stock} item${colorObj.stock > 1 ? 's' : ''} of this color left in stock</span>`;
+    } else {
+        stockMsg.innerHTML = '';
+    }
+    // Out of stock UI
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    const buyNowContainer = document.getElementById('buyNowContainer');
+    if (colorObj && colorObj.stock === 0) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.style.opacity = 0.5;
+        addToCartBtn.style.cursor = 'not-allowed';
+        if (buyNowBtn) {
+            buyNowBtn.disabled = true;
+            buyNowBtn.style.opacity = 0.5;
+            buyNowBtn.style.cursor = 'not-allowed';
+        }
+        if (buyNowContainer) {
+            buyNowContainer.style.display = 'none';
+        }
+        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.3rem;">Out of Stock</span>`;
+    } else {
+        addToCartBtn.disabled = false;
+        addToCartBtn.style.opacity = 1;
+        addToCartBtn.style.cursor = '';
+        if (buyNowBtn) {
+            buyNowBtn.disabled = false;
+            buyNowBtn.style.opacity = 1;
+            buyNowBtn.style.cursor = '';
+        }
+        if (buyNowContainer) {
+            buyNowContainer.style.display = '';
+        }
+    }
+}
+
+function showQuantityError(msg) {
+    const errDiv = document.getElementById('quantityError');
+    errDiv.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1rem;">${msg}</span>`;
+    setTimeout(() => { errDiv.innerHTML = ''; }, 2500);
 }
 
 // ... rest of the existing code (InfiniteHorizontalScroll class, etc.) ...
