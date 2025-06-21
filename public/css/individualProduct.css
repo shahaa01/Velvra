@@ -351,57 +351,165 @@
     background-color: rgba(212, 175, 55, 0.1) !important;
 }
 
-/* --- Responsive Main Product Section --- */
-@media (max-width: 900px) {
-    .max-w-screen-xl, .max-w-4xl {
-        max-width: 98vw;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-    }
-    .lg\:grid-cols-2 {
-        grid-template-columns: 1fr;
-    }
-    .product-image-zoom {
-        max-height: 320px;
-    }
-    .image-gallery {
-        gap: 0.5rem;
-    }
-    .mt-10, .lg\:mt-0 {
-        margin-top: 1.5rem !important;
+/* ===========================================
+   RESPONSIVE FIXES FOR OLDER/SMALLER SCREENS
+   =========================================== */
+
+/* Base adjustments for all screens */
+@media screen and (max-width: 1440px) {
+    :root {
+        --spacing-scale: 0.9;
     }
 }
 
-@media (max-width: 811px) {
-    .max-w-screen-xl, .max-w-4xl {
-        max-width: 100vw;
-        padding-left: 0.2rem;
-        padding-right: 0.2rem;
+/* Medium screens (most laptops) */
+@media screen and (max-width: 1366px) {
+    .luxury-gradient {
+        min-height: auto;
     }
-    .product-image-zoom {
-        max-height: 250px;
+    
+    /* Reduce container padding */
+    .max-w-screen-xl {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
-    .text-3xl, .lg\:text-4xl {
+    
+    /* Scale down section padding */
+    .py-8.lg\\:py-16 {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    
+    /* Scale down text sizes */
+    .text-3xl.lg\\:text-4xl {
+        font-size: 1.75rem !important;
+        line-height: 2rem !important;
+    }
+    
+    .text-3xl {
         font-size: 1.5rem !important;
+        line-height: 1.75rem !important;
     }
+    
+    /* Reduce grid gap */
+    .lg\\:gap-16 {
+        gap: 2rem !important;
+    }
+    
+    /* Smaller product image */
+    .aspect-\\[4\\/5\\] {
+        aspect-ratio: 4/4.5 !important;
+    }
+}
+
+/* Smaller screens (1024px and below) */
+@media screen and (max-width: 1024px) {
+    /* Further reduce padding */
+    .px-4.sm\\:px-6.lg\\:px-8 {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    
+    .py-8.lg\\:py-16 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    /* Compact product info */
     .mb-8 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mb-6 {
         margin-bottom: 1rem !important;
     }
+    
+    /* Smaller buttons */
+    .py-4.px-8 {
+        padding: 0.75rem 1.5rem !important;
+    }
+    
+    /* Compact color/size selectors */
+    .w-12.h-12 {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    
+    .py-3.px-4 {
+        padding: 0.5rem 0.75rem !important;
+    }
 }
 
-@media (max-width: 600px) {
-    .max-w-screen-xl, .max-w-4xl {
-        max-width: 100vw;
-        padding-left: 0.1rem;
-        padding-right: 0.1rem;
-    }
-    .product-image-zoom {
-        max-height: 180px;
-    }
-    .text-3xl, .lg\:text-4xl {
+/* Very small/old screens */
+@media screen and (max-width: 768px) {
+    /* Make everything more compact */
+    .text-xl {
         font-size: 1.1rem !important;
     }
-    .mb-8 {
-        margin-bottom: 0.7rem !important;
+    
+    .text-lg {
+        font-size: 1rem !important;
     }
+    
+    /* Reduce accordion padding */
+    .py-6 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    /* Smaller related products cards */
+    .w-80 {
+        width: 16rem !important;
+    }
+}
+
+/* High DPI/Retina detection - keep original sizing */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi),
+       screen and (min-resolution: 2dppx) {
+    /* Reset to original values for high-DPI screens */
+    .text-3xl.lg\\:text-4xl {
+        font-size: 1.875rem !important;
+    }
+    
+    @media (min-width: 1024px) {
+        .text-3xl.lg\\:text-4xl {
+            font-size: 2.25rem !important;
+        }
+    }
+}
+
+/* Windows-specific adjustments */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    .glass-effect {
+        backdrop-filter: none;
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+}
+
+/* Windows font rendering improvements */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Better button scaling for all screens */
+.gold-gradient {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 4vw, 2rem);
+}
+
+/* Responsive container max-width */
+.max-w-screen-xl {
+    max-width: min(1280px, 95vw);
+}
+
+/* Flexible image aspect ratio */
+.aspect-\\[4\\/5\\] {
+    aspect-ratio: clamp(0.75, 4/5, 0.85);
+}
+
+.imageDiv {
+    height: 80%;
 }
