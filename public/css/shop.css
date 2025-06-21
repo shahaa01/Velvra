@@ -2799,3 +2799,14 @@ body {
 .hero-content {
     padding: 0;
 }
+
+@media (max-height: 750px) and (min-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 0 !important;
+
+    }
+    .product-card {
+        transform: scale(0.9) !important;
+    }
+}
