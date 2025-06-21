@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Seller - Order Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .order-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 8px;
+            height: 8px;
+            background-color: #d4af37;
+            border-radius: 50%;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background-color: #e8dcc6;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        
+        .priority-indicator {
+            width: 4px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .priority-high { background-color: #ef4444; }
+        .priority-medium { background-color: #f59e0b; }
+        .priority-low { background-color: #10b981; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+        <aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-charcoal sidebar-transition transform -translate-x-full lg:translate-x-0">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="px-6 py-6 border-b border-stone/20">
+                <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                <p class="text-xs text-stone mt-1">Seller Dashboard</p>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 overflow-y-auto">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-home w-5"></i>
+                            <span class="ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="products.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-box w-5"></i>
+                            <span class="ml-3">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 text-pearl bg-gold/20 rounded-lg transition-all">
+                            <i class="fas fa-shopping-cart w-5"></i>
+                            <span class="ml-3">Orders</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="inventory.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-warehouse w-5"></i>
+                            <span class="ml-3">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="promotions.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-tag w-5"></i>
+                            <span class="ml-3">Promotions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span class="ml-3">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="payouts.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-dollar-sign w-5"></i>
+                            <span class="ml-3">Payouts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span class="ml-3">Messages</span>
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store-settings.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-store w-5"></i>
+                            <span class="ml-3">Store Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="account.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-user-cog w-5"></i>
+                            <span class="ml-3">Account</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Profile Section -->
+            <div class="px-4 py-4 border-t border-stone/20">
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a" alt="Store" class="w-10 h-10 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-pearl">Fashion Hub</p>
+                        <p class="text-xs text-stone">Premium Seller</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Order Management</h2>
+                            <p class="text-sm text-stone">Track and manage customer orders</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-download"></i>
+                            <span class="hidden sm:inline font-medium">Export</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Order Management Content -->
+        <main class="p-4 sm:p-6">
+            <!-- Order Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone">Total Orders</p>
+                            <p class="text-xl font-bold text-charcoal">156</p>
+                        </div>
+                        <i class="fas fa-shopping-cart text-gold"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone">Pending</p>
+                            <p class="text-xl font-bold text-yellow-600">23</p>
+                        </div>
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone">Processing</p>
+                            <p class="text-xl font-bold text-blue-600">12</p>
+                        </div>
+                        <i class="fas fa-box-open text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone">Shipped</p>
+                            <p class="text-xl font-bold text-purple-600">45</p>
+                        </div>
+                        <i class="fas fa-truck text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone">Delivered</p>
+                            <p class="text-xl font-bold text-green-600">76</p>
+                        </div>
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-cream rounded-xl p-4 border border-beige mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" placeholder="Search orders..." 
+                               class="w-full pl-10 pr-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <i class="fas fa-search absolute left-3 top-3 text-stone"></i>
+                    </div>
+                    
+                    <select id="statusFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="returned">Returned</option>
+                    </select>
+                    
+                    <select id="dateFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                    
+                    <select id="sortBy" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="amount-high">Amount: High to Low</option>
+                        <option value="amount-low">Amount: Low to High</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Orders List -->
+            <div class="space-y-4" id="ordersList">
+                <!-- Order cards will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-12">
+                <i class="fas fa-shopping-basket text-6xl text-stone mb-4"></i>
+                <h3 class="text-xl font-semibold text-charcoal mb-2">No orders found</h3>
+                <p class="text-stone">Orders will appear here once customers place them</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content bg-pearl rounded-xl shadow-xl w-full max-w-4xl mx-4">
+            <div class="p-6 border-b border-beige">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-charcoal">Order Details</h3>
+                    <button onclick="closeModal()" class="text-stone hover:text-charcoal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="modalContent" class="p-6">
+                <!-- Modal content will be inserted here -->
+            </div>
+        </div>
+    </div> 
+    <script>
+        // Mock order data
+        const mockOrders = [
+            {
+                id: 1,
+                orderNumber: 'ORD-2024-0001',
+                customer: {
+                    name: 'Emily Johnson',
+                    email: 'emily.j@email.com',
+                    phone: '+1 555-0123',
+                    avatar: 'https://ui-avatars.com/api/?name=Emily+Johnson&background=e8dcc6&color=1a1a1a'
+                },
+                items: [
+                    {
+                        name: 'Premium Leather Jacket',
+                        quantity: 1,
+                        price: 299.99,
+                        image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&h=100&fit=crop'
+                    },
+                    {
+                        name: 'Silk Evening Dress',
+                        quantity: 1,
+                        price: 189.99,
+                        image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=100&h=100&fit=crop'
+                    }
+                ],
+                total: 489.98,
+                status: 'pending',
+                priority: 'high',
+                paymentStatus: 'paid',
+                paymentMethod: 'Credit Card',
+                shippingAddress: '123 Main St, New York, NY 10001',
+                orderDate: '2024-03-20 10:30:00',
+                notes: 'Please gift wrap the items'
+            },
+            {
+                id: 2,
+                orderNumber: 'ORD-2024-0002',
+                customer: {
+                    name: 'Michael Chen',
+                    email: 'mchen@email.com',
+                    phone: '+1 555-0124',
+                    avatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=e8dcc6&color=1a1a1a'
+                },
+                items: [
+                    {
+                        name: 'Designer Handbag',
+                        quantity: 1,
+                        price: 450.00,
+                        image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=100&h=100&fit=crop'
+                    }
+                ],
+                total: 450.00,
+                status: 'processing',
+                priority: 'medium',
+                paymentStatus: 'paid',
+                paymentMethod: 'PayPal',
+                shippingAddress: '456 Oak Ave, Los Angeles, CA 90001',
+                orderDate: '2024-03-19 14:45:00',
+                notes: null
+            },
+            {
+                id: 3,
+                orderNumber: 'ORD-2024-0003',
+                customer: {
+                    name: 'Sarah Williams',
+                    email: 'sarah.w@email.com',
+                    phone: '+1 555-0125',
+                    avatar: 'https://ui-avatars.com/api/?name=Sarah+Williams&background=e8dcc6&color=1a1a1a'
+                },
+                items: [
+                    {
+                        name: 'Cashmere Sweater',
+                        quantity: 2,
+                        price: 125.00,
+                        image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&h=100&fit=crop'
+                    }
+                ],
+                total: 250.00,
+                status: 'shipped',
+                priority: 'low',
+                paymentStatus: 'paid',
+                paymentMethod: 'Debit Card',
+                shippingAddress: '789 Pine St, Chicago, IL 60601',
+                orderDate: '2024-03-18 09:15:00',
+                trackingNumber: 'TRK123456789',
+                notes: null
+            },
+            {
+                id: 4,
+                orderNumber: 'ORD-2024-0004',
+                customer: {
+                    name: 'David Martinez',
+                    email: 'david.m@email.com',
+                    phone: '+1 555-0126',
+                    avatar: 'https://ui-avatars.com/api/?name=David+Martinez&background=e8dcc6&color=1a1a1a'
+                },
+                items: [
+                    {
+                        name: 'Leather Boots',
+                        quantity: 1,
+                        price: 225.00,
+                        image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&h=100&fit=crop'
+                    }
+                ],
+                total: 225.00,
+                status: 'delivered',
+                priority: 'low',
+                paymentStatus: 'paid',
+                paymentMethod: 'Credit Card',
+                shippingAddress: '321 Elm St, Houston, TX 77001',
+                orderDate: '2024-03-15 16:20:00',
+                deliveryDate: '2024-03-18',
+                trackingNumber: 'TRK987654321',
+                notes: 'Leave at doorstep'
+            }
+        ];
+
+        // Initialize
+        function init() {
+            renderOrders();
+            setupEventListeners();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('mobileMenuOverlay').classList.toggle('hidden');
+            });
+
+            document.getElementById('mobileMenuOverlay').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('mobileMenuOverlay').classList.add('hidden');
+            });
+
+            // Filters
+            document.getElementById('searchInput').addEventListener('input', filterOrders);
+            document.getElementById('statusFilter').addEventListener('change', filterOrders);
+            document.getElementById('dateFilter').addEventListener('change', filterOrders);
+            document.getElementById('sortBy').addEventListener('change', filterOrders);
+        }
+
+        // Render orders
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            container.innerHTML = '';
+
+            if (mockOrders.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            mockOrders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card bg-cream rounded-xl border border-beige p-6 relative overflow-hidden cursor-pointer';
+                card.onclick = () => viewOrder(order.id);
+                
+                card.innerHTML = `
+                    <div class="priority-indicator priority-${order.priority}"></div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-charcoal">${order.orderNumber}</h3>
+                            <p class="text-sm text-stone">${formatDateTime(order.orderDate)}</p>
+                        </div>
+                        <div class="mt-2 sm:mt-0 sm:text-right">
+                            ${getStatusBadge(order.status)}
+                            <p class="text-lg font-bold text-charcoal mt-1">${order.total.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center mb-4">
+                        <img src="${order.customer.avatar}" alt="${order.customer.name}" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <p class="font-medium text-charcoal">${order.customer.name}</p>
+                            <p class="text-sm text-stone">${order.customer.email}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-stone mb-4">
+                        <span><i class="fas fa-box mr-1"></i>${order.items.length} item${order.items.length > 1 ? 's' : ''}</span>
+                        <span><i class="fas fa-credit-card mr-1"></i>${order.paymentMethod}</span>
+                        ${order.trackingNumber ? `<span><i class="fas fa-shipping-fast mr-1"></i>${order.trackingNumber}</span>` : ''}
+                        ${order.notes ? '<span><i class="fas fa-sticky-note mr-1"></i>Has notes</span>' : ''}
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            ${order.items.slice(0, 3).map(item => `
+                                <img src="${item.image}" alt="${item.name}" class="w-8 h-8 rounded-full border-2 border-cream">
+                            `).join('')}
+                            ${order.items.length > 3 ? `
+                                <div class="w-8 h-8 rounded-full bg-beige border-2 border-cream flex items-center justify-center text-xs font-medium text-charcoal">
+                                    +${order.items.length - 3}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="flex space-x-2">
+                            ${order.status === 'pending' ? `
+                                <button onclick="event.stopPropagation(); updateOrderStatus(${order.id}, 'processing')" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                                    <i class="fas fa-box-open mr-1"></i>Process
+                                </button>
+                            ` : ''}
+                            ${order.status === 'processing' ? `
+                                <button onclick="event.stopPropagation(); updateOrderStatus(${order.id}, 'shipped')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+                                    <i class="fas fa-truck mr-1"></i>Ship
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // View order details
+        function viewOrder(orderId) {
+            const order = mockOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Order Info -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Header -->
+                        <div class="bg-cream rounded-lg p-6 border border-beige">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h4 class="text-xl font-bold text-charcoal">${order.orderNumber}</h4>
+                                    <p class="text-stone">Placed on ${formatDateTime(order.orderDate)}</p>
+                                </div>
+                                ${getStatusBadge(order.status)}
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-stone">Payment Method</p>
+                                    <p class="font-medium text-charcoal">${order.paymentMethod}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-stone">Payment Status</p>
+                                    <p class="font-medium text-green-600">Paid</p>
+                                </div>
+                                ${order.trackingNumber ? `
+                                    <div>
+                                        <p class="text-sm text-stone">Tracking Number</p>
+                                        <p class="font-medium text-charcoal">${order.trackingNumber}</p>
+                                    </div>
+                                ` : ''}
+                                ${order.deliveryDate ? `
+                                    <div>
+                                        <p class="text-sm text-stone">Delivered On</p>
+                                        <p class="font-medium text-charcoal">${order.deliveryDate}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            ${order.notes ? `
+                                <div class="mt-4 p-3 bg-pearl rounded-lg border border-gold/30">
+                                    <p class="text-sm font-medium text-charcoal mb-1">Customer Notes:</p>
+                                    <p class="text-sm text-stone">${order.notes}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Order Items -->
+                        <div class="bg-cream rounded-lg border border-beige overflow-hidden">
+                            <div class="px-6 py-4 border-b border-beige">
+                                <h5 class="font-semibold text-charcoal">Order Items</h5>
+                            </div>
+                            <div class="divide-y divide-beige">
+                                ${order.items.map(item => `
+                                    <div class="p-4 flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-lg object-cover mr-4">
+                                            <div>
+                                                <p class="font-medium text-charcoal">${item.name}</p>
+                                                <p class="text-sm text-stone">Qty: ${item.quantity}</p>
+                                            </div>
+                                        </div>
+                                        <p class="font-semibold text-charcoal">${(item.price * item.quantity).toFixed(2)}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="px-6 py-4 bg-beige/30 border-t border-beige">
+                                <div class="flex items-center justify-between text-lg font-semibold">
+                                    <span>Total</span>
+                                    <span>${order.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Timeline -->
+                        <div class="bg-cream rounded-lg border border-beige p-6">
+                            <h5 class="font-semibold text-charcoal mb-4">Order Timeline</h5>
+                            <div class="space-y-1">
+                                <div class="timeline-item">
+                                    <p class="font-medium text-charcoal">Order Placed</p>
+                                    <p class="text-sm text-stone">${formatDateTime(order.orderDate)}</p>
+                                </div>
+                                ${order.status !== 'pending' && order.status !== 'cancelled' ? `
+                                    <div class="timeline-item">
+                                        <p class="font-medium text-charcoal">Processing Started</p>
+                                        <p class="text-sm text-stone">Order is being prepared</p>
+                                    </div>
+                                ` : ''}
+                                ${order.status === 'shipped' || order.status === 'delivered' ? `
+                                    <div class="timeline-item">
+                                        <p class="font-medium text-charcoal">Order Shipped</p>
+                                        <p class="text-sm text-stone">Tracking: ${order.trackingNumber || 'N/A'}</p>
+                                    </div>
+                                ` : ''}
+                                ${order.status === 'delivered' ? `
+                                    <div class="timeline-item">
+                                        <p class="font-medium text-charcoal">Order Delivered</p>
+                                        <p class="text-sm text-stone">${order.deliveryDate}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Customer & Actions -->
+                    <div class="space-y-6">
+                        <!-- Customer Info -->
+                        <div class="bg-cream rounded-lg border border-beige p-6">
+                            <h5 class="font-semibold text-charcoal mb-4">Customer Information</h5>
+                            <div class="flex items-center mb-4">
+                                <img src="${order.customer.avatar}" alt="${order.customer.name}" class="w-12 h-12 rounded-full mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal">${order.customer.name}</p>
+                                    <p class="text-sm text-stone">${order.customer.email}</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center text-stone">
+                                    <i class="fas fa-phone w-4 mr-2"></i>
+                                    <span>${order.customer.phone}</span>
+                                </div>
+                                <div class="flex items-start text-stone">
+                                    <i class="fas fa-map-marker-alt w-4 mr-2 mt-0.5"></i>
+                                    <span>${order.shippingAddress}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="bg-cream rounded-lg border border-beige p-6">
+                            <h5 class="font-semibold text-charcoal mb-4">Actions</h5>
+                            <div class="space-y-3">
+                                ${order.status === 'pending' ? `
+                                    <button onclick="updateOrderStatus(${order.id}, 'processing')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                                        <i class="fas fa-box-open mr-2"></i>Start Processing
+                                    </button>
+                                ` : ''}
+                                ${order.status === 'processing' ? `
+                                    <button onclick="showShippingModal(${order.id})" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                        <i class="fas fa-truck mr-2"></i>Mark as Shipped
+                                    </button>
+                                ` : ''}
+                                ${order.status === 'shipped' ? `
+                                    <button onclick="updateOrderStatus(${order.id}, 'delivered')" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                                        <i class="fas fa-check-circle mr-2"></i>Mark as Delivered
+                                    </button>
+                                ` : ''}
+                                <button onclick="printOrder(${order.id})" class="w-full bg-beige text-charcoal py-2 rounded-lg hover:bg-stone hover:text-pearl">
+                                    <i class="fas fa-print mr-2"></i>Print Invoice
+                                </button>
+                                <button onclick="contactCustomer(${order.id})" class="w-full border border-beige text-charcoal py-2 rounded-lg hover:bg-cream">
+                                    <i class="fas fa-envelope mr-2"></i>Contact Customer
+                                </button>
+                                ${order.status !== 'delivered' && order.status !== 'cancelled' ? `
+                                    <button onclick="cancelOrder(${order.id})" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">
+                                        <i class="fas fa-times-circle mr-2"></i>Cancel Order
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('orderModal').classList.add('show');
+        }
+
+        // Format date time
+        function formatDateTime(dateTime) {
+            const date = new Date(dateTime);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Get status badge
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="status-badge bg-yellow-100 text-yellow-700"><i class="fas fa-clock mr-1"></i>Pending</span>',
+                'processing': '<span class="status-badge bg-blue-100 text-blue-700"><i class="fas fa-box-open mr-1"></i>Processing</span>',
+                'shipped': '<span class="status-badge bg-purple-100 text-purple-700"><i class="fas fa-truck mr-1"></i>Shipped</span>',
+                'delivered': '<span class="status-badge bg-green-100 text-green-700"><i class="fas fa-check-circle mr-1"></i>Delivered</span>',
+                'cancelled': '<span class="status-badge bg-red-100 text-red-700"><i class="fas fa-times-circle mr-1"></i>Cancelled</span>',
+                'returned': '<span class="status-badge bg-gray-100 text-gray-700"><i class="fas fa-undo mr-1"></i>Returned</span>'
+            };
+            return badges[status] || '';
+        }
+
+        // Update order status
+        function updateOrderStatus(orderId, newStatus) {
+            const order = mockOrders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+                renderOrders();
+                closeModal();
+                showNotification(`Order marked as ${newStatus}`, 'success');
+            }
+        }
+
+        // Show shipping modal
+        function showShippingModal(orderId) {
+            const trackingNumber = prompt('Enter tracking number:');
+            if (trackingNumber) {
+                const order = mockOrders.find(o => o.id === orderId);
+                if (order) {
+                    order.trackingNumber = trackingNumber;
+                    order.status = 'shipped';
+                    renderOrders();
+                    closeModal();
+                    showNotification('Order marked as shipped', 'success');
+                }
+            }
+        }
+
+        // Cancel order
+        function cancelOrder(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                const order = mockOrders.find(o => o.id === orderId);
+                if (order) {
+                    order.status = 'cancelled';
+                    renderOrders();
+                    closeModal();
+                    showNotification('Order cancelled', 'error');
+                }
+            }
+        }
+
+        // Print order
+        function printOrder(orderId) {
+            showNotification('Printing order invoice...', 'info');
+            // Implementation for printing
+        }
+
+        // Contact customer
+        function contactCustomer(orderId) {
+            const order = mockOrders.find(o => o.id === orderId);
+            if (order) {
+                showNotification(`Opening email to ${order.customer.email}`, 'info');
+                // Implementation for contacting customer
+            }
+        }
+
+        // Filter orders
+        function filterOrders() {
+            // Implementation for filtering
+            renderOrders();
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('orderModal').classList.remove('show');
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                type === 'info' ? 'bg-blue-500 text-white' :
+                'bg-yellow-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize on load
+        init();
+    </script>

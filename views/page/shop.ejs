@@ -2,7 +2,7 @@
 <% block('css').append('<link rel="stylesheet" href="/css/shop.css">') %>
 
 <!-- Hero Section -->
-<section class="hero-section">
+<section class="hero-section" style="min-height: auto;">
     <div class="hero-content">
         <div class="container">
             <!-- Breadcrumb -->
@@ -25,7 +25,7 @@
             <!-- Hero Text -->
             <% if (typeof isSearch !== 'undefined' && isSearch) { %>
                 <h1 class="hero-title">
-                    Search Results<br>
+                    Search Results
                     <span class="hero-subtitle">for "<%= searchQuery %>"</span>
                 </h1>
                 <p class="hero-description">
@@ -37,7 +37,7 @@
                 </p>
             <% } else { %>
                 <h1 class="hero-title">
-                    <%= heroTitle %><br>
+                    <%= heroTitle %>
                     <span class="hero-subtitle">Collection</span>
                 </h1>
                 <p class="hero-description">
@@ -574,7 +574,7 @@
 </div>
 
        <section class="features-section">
-        <div class="container">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
             <h2 class="features-title">The Velvra Promise</h2>
             <div class="features-grid">
                 <div class="feature-card floating">

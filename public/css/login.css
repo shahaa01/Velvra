@@ -145,3 +145,226 @@ input:focus {
         transform: scale(0.98);
     }
 }
+
+/* ===========================================
+   RESPONSIVE FIXES FOR LOGIN PAGE
+   =========================================== */
+
+/* Remove scroll and fit in viewport */
+main {
+    height: 100vh !important;
+    min-height: auto !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    padding-top: var(--navbar-height) !important;
+}
+
+/* Base adjustments for all screens */
+@media screen and (max-width: 1440px) {
+    .max-w-6xl {
+        max-width: min(1152px, 95vw) !important;
+    }
+}
+
+/* Medium screens (most laptops) - 1366px and below */
+@media screen and (max-width: 1366px) {
+    /* Reduce container padding */
+    .p-8.sm\\:p-12.lg\\:p-16 {
+        padding: 1.5rem !important;
+    }
+    
+    /* Reduce form spacing */
+    .space-y-6 > * + * {
+        margin-top: 1rem !important;
+    }
+    
+    .mb-10 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mb-8 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .my-8 {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .mt-8 {
+        margin-top: 1rem !important;
+    }
+    
+    /* Scale down text sizes */
+    .text-2xl.sm\\:text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    .text-3xl {
+        font-size: 1.75rem !important;
+        line-height: 2rem !important;
+    }
+    
+    .text-4xl {
+        font-size: 2rem !important;
+        line-height: 2.25rem !important;
+    }
+    
+    /* Reduce button padding */
+    .py-4 {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+    
+    .py-3 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    /* Smaller input padding */
+    .py-3 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    /* Compact right side padding */
+    .p-12 {
+        padding: 2rem !important;
+    }
+}
+
+/* Smaller screens (1024px and below) */
+@media screen and (max-width: 1024px) {
+    /* Further reduce padding */
+    .p-8.sm\\:p-12.lg\\:p-16 {
+        padding: 1rem !important;
+    }
+    
+    .p-12 {
+        padding: 1.5rem !important;
+    }
+    
+    /* Tighter spacing */
+    .space-y-6 > * + * {
+        margin-top: 0.75rem !important;
+    }
+    
+    .space-y-3 > * + * {
+        margin-top: 0.5rem !important;
+    }
+    
+    .mb-10 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mb-8 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .mb-6 {
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Smaller rounded corners */
+    .sm\\:rounded-3xl {
+        border-radius: 1rem !important;
+    }
+    
+    /* Compact social buttons */
+    .gap-4 {
+        gap: 0.5rem !important;
+    }
+    
+    /* Smaller icons */
+    .w-5.h-5 {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+}
+
+/* Very small/old screens (768px and below) */
+@media screen and (max-width: 768px) {
+    /* Minimal padding */
+    .p-8.sm\\:p-12.lg\\:p-16 {
+        padding: 0.75rem !important;
+    }
+    
+    /* Ultra compact spacing */
+    .space-y-6 > * + * {
+        margin-top: 0.5rem !important;
+    }
+    
+    .mb-10 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .mb-8 {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .my-8 {
+        margin-top: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .mt-8 {
+        margin-top: 0.75rem !important;
+    }
+}
+
+/* Ensure container fits viewport */
+.min-h-screen {
+    height: calc(100vh - var(--navbar-height)) !important;
+    min-height: auto !important;
+}
+
+/* Responsive container scaling */
+.max-w-6xl {
+    max-width: min(1152px, calc(100vw - 1rem));
+}
+
+/* Flexible form inputs */
+.py-3 {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem) 0;
+}
+
+/* Better button scaling */
+.py-4 {
+    padding: clamp(0.625rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
+}
+
+/* High DPI/Retina detection - keep original sizing */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi),
+       screen and (min-resolution: 2dppx) {
+    .text-2xl.sm\\:text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    @media (min-width: 640px) {
+        .text-2xl.sm\\:text-3xl {
+            font-size: 1.875rem !important;
+            line-height: 2.25rem !important;
+        }
+    }
+    
+    .text-3xl {
+        font-size: 1.875rem !important;
+        line-height: 2.25rem !important;
+    }
+    
+    .text-4xl {
+        font-size: 2.25rem !important;
+        line-height: 2.5rem !important;
+    }
+}
+
+/* Windows-specific adjustments */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    .shadow-2xl {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+}

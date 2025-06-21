@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Admin - Complaints Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .complaint-card {
+            transition: all 0.3s ease;
+        }
+        
+        .complaint-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .priority-indicator {
+            width: 4px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .priority-high { background-color: #ef4444; }
+        .priority-medium { background-color: #f59e0b; }
+        .priority-low { background-color: #10b981; }
+        
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #f9fafb;
+        }
+        
+        .chat-input {
+            border-top: 1px solid #e5e7eb;
+            padding: 1rem;
+            background-color: white;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            word-wrap: break-word;
+        }
+        
+        .message.received .message-bubble {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .message.sent .message-bubble {
+            background-color: #7c3aed;
+            color: white;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Velvra Admin</h1>
+            <p class="text-gray-400 text-sm mt-1">Premium Marketplace</p>
+        </div>
+        
+        <nav class="mt-8">
+            <a href="index.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-dashboard w-5"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="users.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-users w-5"></i>
+                <span class="ml-3">User Management</span>
+            </a>
+            <a href="sellers.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-store w-5"></i>
+                <span class="ml-3">Seller Management</span>
+            </a>
+            <a href="products.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-box w-5"></i>
+                <span class="ml-3">Products</span>
+            </a>
+            <a href="orders.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-shopping-cart w-5"></i>
+                <span class="ml-3">Orders</span>
+            </a>
+            <a href="inventory.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-warehouse w-5"></i>
+                <span class="ml-3">Inventory</span>
+            </a>
+            <a href="content.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-file-alt w-5"></i>
+                <span class="ml-3">Content Manager</span>
+            </a>
+            <a href="promotions.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-tag w-5"></i>
+                <span class="ml-3">Promotions</span>
+            </a>
+            <a href="reports.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-chart-line w-5"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+            <a href="#" class="sidebar-link flex items-center px-6 py-3 bg-purple-600 text-white">
+                <i class="fas fa-headset w-5"></i>
+                <span class="ml-3">Support</span>
+            </a>
+            <a href="finance.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-dollar-sign w-5"></i>
+                <span class="ml-3">Finance</span>
+            </a>
+            <a href="settings.html" class="sidebar-link flex items-center px-6 py-3 hover:bg-gray-800">
+                <i class="fas fa-cog w-5"></i>
+                <span class="ml-3">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button id="sidebarToggle" class="lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" placeholder="Search complaints..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">7</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff" alt="Admin" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">Admin User</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Complaints Content -->
+        <main class="p-6">
+            <!-- Page Title and Actions -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Complaints Management</h2>
+                    <p class="text-gray-600 mt-1">Handle customer complaints and disputes</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-3">
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center">
+                        <i class="fas fa-download mr-2"></i>
+                        Export
+                    </button>
+                    <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Complaints</p>
+                            <p class="text-2xl font-bold text-gray-800">156</p>
+                            <p class="text-xs text-gray-500 mt-1">All time</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-exclamation-circle text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Open</p>
+                            
+                            <p class="text-2xl font-bold text-red-600">23</p>
+                            <p class="text-xs text-gray-500 mt-1">Needs attention</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-folder-open text-red-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">In Progress</p>
+                            <p class="text-2xl font-bold text-yellow-600">45</p>
+                            <p class="text-xs text-gray-500 mt-1">Being resolved</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Resolved</p>
+                            <p class="text-2xl font-bold text-green-600">88</p>
+                            <p class="text-xs text-gray-500 mt-1">This month</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Avg. Resolution</p>
+                            <p class="text-2xl font-bold text-gray-800">2.3d</p>
+                            <p class="text-xs text-gray-500 mt-1">Response time</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-tachometer-alt text-purple-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div class="flex flex-wrap border-b border-gray-200">
+                    <button class="px-6 py-3 text-sm font-medium text-purple-600 border-b-2 border-purple-600" data-tab="all">
+                        All Complaints
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="open">
+                        Open
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="in-progress">
+                        In Progress
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="resolved">
+                        Resolved
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="closed">
+                        Closed
+                    </button>
+                </div>
+            </div>
+
+            <!-- Complaints List -->
+            <div id="complaintsContainer" class="space-y-4">
+                <!-- Complaint cards will be inserted here by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Complaint Detail Modal -->
+    <div id="complaintModal" class="modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Complaint Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="modalContent">
+                    <!-- Modal content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock complaint data
+        const mockComplaints = [
+            {
+                id: 1,
+                complaintNumber: 'CMP-2024-0001',
+                customer: {
+                    name: 'Sarah Johnson',
+                    email: 'sarah.j@email.com',
+                    avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=random'
+                },
+                seller: {
+                    name: 'Fashion Hub',
+                    id: 'SELL-001'
+                },
+                order: {
+                    number: 'ORD-2024-0234',
+                    date: '2024-03-15',
+                    amount: 299.99
+                },
+                product: {
+                    name: 'Premium Leather Jacket',
+                    category: 'Men\'s Fashion',
+                    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100'
+                },
+                status: 'open',
+                priority: 'high',
+                category: 'Product Quality',
+                subject: 'Received damaged leather jacket',
+                description: 'The leather jacket I received has a tear on the left sleeve and the zipper is broken. This is unacceptable for a premium product.',
+                dateSubmitted: '2024-03-20 10:30:00',
+                lastUpdated: '2024-03-20 10:30:00',
+                attachments: ['damage1.jpg', 'damage2.jpg'],
+                messages: [
+                    {
+                        sender: 'customer',
+                        message: 'I need this resolved immediately. This was supposed to be a gift.',
+                        timestamp: '2024-03-20 10:35:00'
+                    }
+                ]
+            },
+            {
+                id: 2,
+                complaintNumber: 'CMP-2024-0002',
+                customer: {
+                    name: 'Michael Chen',
+                    email: 'mchen@email.com',
+                    avatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=random'
+                },
+                seller: {
+                    name: 'Style Central',
+                    id: 'SELL-002'
+                },
+                order: {
+                    number: 'ORD-2024-0189',
+                    date: '2024-03-10',
+                    amount: 189.99
+                },
+                product: {
+                    name: 'Designer Silk Dress',
+                    category: 'Women\'s Fashion',
+                    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=100'
+                },
+                status: 'in-progress',
+                priority: 'medium',
+                category: 'Shipping Delay',
+                subject: 'Order not received after 10 days',
+                description: 'My order was supposed to arrive 5 days ago but I still haven\'t received it. The tracking shows it\'s stuck at the distribution center.',
+                dateSubmitted: '2024-03-18 14:20:00',
+                lastUpdated: '2024-03-19 09:15:00',
+                attachments: [],
+                messages: [
+                    {
+                        sender: 'support',
+                        message: 'We\'re looking into this issue with the shipping carrier.',
+                        timestamp: '2024-03-19 09:15:00'
+                    },
+                    {
+                        sender: 'customer',
+                        message: 'Please expedite this. I need it for an event.',
+                        timestamp: '2024-03-19 11:30:00'
+                    }
+                ]
+            },
+            {
+                id: 3,
+                complaintNumber: 'CMP-2024-0003',
+                customer: {
+                    name: 'Emma Williams',
+                    email: 'emma.w@email.com',
+                    avatar: 'https://ui-avatars.com/api/?name=Emma+Williams&background=random'
+                },
+                seller: {
+                    name: 'Kids Paradise',
+                    id: 'SELL-003'
+                },
+                order: {
+                    number: 'ORD-2024-0156',
+                    date: '2024-03-05',
+                    amount: 79.99
+                },
+                product: {
+                    name: 'Kids Winter Coat',
+                    category: 'Kids',
+                    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
+                },
+                status: 'resolved',
+                priority: 'low',
+                category: 'Wrong Item',
+                subject: 'Received wrong size',
+                description: 'I ordered a size 6-7Y but received 4-5Y. Need exchange.',
+                dateSubmitted: '2024-03-12 16:45:00',
+                lastUpdated: '2024-03-15 10:00:00',
+                attachments: [],
+                resolution: 'Exchange processed. New item shipped.',
+                messages: []
+            }
+        ];
+
+        let currentTab = 'all';
+        let filteredComplaints = [...mockComplaints];
+
+        // Render complaints
+        function renderComplaints() {
+            const container = document.getElementById('complaintsContainer');
+            container.innerHTML = '';
+
+            filteredComplaints.forEach(complaint => {
+                const card = document.createElement('div');
+                card.className = 'complaint-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden cursor-pointer';
+                card.onclick = () => viewComplaint(complaint.id);
+                
+                card.innerHTML = `
+                    <div class="priority-indicator priority-${complaint.priority}"></div>
+                    
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">${complaint.subject}</h3>
+                            <p class="text-sm text-gray-600">${complaint.complaintNumber} • ${formatDateTime(complaint.dateSubmitted)}</p>
+                        </div>
+                        <div class="text-right">
+                            ${getStatusBadge(complaint.status)}
+                            ${getPriorityBadge(complaint.priority)}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="flex items-center space-x-3">
+                            <img src="${complaint.customer.avatar}" alt="${complaint.customer.name}" class="w-10 h-10 rounded-full">
+                            <div>
+                                <p class="font-medium text-gray-800">${complaint.customer.name}</p>
+                                <p class="text-sm text-gray-600">Customer</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-store text-purple-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${complaint.seller.name}</p>
+                                <p class="text-sm text-gray-600">Seller</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <img src="${complaint.product.image}" alt="${complaint.product.name}" class="w-10 h-10 rounded-lg object-cover">
+                            <div>
+                                <p class="font-medium text-gray-800 truncate">${complaint.product.name}</p>
+                                <p class="text-sm text-gray-600">${complaint.product.category}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-700 mb-4 line-clamp-2">${complaint.description}</p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <span><i class="fas fa-shopping-bag mr-1"></i> ${complaint.order.number}</span>
+                            <span><i class="fas fa-tag mr-1"></i> ${complaint.category}</span>
+                            ${complaint.attachments.length > 0 ? `
+                                <span><i class="fas fa-paperclip mr-1"></i> ${complaint.attachments.length} files</span>
+                            ` : ''}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="event.stopPropagation(); openChat(${complaint.id})" class="text-purple-600 hover:text-purple-700">
+                                <i class="fas fa-comments"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); viewComplaint(${complaint.id})" class="text-gray-600 hover:text-gray-700">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'open': '<span class="status-badge bg-red-100 text-red-800"><i class="fas fa-exclamation-circle mr-1"></i>Open</span>',
+                'in-progress': '<span class="status-badge bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>In Progress</span>',
+                'resolved': '<span class="status-badge bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Resolved</span>',
+                'closed': '<span class="status-badge bg-gray-100 text-gray-800"><i class="fas fa-times-circle mr-1"></i>Closed</span>'
+            };
+            return badges[status] || '';
+        }
+
+        function getPriorityBadge(priority) {
+            const badges = {
+                'high': '<span class="ml-2 text-xs font-medium text-red-600">High Priority</span>',
+                'medium': '<span class="ml-2 text-xs font-medium text-yellow-600">Medium Priority</span>',
+                'low': '<span class="ml-2 text-xs font-medium text-green-600">Low Priority</span>'
+            };
+            return badges[priority] || '';
+        }
+
+        function formatDateTime(dateTime) {
+            const date = new Date(dateTime);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // View complaint details
+        function viewComplaint(id) {
+            const complaint = mockComplaints.find(c => c.id === id);
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Complaint Details -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Header -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-800">${complaint.subject}</h4>
+                                    <p class="text-gray-600">${complaint.complaintNumber}</p>
+                                </div>
+                                <div class="text-right">
+                                    ${getStatusBadge(complaint.status)}
+                                    ${getPriorityBadge(complaint.priority)}
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Category</p>
+                                    <p class="font-medium">${complaint.category}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Submitted</p>
+                                    <p class="font-medium">${formatDateTime(complaint.dateSubmitted)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Last Updated</p>
+                                    <p class="font-medium">${formatDateTime(complaint.lastUpdated)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Order</p>
+                                    <p class="font-medium text-purple-600">${complaint.order.number}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="bg-white rounded-lg border border-gray-200 p-6">
+                            <h5 class="font-semibold text-gray-800 mb-3">Complaint Description</h5>
+                            <p class="text-gray-700">${complaint.description}</p>
+                            
+                            ${complaint.attachments.length > 0 ? `
+                                <div class="mt-4">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">Attachments</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${complaint.attachments.map(file => `
+                                            <div class="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg">
+                                                <i class="fas fa-file-image text-gray-600"></i>
+                                                <span class="text-sm">${file}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Chat/Messages -->
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="p-4 border-b border-gray-200">
+                                <h5 class="font-semibold text-gray-800">Communication with Seller</h5>
+                            </div>
+                            <div class="chat-container">
+                                <div class="chat-messages" id="chatMessages">
+                                    ${complaint.messages.map(msg => `
+                                        <div class="message ${msg.sender === 'customer' ? 'received' : 'sent'}">
+                                            <div class="message-bubble">
+                                                <p class="text-sm">${msg.message}</p>
+                                                <p class="text-xs ${msg.sender === 'customer' ? 'text-gray-500' : 'text-purple-200'} mt-1">
+                                                    ${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    <div id="typingIndicator" class="hidden">
+                                        <div class="typing-indicator">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chat-input">
+                                    <div class="flex space-x-2">
+                                        <input type="text" id="chatInput" placeholder="Type your message..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500">
+                                        <button onclick="sendMessage()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar Info -->
+                    <div class="space-y-6">
+                        <!-- Customer Info -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h5 class="font-semibold text-gray-800 mb-4">Customer Information</h5>
+                            <div class="flex items-center mb-4">
+                                <img src="${complaint.customer.avatar}" alt="${complaint.customer.name}" class="w-12 h-12 rounded-full mr-3">
+                                <div>
+                                    <p class="font-medium text-gray-800">${complaint.customer.name}</p>
+                                    <p class="text-sm text-gray-600">${complaint.customer.email}</p>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-user mr-2"></i>View Profile
+                            </button>
+                        </div>
+                        
+                        <!-- Seller Info -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h5 class="font-semibold text-gray-800 mb-4">Seller Information</h5>
+                            <div class="mb-4">
+                                <p class="font-medium text-gray-800">${complaint.seller.name}</p>
+                                <p class="text-sm text-gray-600">${complaint.seller.id}</p>
+                            </div>
+                            <button onclick="openDirectChat('${complaint.seller.id}')" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 mb-2">
+                                <i class="fas fa-comments mr-2"></i>Chat with Seller
+                            </button>
+                            <button class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-store mr-2"></i>View Seller Profile
+                            </button>
+                        </div>
+                        
+                        <!-- Product Info -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h5 class="font-semibold text-gray-800 mb-4">Product Details</h5>
+                            <div class="flex items-center mb-4">
+                                <img src="${complaint.product.image}" alt="${complaint.product.name}" class="w-16 h-16 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-gray-800">${complaint.product.name}</p>
+                                    <p class="text-sm text-gray-600">${complaint.product.category}</p>
+                                    <p class="text-lg font-bold text-gray-800">${complaint.order.amount}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="bg-white rounded-lg border border-gray-200 p-6">
+                            <h5 class="font-semibold text-gray-800 mb-4">Actions</h5>
+                            <div class="space-y-2">
+                                ${complaint.status === 'open' ? `
+                                    <button onclick="updateStatus(${complaint.id}, 'in-progress')" class="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700">
+                                        <i class="fas fa-clock mr-2"></i>Mark In Progress
+                                    </button>
+                                ` : ''}
+                                ${complaint.status === 'in-progress' ? `
+                                    <button onclick="updateStatus(${complaint.id}, 'resolved')" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                                        <i class="fas fa-check mr-2"></i>Mark Resolved
+                                    </button>
+                                ` : ''}
+                                ${complaint.status !== 'closed' ? `
+                                    <button onclick="updateStatus(${complaint.id}, 'closed')" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700">
+                                        <i class="fas fa-times mr-2"></i>Close Complaint
+                                    </button>
+                                ` : ''}
+                                <button onclick="escalateComplaint(${complaint.id})" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-arrow-up mr-2"></i>Escalate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showModal();
+        }
+
+        // Tab switching
+        document.querySelectorAll('[data-tab]').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab styling
+                document.querySelectorAll('[data-tab]').forEach(t => {
+                    t.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                    t.classList.add('text-gray-600');
+                });
+                this.classList.remove('text-gray-600');
+                this.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+                
+                // Filter complaints
+                const tabName = this.dataset.tab;
+                if (tabName === 'all') {
+                    filteredComplaints = [...mockComplaints];
+                } else {
+                    filteredComplaints = mockComplaints.filter(c => c.status === tabName);
+                }
+                renderComplaints();
+            });
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            filteredComplaints = mockComplaints.filter(complaint => 
+                complaint.subject.toLowerCase().includes(search) ||
+                complaint.description.toLowerCase().includes(search) ||
+                complaint.customer.name.toLowerCase().includes(search) ||
+                complaint.seller.name.toLowerCase().includes(search) ||
+                complaint.complaintNumber.toLowerCase().includes(search)
+            );
+            renderComplaints();
+        });
+
+        // Chat functions
+        function openChat(id) {
+            viewComplaint(id);
+            setTimeout(() => {
+                document.getElementById('chatInput').focus();
+            }, 300);
+        }
+
+        function openDirectChat(sellerId) {
+            alert(`Opening direct chat with seller ${sellerId}`);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const newMessage = document.createElement('div');
+                newMessage.className = 'message sent';
+                newMessage.innerHTML = `
+                    <div class="message-bubble">
+                        <p class="text-sm">${message}</p>
+                        <p class="text-xs text-purple-200 mt-1">
+                            ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+                `;
+                
+                // Remove typing indicator if exists
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (!typingIndicator.classList.contains('hidden')) {
+                    typingIndicator.classList.add('hidden');
+                }
+                
+                chatMessages.appendChild(newMessage);
+                input.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Simulate seller typing
+                setTimeout(() => {
+                    typingIndicator.classList.remove('hidden');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                // Simulate seller response
+                setTimeout(() => {
+                    typingIndicator.classList.add('hidden');
+                    const response = document.createElement('div');
+                    response.className = 'message received';
+                    response.innerHTML = `
+                        <div class="message-bubble">
+                            <p class="text-sm">Thank you for your message. We're looking into this issue and will resolve it as soon as possible.</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        </div>
+                    `;
+                    chatMessages.appendChild(response);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 3000);
+            }
+        }
+
+        // Enter key to send message
+        document.addEventListener('keypress', function(e) {
+            if (e.target.id === 'chatInput' && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Update status
+        function updateStatus(id, newStatus) {
+            const complaint = mockComplaints.find(c => c.id === id);
+            complaint.status = newStatus;
+            complaint.lastUpdated = new Date().toISOString();
+            renderComplaints();
+            closeModal();
+            showNotification(`Complaint status updated to ${newStatus}`, 'success');
+        }
+
+        function escalateComplaint(id) {
+            if (confirm('Are you sure you want to escalate this complaint?')) {
+                showNotification('Complaint escalated to senior management', 'warning');
+            }
+        }
+
+        // Modal functions
+        function showModal() {
+            document.getElementById('complaintModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('complaintModal').classList.remove('show');
+        }
+
+        // Notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            } text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}-circle mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+
+        // Initialize
+        renderComplaints();
+    </script>
+</body>
+</html>

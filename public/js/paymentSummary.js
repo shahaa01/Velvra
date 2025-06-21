@@ -30,27 +30,49 @@ function updatePrices() {
 // Address Form Handling
 const addressForm = document.getElementById('addressForm');
 const addressList = document.getElementById('addressList');
+const addAddressBtn = document.getElementById('addAddressBtn');
 
-// Show sidebar
-document.getElementById('addAddressBtn').addEventListener('click', () => {
-    openAddressSidebar();
-});
+// Show sidebar - Fix event listener setup
+if (addAddressBtn) {
+    addAddressBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Add address button clicked');
+        openAddressSidebar();
+    });
+} else {
+    console.error('Add address button not found');
+}
 
 function openAddressSidebar() {
     const sidebar = document.getElementById('addressSidebar');
+    if (!sidebar) {
+        console.error('Address sidebar not found');
+        return;
+    }
+    
     const sheet = sidebar.querySelector('.bottom-sheet');
+    const overlay = sidebar.querySelector('.bg-opacity-50');
+    
     sidebar.classList.remove('invisible');
     setTimeout(() => {
-        sidebar.querySelector('.bg-opacity-50').classList.add('opacity-100');
-        sheet.classList.add('active');
+        if (overlay) overlay.classList.add('opacity-100');
+        if (sheet) sheet.classList.add('active');
     }, 10);
 }
 
 function closeAddressSidebar() {
     const sidebar = document.getElementById('addressSidebar');
+    if (!sidebar) {
+        console.error('Address sidebar not found');
+        return;
+    }
+    
     const sheet = sidebar.querySelector('.bottom-sheet');
-    sidebar.querySelector('.bg-opacity-50').classList.remove('opacity-100');
-    sheet.classList.remove('active');
+    const overlay = sidebar.querySelector('.bg-opacity-50');
+    
+    if (overlay) overlay.classList.remove('opacity-100');
+    if (sheet) sheet.classList.remove('active');
     setTimeout(() => {
         sidebar.classList.add('invisible');
     }, 400);
@@ -334,8 +356,22 @@ async function loadAddresses() {
     }
 }
 
+// Make closeAddressSidebar globally accessible for onclick in EJS
+window.closeAddressSidebar = closeAddressSidebar;
+
 // Load addresses when page loads
-loadAddresses();
+document.addEventListener('DOMContentLoaded', () => {
+    loadAddresses();
+    
+    // Initialize form validation
+    if (addressForm) {
+        addressForm.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                validateField(e.target.name, e.target.value);
+            });
+        });
+    }
+});
 
 // Coupon handling
 document.getElementById('applyBtn').addEventListener('click', () => {

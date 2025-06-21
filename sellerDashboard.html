@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Seller - Dashboard Overview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quick-action-card {
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(212, 175, 55, 0.2);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-charcoal sidebar-transition transform -translate-x-full lg:translate-x-0">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="px-6 py-6 border-b border-stone/20">
+                <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                <p class="text-xs text-stone mt-1">Seller Dashboard</p>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 overflow-y-auto">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 text-pearl bg-gold/20 rounded-lg transition-all">
+                            <i class="fas fa-home w-5"></i>
+                            <span class="ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="products.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-box w-5"></i>
+                            <span class="ml-3">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-shopping-cart w-5"></i>
+                            <span class="ml-3">Orders</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="inventory.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-warehouse w-5"></i>
+                            <span class="ml-3">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="promotions.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-tag w-5"></i>
+                            <span class="ml-3">Promotions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span class="ml-3">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="payouts.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-dollar-sign w-5"></i>
+                            <span class="ml-3">Payouts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span class="ml-3">Messages</span>
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store-settings.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-store w-5"></i>
+                            <span class="ml-3">Store Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="account.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-user-cog w-5"></i>
+                            <span class="ml-3">Account</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Profile Section -->
+            <div class="px-4 py-4 border-t border-stone/20">
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a" alt="Store" class="w-10 h-10 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-pearl">Fashion Hub</p>
+                        <p class="text-xs text-stone">Premium Seller</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Welcome back, Sarah!</h2>
+                            <p class="text-sm text-stone">Here's your store performance today</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full notification-dot"></span>
+                        </button>
+                        <button class="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-plus"></i>
+                            <span class="font-medium">Add Product</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="p-4 sm:p-6">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Sales Card -->
+                <div class="stat-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Total Sales</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">$12,485</h3>
+                        </div>
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-dollar-sign text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up text-green-600 mr-1"></i>
+                        <span class="text-green-600 font-medium">12.5%</span>
+                        <span class="text-stone ml-1">vs last month</span>
+                    </div>
+                </div>
+
+                <!-- Active Products Card -->
+                <div class="stat-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Active Products</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">156</h3>
+                        </div>
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-box text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up text-green-600 mr-1"></i>
+                        <span class="text-green-600 font-medium">8 new</span>
+                        <span class="text-stone ml-1">this week</span>
+                    </div>
+                </div>
+
+                <!-- Orders Card -->
+                <div class="stat-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Pending Orders</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">23</h3>
+                        </div>
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-shopping-cart text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-clock text-yellow-600 mr-1"></i>
+                        <span class="text-yellow-600 font-medium">5 urgent</span>
+                        <span class="text-stone ml-1">need attention</span>
+                    </div>
+                </div>
+
+                <!-- Payouts Card -->
+                <div class="stat-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Pending Payout</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">$3,256</h3>
+                        </div>
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-wallet text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-calendar text-stone mr-1"></i>
+                        <span class="text-stone">Next payout in 3 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Sales Chart -->
+                <div class="lg:col-span-2 bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-charcoal mb-2 sm:mb-0">Monthly Sales Overview</h3>
+                        <select class="text-sm border border-beige rounded-lg px-3 py-2 bg-pearl focus:outline-none focus:border-gold">
+                            <option>Last 30 days</option>
+                            <option>Last 90 days</option>
+                            <option>Last 6 months</option>
+                            <option>This year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Product Performance -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Top Products</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=50&h=50&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                                <div class="ml-3 min-w-0">
+                                    <p class="font-medium text-charcoal text-sm truncate">Leather Jacket</p>
+                                    <p class="text-xs text-stone">45 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal ml-2">$4,050</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=50&h=50&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                                <div class="ml-3 min-w-0">
+                                    <p class="font-medium text-charcoal text-sm truncate">Silk Dress</p>
+                                    <p class="text-xs text-stone">38 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal ml-2">$3,420</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=50&h=50&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                                <div class="ml-3 min-w-0">
+                                    <p class="font-medium text-charcoal text-sm truncate">Designer Handbag</p>
+                                    <p class="text-xs text-stone">32 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal ml-2">$2,880</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1 min-w-0">
+                                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=50&h=50&fit=crop" alt="Product" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                                <div class="ml-3 min-w-0">
+                                    <p class="font-medium text-charcoal text-sm truncate">Cashmere Sweater</p>
+                                    <p class="text-xs text-stone">28 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal ml-2">$2,520</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-charcoal mb-4">Quick Actions</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <a href="products.html#add" class="quick-action-card bg-cream border border-beige rounded-xl p-4 text-center hover:border-gold">
+                        <div class="p-3 bg-gold/20 rounded-lg inline-block mb-3">
+                            <i class="fas fa-plus text-gold text-xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-charcoal">Add Product</p>
+                    </a>
+                    <a href="orders.html" class="quick-action-card bg-cream border border-beige rounded-xl p-4 text-center hover:border-gold">
+                        <div class="p-3 bg-gold/20 rounded-lg inline-block mb-3">
+                            <i class="fas fa-truck text-gold text-xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-charcoal">View Orders</p>
+                    </a>
+                    <a href="payouts.html" class="quick-action-card bg-cream border border-beige rounded-xl p-4 text-center hover:border-gold">
+                        <div class="p-3 bg-gold/20 rounded-lg inline-block mb-3">
+                            <i class="fas fa-wallet text-gold text-xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-charcoal">View Payouts</p>
+                    </a>
+                    <a href="promotions.html#create" class="quick-action-card bg-cream border border-beige rounded-xl p-4 text-center hover:border-gold">
+                        <div class="p-3 bg-gold/20 rounded-lg inline-block mb-3">
+                            <i class="fas fa-tag text-gold text-xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-charcoal">Create Promo</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                <h3 class="text-lg font-semibold text-charcoal mb-4">Recent Activity</h3>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <i class="fas fa-shopping-bag text-green-600 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-charcoal">New order received</p>
+                            <p class="text-xs text-stone">Order #12345 - Leather Jacket</p>
+                            <p class="text-xs text-stone mt-1">5 minutes ago</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i class="fas fa-comment text-blue-600 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-charcoal">New message from buyer</p>
+                            <p class="text-xs text-stone">Regarding: Silk Dress sizing</p>
+                            <p class="text-xs text-stone mt-1">15 minutes ago</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="p-2 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-charcoal">Low stock alert</p>
+                            <p class="text-xs text-stone">Designer Handbag - Only 2 left</p>
+                            <p class="text-xs text-stone mt-1">1 hour ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileMenuOverlay.classList.toggle('hidden');
+        });
+
+        mobileMenuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            mobileMenuOverlay.classList.add('hidden');
+        });
+
+        // Sales Chart
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 30'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [1200, 1900, 1500, 2500, 2200, 3000, 2800],
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#d4af37',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        titleColor: '#d4af37',
+                        bodyColor: '#fff',
+                        borderColor: '#d4af37',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#a8a196',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e8dcc6',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#a8a196',
+                            font: {
+                                size: 11
+                            },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate loading states
+        window.addEventListener('load', () => {
+            // Add any initialization here
+        });
+    </script>
+</body>
+</html>
