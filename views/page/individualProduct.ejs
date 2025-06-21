@@ -1,9 +1,8 @@
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
-<section class="bg-velvra-pearl font-montserrat">
+<section class="mainSection bg-velvra-pearl font-montserrat">
     <!-- Product Detail Page -->
     <main class="luxury-gradient min-h-screen">
-        <div class="sm:h-screen flex flex-col">
         <!-- Breadcrumb -->
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             <nav class="breadcrumb flex items-center space-x-2 text-sm text-velvra-stone animate-fadeInUp">
@@ -22,7 +21,7 @@
             <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12 lg:items-start">
                 
                 <!-- Product Images -->
-                <div class="animate-fadeInUp">
+                <div class="productImageDiv animate-fadeInUp">
                     <!-- Main Image -->
                     <div class="imageDiv aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
                         <img id="mainImage" 
@@ -207,7 +206,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    
 
         <!-- Product Details Accordion -->
         <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-16">
