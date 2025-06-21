@@ -113,3 +113,235 @@ input:focus {
     60% { content: '..'; }
     80%, 100% { content: '...'; }
 }
+
+/* ===========================================
+   RESPONSIVE FIXES FOR PAYMENT SUMMARY PAGE
+   =========================================== */
+
+/* Base adjustments for all screens */
+@media screen and (max-width: 1440px) {
+    .max-w-2xl {
+        max-width: min(672px, 95vw) !important;
+    }
+}
+
+/* Medium screens (most laptops) - 1366px and below */
+@media screen and (max-width: 1366px) {
+    /* Reduce main container padding */
+    .px-4.py-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Reduce card padding */
+    .p-6 {
+        padding: 1.25rem !important;
+    }
+    
+    /* Reduce spacing between sections */
+    .space-y-6 > * + * {
+        margin-top: 1.25rem !important;
+    }
+    
+    /* Smaller text sizes */
+    .text-lg {
+        font-size: 1rem !important;
+        line-height: 1.5rem !important;
+    }
+    
+    .text-2xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    /* Reduce button padding */
+    .py-4 {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+    
+    .py-3 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    /* Smaller sidebar */
+    .max-w-md {
+        max-width: 20rem !important;
+    }
+    
+    /* Reduce image sizes */
+    .w-20.h-20 {
+        width: 4rem !important;
+        height: 4rem !important;
+    }
+}
+
+/* Smaller screens (1024px and below) */
+@media screen and (max-width: 1024px) {
+    /* Further reduce padding */
+    .px-4.py-6 {
+        padding: 0.75rem !important;
+    }
+    
+    .p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Tighter spacing */
+    .space-y-6 > * + * {
+        margin-top: 1rem !important;
+    }
+    
+    .space-y-4 > * + * {
+        margin-top: 0.75rem !important;
+    }
+    
+    .space-y-3 > * + * {
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Smaller rounded corners */
+    .rounded-2xl {
+        border-radius: 0.75rem !important;
+    }
+    
+    /* Compact form inputs */
+    .px-4.py-3 {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Smaller icons */
+    .w-6.h-6 {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+    
+    .w-5.h-5 {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+}
+
+/* Very small/old screens (768px and below) */
+@media screen and (max-width: 768px) {
+    /* Minimal padding */
+    .px-4.py-6 {
+        padding: 0.5rem !important;
+    }
+    
+    .p-6 {
+        padding: 0.75rem !important;
+    }
+    
+    /* Compact header */
+    .py-4 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    /* Smaller product images */
+    .w-20.h-20 {
+        width: 3rem !important;
+        height: 3rem !important;
+    }
+    
+    /* Compact bottom CTA */
+    .p-4 {
+        padding: 0.75rem !important;
+    }
+    
+    /* Full width sidebar on mobile */
+    .max-w-md {
+        max-width: 100% !important;
+    }
+}
+
+/* High DPI/Retina detection - keep original sizing */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi),
+       screen and (min-resolution: 2dppx) {
+    /* Reset to original values for high-DPI screens */
+    .text-lg {
+        font-size: 1.125rem !important;
+        line-height: 1.75rem !important;
+    }
+    
+    .text-2xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    @media (min-width: 1024px) {
+        .text-2xl {
+            font-size: 1.5rem !important;
+            line-height: 2rem !important;
+        }
+    }
+}
+
+/* Container width optimization */
+.max-w-2xl {
+    max-width: min(672px, calc(100vw - 2rem));
+}
+
+/* Responsive button sizing */
+.gold-gradient {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
+}
+
+/* Flexible form inputs */
+.px-4.py-3 {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+}
+
+/* Better sidebar scaling */
+.bottom-sheet {
+    width: min(28rem, 90vw);
+}
+
+/* Windows-specific adjustments */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    .luxury-shadow {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Responsive text scaling */
+.text-responsive-lg {
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: clamp(1.5rem, 3vw, 1.75rem);
+}
+
+.text-responsive-2xl {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    line-height: clamp(1.75rem, 3.5vw, 2rem);
+}
+
+/* Better mobile touch targets */
+@media (max-width: 768px) {
+    .touch-scale {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* Optimized container for all screen sizes */
+.payment-container {
+    max-width: min(672px, calc(100vw - 1rem));
+    margin: 0 auto;
+}
+
+/* Flexible grid for address form */
+.grid.grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .grid.grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}

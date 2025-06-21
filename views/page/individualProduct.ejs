@@ -1,9 +1,9 @@
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
 <section class="bg-velvra-pearl font-montserrat">
-    
     <!-- Product Detail Page -->
     <main class="luxury-gradient min-h-screen">
+        <div class="sm:h-screen flex flex-col">
         <!-- Breadcrumb -->
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             <nav class="breadcrumb flex items-center space-x-2 text-sm text-velvra-stone animate-fadeInUp">
@@ -18,13 +18,13 @@
         </div>
 
         <!-- Main Product Section -->
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-16 lg:items-start">
+        <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-12">
+            <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12 lg:items-start">
                 
                 <!-- Product Images -->
                 <div class="animate-fadeInUp">
                     <!-- Main Image -->
-                    <div class="aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
+                    <div class="imageDiv aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
                         <img id="mainImage" 
                              src="<%= product.images[0] %>" 
                              alt="<%= product.name %>" 
@@ -74,7 +74,7 @@
                 </div>
 
                 <!-- Product Information -->
-                <div class="mt-10 lg:mt-0 animate-fadeInUp" style="animation-delay: 0.2s;">
+                <div class="mt-6 lg:mt-0 animate-fadeInUp" style="animation-delay: 0.2s;">
                     
                     <!-- Brand & Title -->
                     <div class="mb-8">
@@ -88,11 +88,11 @@
                                 </svg>
                             </button>
                         </div>
-                        <h1 class="text-3xl lg:text-4xl font-playfair font-semibold text-velvra-charcoal leading-tight mb-4">
+                        <h1 class="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-playfair font-semibold text-velvra-charcoal leading-tight mb-4">
                             <% product.name %>
                         </h1>
                         <div class="flex items-baseline space-x-4">
-                            <span class="text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice || product.price %></span>
+                            <span class="text-xl sm:text-2xl lg:text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice || product.price %>
                             <% if(product.sale) { %>
                             <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
                             <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= product.salePercentage %>% OFF</span>
@@ -133,7 +133,7 @@
                     <!-- Quantity & Add to Cart -->
                     <div class="mb-8">
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Quantity</h3>
-                        <div class="flex items-center space-x-5 gap-4">
+                        <div class="flex items-center space-x-3 gap-2 sm:space-x-4 sm:gap-3">
                             <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
                                 <button id="decreaseQty" class="px-4 py-3 hover:bg-gray-50 transition-colors duration-300">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,9 +207,10 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <!-- Product Details Accordion -->
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-16">
             <div class="max-w-4xl mx-auto">
                 
                 <!-- Product Details -->
@@ -364,7 +365,7 @@
 <!-- Enhanced You May Also Like Section -->
 <!-- Enhanced You May Also Like Section -->
 <!-- Replace the entire "You May Also Like" section starting from the comment to the closing </div> -->
-<div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+<div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-20">
     <div class="mb-12 text-center">
         <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
         <p class="text-velvra-stone max-w-2xl mx-auto">Discover more pieces from our curated collection of premium menswear</p>
