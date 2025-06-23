@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Seller - Performance & Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .kpi-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .chart-container {
+            position: relative;
+            min-height: 350px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                min-height: 250px;
+            }
+        }
+        
+        .trend-up {
+            color: #10b981;
+        }
+        
+        .trend-down {
+            color: #ef4444;
+        }
+        
+        .period-button {
+            transition: all 0.2s ease;
+        }
+        
+        .period-button.active {
+            background-color: #d4af37;
+            color: #1a1a1a;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        /* ApexCharts custom theme */
+        .apexcharts-tooltip {
+            background: #1a1a1a !important;
+            border: 1px solid #d4af37 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .apexcharts-tooltip-title {
+            background: #d4af37 !important;
+            color: #1a1a1a !important;
+        }
+        
+        .apexcharts-tooltip-text {
+            color: #fefcf7 !important;
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-charcoal sidebar-transition transform -translate-x-full lg:translate-x-0">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="px-6 py-6 border-b border-stone/20">
+                <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                <p class="text-xs text-stone mt-1">Seller Dashboard</p>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 overflow-y-auto">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-home w-5"></i>
+                            <span class="ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="products.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-box w-5"></i>
+                            <span class="ml-3">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-shopping-cart w-5"></i>
+                            <span class="ml-3">Orders</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="inventory.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-warehouse w-5"></i>
+                            <span class="ml-3">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="promotions.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-tag w-5"></i>
+                            <span class="ml-3">Promotions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 text-pearl bg-gold/20 rounded-lg transition-all">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span class="ml-3">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="payouts.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-dollar-sign w-5"></i>
+                            <span class="ml-3">Payouts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span class="ml-3">Messages</span>
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store-settings.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-store w-5"></i>
+                            <span class="ml-3">Store Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="account.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-user-cog w-5"></i>
+                            <span class="ml-3">Account</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Profile Section -->
+            <div class="px-4 py-4 border-t border-stone/20">
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a" alt="Store" class="w-10 h-10 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-pearl">Fashion Hub</p>
+                        <p class="text-xs text-stone">Premium Seller</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Performance & Analytics</h2>
+                            <p class="text-sm text-stone">Track your store's performance metrics</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <!-- Time Period Selector -->
+                        <div class="hidden sm:flex items-center bg-pearl rounded-lg p-1 border border-beige">
+                            <button class="period-button px-3 py-1 rounded-md text-sm active" data-period="week">Week</button>
+                            <button class="period-button px-3 py-1 rounded-md text-sm" data-period="month">Month</button>
+                            <button class="period-button px-3 py-1 rounded-md text-sm" data-period="quarter">Quarter</button>
+                        </div>
+                        <button class="flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-download"></i>
+                            <span class="hidden sm:inline font-medium">Export</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Analytics Content -->
+        <main class="p-4 sm:p-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Total Views</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">45.2K</h3>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-eye text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">12.5%</span>
+                        <span class="text-stone ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Clicks</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">8,734</h3>
+                        </div>
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <i class="fas fa-mouse-pointer text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">8.3%</span>
+                        <span class="text-stone ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Sales</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">$12.4K</h3>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-dollar-sign text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">15.2%</span>
+                        <span class="text-stone ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-stone">Return Rate</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">2.1%</h3>
+                        </div>
+                        <div class="p-3 bg-red-100 rounded-lg">
+                            <i class="fas fa-undo text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-down trend-down mr-1"></i>
+                        <span class="trend-down font-medium">0.5%</span>
+                        <span class="text-stone ml-1">vs last period</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Period Selector -->
+            <div class="sm:hidden mb-6">
+                <select class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold text-charcoal">
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                </select>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Sales Chart -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-charcoal">Sales Overview</h3>
+                        <div class="flex items-center space-x-4 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-gold rounded-full mr-2"></div>
+                                <span class="text-stone">Revenue</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-stone rounded-full mr-2"></div>
+                                <span class="text-stone">Orders</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="salesChart"></div>
+                    </div>
+                </div>
+
+                <!-- Conversion Funnel -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Conversion Funnel</h3>
+                    <div class="chart-container">
+                        <div id="conversionChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Product Views -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Product Views by Category</h3>
+                    <div class="chart-container">
+                        <div id="categoryChart"></div>
+                    </div>
+                </div>
+
+                <!-- Traffic Sources -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Traffic Sources</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-stone">Direct</span>
+                                <span class="text-sm font-medium text-charcoal">35%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-gold" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-stone">Search</span>
+                                <span class="text-sm font-medium text-charcoal">28%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-velvra-gold-light" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-stone">Social Media</span>
+                                <span class="text-sm font-medium text-charcoal">22%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-beige" style="width: 22%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-stone">Email</span>
+                                <span class="text-sm font-medium text-charcoal">15%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-stone" style="width: 15%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Top Performing Products</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Leather Jacket</p>
+                                    <p class="text-xs text-stone">45 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$13.5K</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Silk Dress</p>
+                                    <p class="text-xs text-stone">38 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$7.2K</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Designer Bag</p>
+                                    <p class="text-xs text-stone">28 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$12.6K</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                <h3 class="text-lg font-semibold text-charcoal mb-6">Performance Summary</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <p class="text-sm text-stone mb-1">Avg. Order Value</p>
+                        <p class="text-2xl font-bold text-charcoal">$127.50</p>
+                        <p class="text-xs text-green-600 mt-1">↑ $12.50 vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-stone mb-1">Conversion Rate</p>
+                        <p class="text-2xl font-bold text-charcoal">3.2%</p>
+                        <p class="text-xs text-green-600 mt-1">↑ 0.4% vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-stone mb-1">Customer Retention</p>
+                        <p class="text-2xl font-bold text-charcoal">68%</p>
+                        <p class="text-xs text-green-600 mt-1">↑ 5% vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-stone mb-1">Avg. Rating</p>
+                        <p class="text-2xl font-bold text-charcoal">4.7</p>
+                        <p class="text-xs text-stone mt-1">
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star-half-alt text-gold"></i>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize
+        function init() {
+            setupEventListeners();
+            initializeCharts();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('mobileMenuOverlay').classList.toggle('hidden');
+            });
+
+            document.getElementById('mobileMenuOverlay').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('mobileMenuOverlay').classList.add('hidden');
+            });
+
+            // Period selector
+            document.querySelectorAll('.period-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    updateCharts(this.dataset.period);
+                });
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Chart theme
+            const chartTheme = {
+                colors: ['#d4af37', '#a8a196', '#e8dcc6'],
+                chart: {
+                    fontFamily: 'Inter, sans-serif',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                grid: {
+                    borderColor: '#e8dcc6',
+                    strokeDashArray: 0
+                },
+                xaxis: {
+                    labels: {
+                        style: {
+                            colors: '#a8a196',
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: '#a8a196',
+                            fontSize: '12px'
+                        }
+                    }
+                }
+            };
+
+            // Sales Chart
+            const salesOptions = {
+                ...chartTheme,
+                series: [{
+                    name: 'Revenue',
+                    type: 'area',
+                    data: [3200, 4100, 3800, 5100, 4200, 5200, 4800]
+                }, {
+                    name: 'Orders',
+                    type: 'line',
+                    data: [28, 35, 31, 42, 36, 44, 39]
+                }],
+                chart: {
+                    height: 350,
+                    type: 'line',
+                    ...chartTheme.chart
+                },
+                stroke: {
+                    width: [0, 3],
+                    curve: 'smooth'
+                },
+                fill: {
+                    opacity: [0.25, 1],
+                    gradient: {
+                        inverseColors: false,
+                        shade: 'light',
+                        type: "vertical",
+                        opacityFrom: 0.85,
+                        opacityTo: 0.55,
+                        stops: [0, 100, 100, 100]
+                    }
+                },
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                yaxis: [{
+                    title: {
+                        text: 'Revenue ($)',
+                        style: {
+                            color: '#a8a196'
+                        }
+                    },
+                    ...chartTheme.yaxis
+                }, {
+                    opposite: true,
+                    title: {
+                        text: 'Orders',
+                        style: {
+                            color: '#a8a196'
+                        }
+                    },
+                    ...chartTheme.yaxis
+                }],
+                tooltip: {
+                    shared: true,
+                    intersect: false,
+                    y: {
+                        formatter: function (y, { seriesIndex }) {
+                            if (seriesIndex === 0) {
+                                return ' + y.toFixed(0);
+                            }
+                            return y;
+                        }
+                    }
+                }
+            };
+
+            const salesChart = new ApexCharts(document.querySelector("#salesChart"), salesOptions);
+            salesChart.render();
+
+            // Conversion Funnel Chart
+            const conversionOptions = {
+                ...chartTheme,
+                series: [{
+                    name: 'Conversion',
+                    data: [100, 75, 45, 20, 15]
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    ...chartTheme.chart
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        horizontal: true,
+                        distributed: true,
+                        dataLabels: {
+                            position: 'bottom'
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function(val, opt) {
+                        return val + '%';
+                    },
+                    style: {
+                        fontSize: '12px',
+                        colors: ['#1a1a1a']
+                    }
+                },
+                xaxis: {
+                    categories: ['Views', 'Clicks', 'Add to Cart', 'Checkout', 'Purchase'],
+                    ...chartTheme.xaxis
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val + '%';
+                        }
+                    }
+                }
+            };
+
+            const conversionChart = new ApexCharts(document.querySelector("#conversionChart"), conversionOptions);
+            conversionChart.render();
+
+            // Category Chart
+            const categoryOptions = {
+                ...chartTheme,
+                series: [35, 25, 20, 15, 5],
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    ...chartTheme.chart
+                },
+                labels: ['Clothing', 'Accessories', 'Shoes', 'Bags', 'Other'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total Views',
+                                    formatter: function() {
+                                        return '45.2K';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: 'bottom',
+                    offsetY: 0,
+                    labels: {
+                        colors: '#1a1a1a'
+                    }
+                }
+            };
+
+            const categoryChart = new ApexCharts(document.querySelector("#categoryChart"), categoryOptions);
+            categoryChart.render();
+
+            // Store charts for updates
+            window.charts = {
+                sales: salesChart,
+                conversion: conversionChart,
+                category: categoryChart
+            };
+        }
+
+        // Update charts based on period
+        function updateCharts(period) {
+            // Simulate updating charts with new data
+            showNotification(`Analytics updated for ${period}`, 'info');
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

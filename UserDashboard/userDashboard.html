@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra - My Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .quick-card {
+            transition: all 0.3s ease;
+        }
+        
+        .quick-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mobile-nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav-item.active {
+            color: #d4af37;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-link.active {
+                border-left: none;
+                border-bottom: 3px solid #d4af37;
+            }
+        }
+        /* Ultra Responsive CSS - Add this at the end of your existing styles */
+
+/* Base responsive improvements for 350px+ */
+@media (max-width: 480px) {
+    /* Header adjustments */
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    header .container {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    
+    header h1 {
+        font-size: 1.25rem;
+    }
+    
+    header .flex {
+        gap: 8px;
+    }
+    
+    header button {
+        padding: 6px;
+    }
+    
+    header img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    /* Main content spacing */
+    main {
+        padding: 12px;
+        padding-bottom: 80px; /* Account for bottom nav */
+    }
+    
+    /* Welcome section */
+    .mb-8 h2 {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+    
+    .mb-8 p {
+        font-size: 0.875rem;
+    }
+    
+    /* Quick stats cards - make them stack better */
+    .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .quick-card {
+        padding: 16px;
+    }
+    
+    .quick-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 2px;
+    }
+    
+    .quick-card p {
+        font-size: 0.75rem;
+    }
+    
+    .quick-card .text-xs {
+        font-size: 0.625rem;
+    }
+    
+    .quick-card .p-3 {
+        padding: 8px;
+    }
+    
+    .quick-card .fas {
+        font-size: 0.875rem;
+    }
+    
+    /* Chart container */
+    .bg-cream.rounded-xl.p-6.border.border-beige.mb-8 {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .h-64 {
+        height: 200px;
+    }
+    
+    /* Recent activity grid */
+    .grid.grid-cols-1.lg\\:grid-cols-2 {
+        gap: 16px;
+    }
+    
+    .bg-cream.rounded-xl.p-6.border.border-beige {
+        padding: 16px;
+    }
+    
+    /* Activity items */
+    .space-y-4 > * + * {
+        margin-top: 12px;
+    }
+    
+    .flex.items-center.space-x-4 {
+        gap: 8px;
+    }
+    
+    .flex.items-center.space-x-4 img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .flex.items-center.space-x-4 .font-medium {
+        font-size: 0.875rem;
+    }
+    
+    .flex.items-center.space-x-4 .text-xs {
+        font-size: 0.625rem;
+    }
+    
+    .flex.items-center.space-x-4 .text-sm {
+        font-size: 0.75rem;
+    }
+    
+    /* Status badges */
+    .px-2.py-1 {
+        padding: 2px 6px;
+        font-size: 0.625rem;
+    }
+    
+    /* Mobile bottom nav adjustments */
+    .grid.grid-cols-5 {
+        gap: 0;
+    }
+    
+    .mobile-nav-item {
+        padding: 8px 4px;
+        font-size: 0.625rem;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 0.875rem;
+        margin-bottom: 2px;
+    }
+    
+    /* Sidebar adjustments */
+    #sidebar {
+        width: 240px;
+    }
+    
+    .nav-link {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+    
+    .nav-link i {
+        font-size: 0.875rem;
+    }
+    
+    /* Modal adjustments */
+    #logoutModal .bg-cream {
+        margin: 16px;
+        padding: 20px;
+    }
+    
+    #logoutModal h3 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+    
+    #logoutModal p {
+        font-size: 0.875rem;
+        margin-bottom: 16px;
+    }
+    
+    #logoutModal .flex {
+        gap: 8px;
+    }
+    
+    #logoutModal button {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Micro screens - 350px and below */
+@media (max-width: 350px) {
+    /* Even tighter spacing */
+    main {
+        padding: 8px;
+    }
+    
+    .container {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    
+    /* Single column for quick stats */
+    .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .quick-card {
+        padding: 12px;
+    }
+    
+    .quick-card .flex.items-center.justify-between {
+        margin-bottom: 8px;
+    }
+    
+    /* Smaller text throughout */
+    .welcome-section h2 {
+        font-size: 1.25rem;
+    }
+    
+    .welcome-section p {
+        font-size: 0.8125rem;
+    }
+    
+    /* Tighter activity items */
+    .flex.items-center.space-x-4 {
+        gap: 6px;
+        padding: 8px;
+    }
+    
+    .flex.items-center.space-x-4 img {
+        width: 36px;
+        height: 36px;
+    }
+    
+    /* Sidebar even narrower */
+    #sidebar {
+        width: 220px;
+    }
+    
+    /* Bottom nav text even smaller */
+    .mobile-nav-item {
+        font-size: 0.5625rem;
+        padding: 6px 2px;
+    }
+    
+    .mobile-nav-item span {
+        display: none; /* Hide text labels on very small screens */
+    }
+}
+
+/* Medium screens - better utilization */
+@media (min-width: 481px) and (max-width: 768px) {
+    /* 3 columns for quick stats on medium mobile */
+    .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .quick-card {
+        padding: 20px;
+    }
+    
+    main {
+        padding: 16px;
+        padding-bottom: 80px;
+    }
+}
+
+/* Tablet improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+    
+    /* Better sidebar visibility */
+    #sidebar {
+        position: static;
+        transform: translateX(0);
+    }
+    
+    .lg\\:hidden {
+        display: none;
+    }
+}
+
+/* Large screens - maximize space usage */
+@media (min-width: 1025px) {
+    .container {
+        max-width: 1200px;
+    }
+    
+    main {
+        padding: 32px;
+    }
+    
+    .quick-card {
+        padding: 24px;
+    }
+    
+    .bg-cream.rounded-xl.p-6 {
+        padding: 24px;
+    }
+    
+    .h-64 {
+        height: 300px;
+    }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1440px) {
+    .container {
+        max-width: 1400px;
+    }
+    
+    .grid.grid-cols-1.lg\\:grid-cols-2 {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+    
+    .quick-card {
+        padding: 28px;
+    }
+    
+    .h-64 {
+        height: 320px;
+    }
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+    button, .nav-link, .mobile-nav-item {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .quick-card {
+        min-height: 120px;
+    }
+}
+
+/* Improve readability on all screens */
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+}
+
+/* Ensure chart responsiveness */
+@media (max-width: 480px) {
+    canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+    
+    .h-64 canvas {
+        height: 180px !important;
+    }
+}
+
+/* Fix overflow issues */
+@media (max-width: 480px) {
+    * {
+        box-sizing: border-box;
+    }
+    
+    .flex {
+        flex-wrap: wrap;
+    }
+    
+    .space-x-4 > * + * {
+        margin-left: 0;
+        margin-top: 4px;
+    }
+    
+    .space-x-3 > * + * {
+        margin-left: 0;
+        margin-top: 3px;
+    }
+}
+
+/* Smooth transitions for all responsive changes */
+* {
+    transition: padding 0.3s ease, margin 0.3s ease, font-size 0.3s ease;
+}
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="menuToggle" class="lg:hidden text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </button>
+                    <img src="https://ui-avatars.com/api/?name=Emma+Johnson&background=d4af37&color=1a1a1a" 
+                         alt="Profile" 
+                         class="w-8 h-8 rounded-full cursor-pointer">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300 pt-16 lg:pt-0">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-shopping-bag w-5"></i>
+                            <span>My Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span>Messages</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-exclamation-circle w-5"></i>
+                            <span>Report Issues</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="wishlist.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-heart w-5"></i>
+                            <span>Wishlist</span>
+                            <span class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="profile.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-user-circle w-5"></i>
+                            <span>Profile Settings</span>
+                        </a>
+                    </li>
+                    <li class="pt-4 border-t border-beige">
+                        <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-red-600">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <!-- Welcome Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">Welcome back, Emma!</h2>
+                <p class="text-stone">Here's what's happening with your Velvra account today.</p>
+            </div>
+
+            <!-- Quick Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- Recent Orders Card -->
+                <div class="quick-card bg-cream rounded-xl p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-shopping-bag text-gold text-xl"></i>
+                        </div>
+                        <span class="text-xs text-stone">View all →</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-charcoal mb-1">3</h3>
+                    <p class="text-sm text-stone">Active Orders</p>
+                    <p class="text-xs text-green-600 mt-2">1 delivered this week</p>
+                </div>
+
+                <!-- Wishlist Card -->
+                <div class="quick-card bg-cream rounded-xl p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-heart text-gold text-xl"></i>
+                        </div>
+                        <span class="text-xs text-stone">View all →</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-charcoal mb-1">12</h3>
+                    <p class="text-sm text-stone">Wishlist Items</p>
+                    <p class="text-xs text-blue-600 mt-2">2 items on sale</p>
+                </div>
+
+                <!-- Messages Card -->
+                <div class="quick-card bg-cream rounded-xl p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-envelope text-gold text-xl"></i>
+                        </div>
+                        <span class="text-xs text-stone">View all →</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-charcoal mb-1">3</h3>
+                    <p class="text-sm text-stone">Unread Messages</p>
+                    <p class="text-xs text-yellow-600 mt-2">1 from seller</p>
+                </div>
+
+                <!-- Rewards Card -->
+                <div class="quick-card bg-cream rounded-xl p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-gold/20 rounded-lg">
+                            <i class="fas fa-gift text-gold text-xl"></i>
+                        </div>
+                        <span class="text-xs text-stone">View details →</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-charcoal mb-1">250</h3>
+                    <p class="text-sm text-stone">Reward Points</p>
+                    <p class="text-xs text-gold mt-2">$25 voucher available</p>
+                </div>
+            </div>
+
+            <!-- Order Activity Chart -->
+            <div class="bg-cream rounded-xl p-6 border border-beige mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-charcoal mb-2 sm:mb-0">Order Activity</h3>
+                    <select class="text-sm border border-beige rounded-lg px-3 py-2 bg-pearl focus:outline-none focus:border-gold">
+                        <option>Last 6 months</option>
+                        <option>Last year</option>
+                        <option>All time</option>
+                    </select>
+                </div>
+                <div class="h-64">
+                    <canvas id="orderChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Recent Orders -->
+                <div class="bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Recent Orders</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Leather Jacket</p>
+                                <p class="text-xs text-stone">Order #12345 • Dec 20</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Delivered</span>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Silk Dress</p>
+                                <p class="text-xs text-stone">Order #12344 • Dec 18</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Shipped</span>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Designer Handbag</p>
+                                <p class="text-xs text-stone">Order #12343 • Dec 15</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">Processing</span>
+                        </div>
+                    </div>
+                    <a href="orders.html" class="block mt-4 text-center text-sm text-gold hover:text-velvra-gold-dark transition-colors">
+                        View All Orders →
+                    </a>
+                </div>
+
+                <!-- Recommended Products -->
+                <div class="bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Recommended for You</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Cashmere Sweater</p>
+                                <p class="text-xs text-stone">Premium Collection</p>
+                                <p class="text-sm font-semibold text-gold mt-1">$189.00</p>
+                            </div>
+                            <button class="p-2 text-stone hover:text-gold transition-colors">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Silk Scarf</p>
+                                <p class="text-xs text-stone">Limited Edition</p>
+                                <p class="text-sm font-semibold text-gold mt-1">$89.00</p>
+                            </div>
+                            <button class="p-2 text-stone hover:text-gold transition-colors">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-4 p-3 bg-pearl rounded-lg">
+                            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=50&h=50&fit=crop" 
+                                 alt="Product" 
+                                 class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <p class="font-medium text-charcoal">Leather Sneakers</p>
+                                <p class="text-xs text-stone">New Arrival</p>
+                                <p class="text-sm font-semibold text-gold mt-1">$249.00</p>
+                            </div>
+                            <button class="p-2 text-stone hover:text-gold transition-colors">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <a href="#" class="block mt-4 text-center text-sm text-gold hover:text-velvra-gold-dark transition-colors">
+                        Shop New Arrivals →
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige z-40">
+        <div class="grid grid-cols-5 gap-1">
+            <a href="#" class="mobile-nav-item active flex flex-col items-center py-2 text-xs">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="orders.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-shopping-bag text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            <a href="wishlist.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-heart text-lg mb-1"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="messages.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone relative">
+                <i class="fas fa-envelope text-lg mb-1"></i>
+                <span>Messages</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+            <p class="text-stone mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+                <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile menu -->
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        // Logout modal
+        const logoutBtn = document.getElementById('logoutBtn');
+        const logoutModal = document.getElementById('logoutModal');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const confirmLogout = document.getElementById('confirmLogout');
+
+        logoutBtn.addEventListener('click', () => {
+            logoutModal.classList.remove('hidden');
+        });
+
+        cancelLogout.addEventListener('click', () => {
+            logoutModal.classList.add('hidden');
+        });
+
+        confirmLogout.addEventListener('click', () => {
+            // Simulate logout
+            window.location.href = '#logged-out';
+        });
+
+        // Order activity chart
+        const ctx = document.getElementById('orderChart').getContext('2d');
+        const orderChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [2, 3, 1, 4, 2, 3],
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#d4af37',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        titleColor: '#d4af37',
+                        bodyColor: '#fff',
+                        borderColor: '#d4af37',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' orders';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#a8a196',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#a8a196',
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: '#e8dcc6',
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add click handlers to quick cards
+        document.querySelectorAll('.quick-card').forEach(card => {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('span')) {
+                    // Navigate based on card content
+                    const text = card.querySelector('p').textContent;
+                    if (text.includes('Orders')) window.location.href = 'orders.html';
+                    else if (text.includes('Wishlist')) window.location.href = 'wishlist.html';
+                    else if (text.includes('Messages')) window.location.href = 'messages.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

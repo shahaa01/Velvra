@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra - Report Issues</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .issue-card {
+            transition: all 0.3s ease;
+        }
+        
+        .issue-card:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .mobile-nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav-item.active {
+            color: #d4af37;
+        }
+        
+        .file-upload-zone {
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-zone:hover {
+            border-color: #d4af37;
+            background-color: rgba(212, 175, 55, 0.05);
+        }
+        
+        .file-upload-zone.dragover {
+            border-color: #d4af37;
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-link.active {
+                border-left: none;
+                border-bottom: 3px solid #d4af37;
+            }
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="menuToggle" class="lg:hidden text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </button>
+                    <img src="https://ui-avatars.com/api/?name=Emma+Johnson&background=d4af37&color=1a1a1a" 
+                         alt="Profile" 
+                         class="w-8 h-8 rounded-full cursor-pointer">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300 pt-16 lg:pt-0">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-shopping-bag w-5"></i>
+                            <span>My Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span>Messages</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                            <i class="fas fa-exclamation-circle w-5"></i>
+                            <span>Report Issues</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="wishlist.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-heart w-5"></i>
+                            <span>Wishlist</span>
+                            <span class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="profile.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-user-circle w-5"></i>
+                            <span>Profile Settings</span>
+                        </a>
+                    </li>
+                    <li class="pt-4 border-t border-beige">
+                        <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-red-600">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">Report Issues</h2>
+                <p class="text-stone">Report problems with your orders or get help</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button class="tab-btn px-4 py-2 text-sm font-medium bg-gold text-charcoal rounded-lg transition-all" data-tab="new">
+                    Report New Issue
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-tab="existing">
+                    My Reports
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tabContent">
+                <!-- New Issue Tab -->
+                <div id="newTab" class="tab-content">
+                    <div class="bg-cream rounded-xl p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-4">Report a New Issue</h3>
+                        
+                        <form id="issueForm" class="space-y-4">
+                            <!-- Select Order -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Select Order</label>
+                                <select id="orderSelect" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                    <option value="">Choose an order...</option>
+                                    <option value="12345">Order #12345 - Leather Jacket (Delivered)</option>
+                                    <option value="12344">Order #12344 - Silk Dress (Shipped)</option>
+                                    <option value="12343">Order #12343 - Designer Handbag (Processing)</option>
+                                </select>
+                            </div>
+
+                            <!-- Issue Category -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Issue Category</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="damaged" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Damaged Item</p>
+                                            <p class="text-xs text-stone">Product arrived damaged or broken</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="wrong" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Wrong Item</p>
+                                            <p class="text-xs text-stone">Received different product</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="missing" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Missing Item</p>
+                                            <p class="text-xs text-stone">Order incomplete or not received</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="quality" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Quality Issue</p>
+                                            <p class="text-xs text-stone">Product not as described</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="shipping" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Shipping Problem</p>
+                                            <p class="text-xs text-stone">Delivery delays or issues</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-pearl border border-beige rounded-lg cursor-pointer hover:border-gold transition-colors">
+                                        <input type="radio" name="category" value="other" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-charcoal">Other</p>
+                                            <p class="text-xs text-stone">Different issue</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Describe the Issue</label>
+                                <textarea id="issueDescription" 
+                                          placeholder="Please provide details about the problem..." 
+                                          class="w-full px-4 py-3 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold resize-none"
+                                          rows="4"></textarea>
+                            </div>
+
+                            <!-- File Upload -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Attach Photos (Optional)</label>
+                                <div id="fileUploadZone" class="file-upload-zone border-2 border-dashed border-beige rounded-lg p-6 text-center cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-stone mb-2"></i>
+                                    <p class="text-sm text-stone">Drop files here or click to upload</p>
+                                    <p class="text-xs text-stone mt-1">JPG, PNG up to 5MB each</p>
+                                    <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+                                </div>
+                                <div id="uploadedFiles" class="mt-3 space-y-2"></div>
+                            </div>
+
+                            <!-- Resolution Preference -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Preferred Resolution</label>
+                                <select id="resolution" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                    <option value="refund">Full Refund</option>
+                                    <option value="replacement">Replacement</option>
+                                    <option value="partial">Partial Refund</option>
+                                    <option value="other">Other (please specify)</option>
+                                </select>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="flex justify-end pt-4">
+                                <button type="submit" class="px-6 py-3 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                    Submit Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Existing Issues Tab -->
+                <div id="existingTab" class="tab-content hidden">
+                    <div id="issuesList" class="space-y-4">
+                        <!-- Issues will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyIssues" class="hidden bg-cream rounded-xl p-12 border border-beige text-center">
+                        <i class="fas fa-check-circle text-6xl text-stone mb-4"></i>
+                        <h3 class="text-xl font-semibold text-charcoal mb-2">No issues reported</h3>
+                        <p class="text-stone">You haven't reported any issues yet.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige z-40">
+        <div class="grid grid-cols-5 gap-1">
+            <a href="dashboard.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="orders.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-shopping-bag text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            <a href="wishlist.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-heart text-lg mb-1"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="messages.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone relative">
+                <i class="fas fa-envelope text-lg mb-1"></i>
+                <span>Messages</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-charcoal mb-2">Report Submitted</h3>
+            <p class="text-stone mb-4">Your issue has been reported successfully. We'll review it and get back to you within 24 hours.</p>
+            <p class="text-sm text-stone mb-4">Report ID: <span id="reportId" class="font-medium text-charcoal"></span></p>
+            <button id="closeSuccess" class="px-6 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+            <p class="text-stone mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+                <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+
+    <script>
+        // Sample existing issues
+        const existingIssues = [
+            {
+                id: "RPT-001",
+                orderId: "12340",
+                product: "Wool Sweater",
+                category: "quality",
+                status: "resolved",
+                date: new Date("2023-12-08"),
+                description: "Size was smaller than expected",
+                resolution: "Full refund processed"
+            },
+            {
+                id: "RPT-002",
+                orderId: "12339",
+                product: "Canvas Shoes",
+                category: "damaged",
+                status: "pending",
+                date: new Date("2023-12-20"),
+                description: "Sole was detached from the shoe",
+                resolution: "Under review"
+            }
+        ];
+
+        // DOM elements
+        const issueForm = document.getElementById('issueForm');
+        const fileUploadZone = document.getElementById('fileUploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedFiles = document.getElementById('uploadedFiles');
+        const successModal = document.getElementById('successModal');
+        const logoutModal = document.getElementById('logoutModal');
+        const issuesList = document.getElementById('issuesList');
+        const emptyIssues = document.getElementById('emptyIssues');
+
+        // Mobile menu
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                // Update button styles
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    if (b.dataset.tab === tab) {
+                        b.classList.add('bg-gold', 'text-charcoal');
+                        b.classList.remove('text-stone', 'bg-cream', 'border', 'border-beige');
+                    } else {
+                        b.classList.remove('bg-gold', 'text-charcoal');
+                        b.classList.add('text-stone', 'bg-cream', 'border', 'border-beige');
+                    }
+                });
+                
+                // Show/hide content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`${tab}Tab`).classList.remove('hidden');
+                
+                if (tab === 'existing') {
+                    renderExistingIssues();
+                }
+            });
+        });
+
+        // Check for order parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderFromUrl = urlParams.get('order');
+        if (orderFromUrl) {
+            document.getElementById('orderSelect').value = orderFromUrl;
+        }
+
+        // File upload
+        let uploadedFilesList = [];
+
+        fileUploadZone.addEventListener('click', () => fileInput.click());
+
+        fileUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadZone.classList.add('dragover');
+        });
+
+        fileUploadZone.addEventListener('dragleave', () => {
+            fileUploadZone.classList.remove('dragover');
+        });
+
+        fileUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                    uploadedFilesList.push(file);
+                    displayUploadedFile(file);
+                }
+            });
+        }
+
+        function displayUploadedFile(file) {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'flex items-center justify-between p-3 bg-pearl rounded-lg fade-in';
+            fileDiv.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-image text-gold"></i>
+                    <span class="text-sm text-charcoal">${file.name}</span>
+                    <span class="text-xs text-stone">(${(file.size / 1024).toFixed(1)} KB)</span>
+                </div>
+                <button onclick="removeFile('${file.name}')" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            uploadedFiles.appendChild(fileDiv);
+        }
+
+        function removeFile(fileName) {
+            uploadedFilesList = uploadedFilesList.filter(f => f.name !== fileName);
+            renderUploadedFiles();
+        }
+
+        function renderUploadedFiles() {
+            uploadedFiles.innerHTML = '';
+            uploadedFilesList.forEach(file => displayUploadedFile(file));
+        }
+
+        // Form submission
+        issueForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                order: document.getElementById('orderSelect').value,
+                category: document.querySelector('input[name="category"]:checked')?.value,
+                description: document.getElementById('issueDescription').value,
+                resolution: document.getElementById('resolution').value,
+                files: uploadedFilesList
+            };
+            
+            // Validate
+            if (!formData.order || !formData.category || !formData.description) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Simulate submission
+            const reportId = 'RPT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            document.getElementById('reportId').textContent = reportId;
+            
+            // Add to existing issues
+            existingIssues.unshift({
+                id: reportId,
+                orderId: formData.order,
+                product: document.getElementById('orderSelect').selectedOptions[0].text.split(' - ')[1].split(' (')[0],
+                category: formData.category,
+                status: "pending",
+                date: new Date(),
+                description: formData.description,
+                resolution: "Under review"
+            });
+            
+            // Show success modal
+            successModal.classList.remove('hidden');
+            
+            // Reset form
+            issueForm.reset();
+            uploadedFilesList = [];
+            uploadedFiles.innerHTML = '';
+        });
+
+        // Render existing issues
+        function renderExistingIssues() {
+            if (existingIssues.length === 0) {
+                issuesList.classList.add('hidden');
+                emptyIssues.classList.remove('hidden');
+                return;
+            }
+            
+            issuesList.classList.remove('hidden');
+            emptyIssues.classList.add('hidden');
+            
+            issuesList.innerHTML = existingIssues.map(issue => `
+                <div class="issue-card bg-cream rounded-xl p-6 border border-beige fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                        <div>
+                            <h3 class="font-semibold text-charcoal mb-1">Report #${issue.id}</h3>
+                            <p class="text-sm text-stone">Order #${issue.orderId} - ${issue.product}</p>
+                            <p class="text-xs text-stone mt-1">${formatDate(issue.date)}</p>
+                        </div>
+                        <span class="mt-2 sm:mt-0 inline-block px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(issue.status)}">
+                            ${issue.status.charAt(0).toUpperCase() + issue.status.slice(1)}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm font-medium text-charcoal">Issue Type</p>
+                            <p class="text-sm text-stone">${getCategoryLabel(issue.category)}</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm font-medium text-charcoal">Description</p>
+                            <p class="text-sm text-stone">${issue.description}</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm font-medium text-charcoal">Resolution</p>
+                            <p class="text-sm text-stone">${issue.resolution}</p>
+                        </div>
+                    </div>
+                    
+                    ${issue.status === 'pending' ? `
+                        <div class="mt-4 pt-4 border-t border-beige">
+                            <button onclick="window.location.href='messages.html'" class="text-sm text-gold hover:text-velvra-gold-dark transition-colors">
+                                <i class="fas fa-comment mr-2"></i>Contact Support
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Close success modal
+        document.getElementById('closeSuccess').addEventListener('click', () => {
+            successModal.classList.add('hidden');
+            // Switch to existing issues tab
+            document.querySelector('[data-tab="existing"]').click();
+        });
+
+        // Logout modal
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            logoutModal.classList.remove('hidden');
+        });
+
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            logoutModal.classList.add('hidden');
+        });
+
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            window.location.href = '#logged-out';
+        });
+
+        // Utility functions
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'bg-yellow-100 text-yellow-700',
+                'in-progress': 'bg-blue-100 text-blue-700',
+                'resolved': 'bg-green-100 text-green-700'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-700';
+        }
+
+        function getCategoryLabel(category) {
+            const labels = {
+                'damaged': 'Damaged Item',
+                'wrong': 'Wrong Item',
+                'missing': 'Missing Item',
+                'quality': 'Quality Issue',
+                'shipping': 'Shipping Problem',
+                'other': 'Other'
+            };
+            return labels[category] || category;
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                successModal.classList.add('hidden');
+                logoutModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

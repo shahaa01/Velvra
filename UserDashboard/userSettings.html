@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra - Profile Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .settings-section {
+            transition: all 0.3s ease;
+        }
+        
+        .settings-section:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+        
+        .mobile-nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav-item.active {
+            color: #d4af37;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background-color: #a8a196;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background-color: #d4af37;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+        
+        .success-pulse {
+            animation: successPulse 0.5s ease;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-link.active {
+                border-left: none;
+                border-bottom: 3px solid #d4af37;
+            }
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="menuToggle" class="lg:hidden text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </button>
+                    <img src="https://ui-avatars.com/api/?name=Emma+Johnson&background=d4af37&color=1a1a1a" 
+                         alt="Profile" 
+                         class="w-8 h-8 rounded-full cursor-pointer">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300 pt-16 lg:pt-0">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-shopping-bag w-5"></i>
+                            <span>My Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span>Messages</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-exclamation-circle w-5"></i>
+                            <span>Report Issues</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="wishlist.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-heart w-5"></i>
+                            <span>Wishlist</span>
+                            <span class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                            <i class="fas fa-user-circle w-5"></i>
+                            <span>Profile Settings</span>
+                        </a>
+                    </li>
+                    <li class="pt-4 border-t border-beige">
+                        <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-red-600">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">Profile Settings</h2>
+                <p class="text-stone">Manage your account information and preferences</p>
+            </div>
+
+            <!-- Settings Sections -->
+            <div class="space-y-6">
+                <!-- Personal Information -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Personal Information</h3>
+                    
+                    <form id="personalForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">First Name</label>
+                            <input type="text" id="firstName" value="Emma" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Last Name</label>
+                            <input type="text" id="lastName" value="Johnson" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Email Address</label>
+                            <input type="email" id="email" value="emma.johnson@email.com" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Phone Number</label>
+                            <input type="tel" id="phone" value="+1 (555) 123-4567" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-charcoal mb-2">Date of Birth</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <select id="birthMonth" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3" selected>March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <input type="number" id="birthDay" value="15" min="1" max="31" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                <input type="number" id="birthYear" value="1990" min="1900" max="2023" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Shipping Address</h3>
+                    
+                    <form id="addressForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Street Address</label>
+                            <input type="text" id="address1" value="123 Main Street" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Apartment, suite, etc. (optional)</label>
+                            <input type="text" id="address2" value="Apt 4B" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">ZIP Code</label>
+                                <input type="text" id="zipCode" value="10001" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Update Address
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password & Security -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Password & Security</h3>
+                    
+                    <form id="passwordForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Current Password</label>
+                            <input type="password" id="currentPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">New Password</label>
+                            <input type="password" id="newPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                            <p class="text-xs text-stone mt-1">Must be at least 8 characters with a mix of letters and numbers</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-6 pt-6 border-t border-beige">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-charcoal">Two-Factor Authentication</h4>
+                                <p class="text-sm text-stone mt-1">Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="toggle-switch" data-toggle="2fa"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Preferences -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Email Preferences</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-3 border-b border-beige">
+                            <div>
+                                <p class="font-medium text-charcoal">Order Updates</p>
+                                <p class="text-sm text-stone">Receive emails about your order status</p>
+                            </div>
+                            <div class="toggle-switch active" data-toggle="order-updates"></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between py-3 border-b border-beige">
+                            <div>
+                                <p class="font-medium text-charcoal">Promotional Emails</p>
+                                <p class="text-sm text-stone">New arrivals, sales, and exclusive offers</p>
+                            </div>
+                            <div class="toggle-switch active" data-toggle="promotions"></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between py-3 border-b border-beige">
+                            <div>
+                                <p class="font-medium text-charcoal">Newsletter</p>
+                                <p class="text-sm text-stone">Fashion tips, trends, and style guides</p>
+                            </div>
+                            <div class="toggle-switch" data-toggle="newsletter"></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between py-3">
+                            <div>
+                                <p class="font-medium text-charcoal">Wishlist Reminders</p>
+                                <p class="text-sm text-stone">Notifications when wishlist items go on sale</p>
+                            </div>
+                            <div class="toggle-switch active" data-toggle="wishlist-reminders"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Actions -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Account Actions</h3>
+                    
+                    <div class="space-y-4">
+                        <button class="w-full sm:w-auto px-6 py-3 bg-pearl border border-beige text-charcoal font-medium rounded-lg hover:bg-cream transition-colors">
+                            <i class="fas fa-download mr-2"></i>Download My Data
+                        </button>
+                        
+                        <div class="pt-4 border-t border-beige">
+                            <h4 class="font-medium text-red-600 mb-2">Danger Zone</h4>
+                            <p class="text-sm text-stone mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+                            <button id="deleteAccountBtn" class="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige z-40">
+        <div class="grid grid-cols-5 gap-1">
+            <a href="dashboard.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="orders.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-shopping-bag text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            <a href="wishlist.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-heart text-lg mb-1"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="messages.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone relative">
+                <i class="fas fa-envelope text-lg mb-1"></i>
+                <span>Messages</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+            <a href="#" class="mobile-nav-item active flex flex-col items-center py-2 text-xs">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Delete Account Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Delete Account</h3>
+            <p class="text-stone mb-4">Are you sure you want to delete your account? This action cannot be undone.</p>
+            <p class="text-sm text-stone mb-6">Type <span class="font-medium text-charcoal">DELETE</span> to confirm:</p>
+            <input type="text" id="deleteConfirm" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold mb-4">
+            <div class="flex space-x-3">
+                <button id="cancelDelete" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDelete" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+            <p class="text-stone mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+                <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="notification" class="fixed bottom-20 lg:bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationText">Settings saved successfully!</span>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+
+    <script>
+        // Mobile menu
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        // Toggle switches
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                const setting = toggle.dataset.toggle;
+                const isActive = toggle.classList.contains('active');
+                
+                // Save preference (simulated)
+                localStorage.setItem(`setting_${setting}`, isActive);
+                
+                if (setting === '2fa' && isActive) {
+                    showNotification('Two-factor authentication setup required. Check your email.');
+                }
+            });
+        });
+
+        // Form submissions
+        document.getElementById('personalForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            simulateSaving(() => {
+                showNotification('Personal information updated successfully!');
+            });
+        });
+
+        document.getElementById('addressForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            simulateSaving(() => {
+                showNotification('Shipping address updated successfully!');
+            });
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showNotification('Please fill in all password fields', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showNotification('New password must be at least 8 characters', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+            
+            simulateSaving(() => {
+                document.getElementById('passwordForm').reset();
+                showNotification('Password changed successfully!');
+            });
+        });
+
+        // Delete account
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteConfirmInput = document.getElementById('deleteConfirm');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+
+        deleteAccountBtn.addEventListener('click', () => {
+            deleteModal.classList.remove('hidden');
+        });
+
+        deleteConfirmInput.addEventListener('input', (e) => {
+            confirmDeleteBtn.disabled = e.target.value !== 'DELETE';
+        });
+
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            deleteConfirmInput.value = '';
+            confirmDeleteBtn.disabled = true;
+        });
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (deleteConfirmInput.value === 'DELETE') {
+                showNotification('Account deletion in progress...');
+                setTimeout(() => {
+                    window.location.href = '#account-deleted';
+                }, 2000);
+            }
+        });
+
+        // Logout modal
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('logoutModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            document.getElementById('logoutModal').classList.add('hidden');
+        });
+
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            window.location.href = '#logged-out';
+        });
+
+        // Utility functions
+        function simulateSaving(callback) {
+            // Show loading state on buttons
+            const buttons = document.querySelectorAll('button[type="submit"]:not([disabled])');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            });
+
+            setTimeout(() => {
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    if (btn.closest('#personalForm')) {
+                        btn.innerHTML = 'Save Changes';
+                    } else if (btn.closest('#addressForm')) {
+                        btn.innerHTML = 'Update Address';
+                    } else if (btn.closest('#passwordForm')) {
+                        btn.innerHTML = 'Change Password';
+                    }
+                    btn.classList.add('success-pulse');
+                    setTimeout(() => btn.classList.remove('success-pulse'), 500);
+                });
+                callback();
+            }, 1500);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = `fixed bottom-20 lg:bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+                type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+            }`;
+            
+            notification.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateY(100%)';
+            }, 3000);
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                deleteModal.classList.add('hidden');
+                document.getElementById('logoutModal').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

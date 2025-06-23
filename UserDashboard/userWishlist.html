@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra - My Wishlist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            border-left: 3px solid #d4af37;
+        }
+        
+        .wishlist-card {
+            transition: all 0.3s ease;
+        }
+        
+        .wishlist-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .wishlist-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        
+        .product-image {
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav-item.active {
+            color: #d4af37;
+        }
+        
+        .heart-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .heart-icon.removing {
+            animation: heartBeat 0.5s ease-out;
+        }
+        
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-link.active {
+                border-left: none;
+                border-bottom: 3px solid #d4af37;
+            }
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="menuToggle" class="lg:hidden text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="p-2 text-stone hover:text-charcoal transition-colors">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </button>
+                    <img src="https://ui-avatars.com/api/?name=Emma+Johnson&background=d4af37&color=1a1a1a" 
+                         alt="Profile" 
+                         class="w-8 h-8 rounded-full cursor-pointer">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300 pt-16 lg:pt-0">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-shopping-bag w-5"></i>
+                            <span>My Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="messages.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span>Messages</span>
+                            <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-exclamation-circle w-5"></i>
+                            <span>Report Issues</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                            <i class="fas fa-heart w-5"></i>
+                            <span>Wishlist</span>
+                            <span id="wishlistCount" class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full">12</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="profile.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-charcoal">
+                            <i class="fas fa-user-circle w-5"></i>
+                            <span>Profile Settings</span>
+                        </a>
+                    </li>
+                    <li class="pt-4 border-t border-beige">
+                        <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-stone hover:text-red-600">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">My Wishlist</h2>
+                <p class="text-stone">Items you've saved for later</p>
+            </div>
+
+            <!-- Filter and Sort -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-btn px-4 py-2 text-sm font-medium bg-gold text-charcoal rounded-lg transition-all" data-filter="all">
+                        All Items
+                    </button>
+                    <button class="filter-btn px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="sale">
+                        On Sale
+                    </button>
+                    <button class="filter-btn px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="instock">
+                        In Stock
+                    </button>
+                </div>
+                <select id="sortSelect" class="px-4 py-2 bg-cream border border-beige rounded-lg text-sm focus:outline-none focus:border-gold">
+                    <option value="recent">Recently Added</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name: A-Z</option>
+                </select>
+            </div>
+
+            <!-- Wishlist Container -->
+            <div id="wishlistContainer">
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div class="bg-cream rounded-xl border border-beige p-4">
+                        <div class="loading-skeleton h-48 w-full mb-4 rounded-lg"></div>
+                        <div class="loading-skeleton h-4 w-3/4 mb-2 rounded"></div>
+                        <div class="loading-skeleton h-4 w-1/2 rounded"></div>
+                    </div>
+                    <div class="bg-cream rounded-xl border border-beige p-4">
+                        <div class="loading-skeleton h-48 w-full mb-4 rounded-lg"></div>
+                        <div class="loading-skeleton h-4 w-3/4 mb-2 rounded"></div>
+                        <div class="loading-skeleton h-4 w-1/2 rounded"></div>
+                    </div>
+                    <div class="bg-cream rounded-xl border border-beige p-4">
+                        <div class="loading-skeleton h-48 w-full mb-4 rounded-lg"></div>
+                        <div class="loading-skeleton h-4 w-3/4 mb-2 rounded"></div>
+                        <div class="loading-skeleton h-4 w-1/2 rounded"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden bg-cream rounded-xl p-12 border border-beige text-center">
+                    <i class="fas fa-heart text-6xl text-stone mb-4"></i>
+                    <h3 class="text-xl font-semibold text-charcoal mb-2">Your wishlist is empty</h3>
+                    <p class="text-stone mb-6">Save items you love to buy them later</p>
+                    <a href="#" class="inline-block px-6 py-3 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                        Start Shopping
+                    </a>
+                </div>
+
+                <!-- Wishlist Grid -->
+                <div id="wishlistGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Items will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige z-40">
+        <div class="grid grid-cols-5 gap-1">
+            <a href="dashboard.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span>Home</span>
+            </a>
+            <a href="orders.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-shopping-bag text-lg mb-1"></i>
+                <span>Orders</span>
+            </a>
+            <a href="#" class="mobile-nav-item active flex flex-col items-center py-2 text-xs">
+                <i class="fas fa-heart text-lg mb-1"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="messages.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone relative">
+                <i class="fas fa-envelope text-lg mb-1"></i>
+                <span>Messages</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-stone">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+            <p class="text-stone mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+                <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="notification" class="fixed bottom-20 lg:bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationText">Added to cart!</span>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
+
+    <script>
+        // Sample wishlist data
+        let wishlistItems = [
+            {
+                id: 1,
+                name: "Cashmere Sweater",
+                brand: "Premium Collection",
+                price: 189.00,
+                originalPrice: 220.00,
+                image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: true,
+                addedDate: new Date("2023-12-15")
+            },
+            {
+                id: 2,
+                name: "Silk Scarf",
+                brand: "Limited Edition",
+                price: 89.00,
+                originalPrice: 89.00,
+                image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-10")
+            },
+            {
+                id: 3,
+                name: "Leather Sneakers",
+                brand: "New Arrival",
+                price: 249.00,
+                originalPrice: 249.00,
+                image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-18")
+            },
+            {
+                id: 4,
+                name: "Designer Watch",
+                brand: "Luxury Collection",
+                price: 450.00,
+                originalPrice: 599.00,
+                image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=400&h=400&fit=crop",
+                inStock: false,
+                onSale: true,
+                addedDate: new Date("2023-12-05")
+            },
+            {
+                id: 5,
+                name: "Wool Coat",
+                brand: "Winter Collection",
+                price: 320.00,
+                originalPrice: 320.00,
+                image: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-20")
+            },
+            {
+                id: 6,
+                name: "Canvas Tote Bag",
+                brand: "Eco Friendly",
+                price: 45.00,
+                originalPrice: 45.00,
+                image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-08")
+            },
+            {
+                id: 7,
+                name: "Leather Belt",
+                brand: "Classic Collection",
+                price: 85.00,
+                originalPrice: 120.00,
+                image: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: true,
+                addedDate: new Date("2023-11-28")
+            },
+            {
+                id: 8,
+                name: "Sunglasses",
+                brand: "Summer Essentials",
+                price: 150.00,
+                originalPrice: 150.00,
+                image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-12")
+            },
+            {
+                id: 9,
+                name: "Denim Jacket",
+                brand: "Streetwear",
+                price: 110.00,
+                originalPrice: 140.00,
+                image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=400&fit=crop",
+                inStock: false,
+                onSale: true,
+                addedDate: new Date("2023-12-01")
+            },
+            {
+                id: 10,
+                name: "Pearl Necklace",
+                brand: "Jewelry Collection",
+                price: 280.00,
+                originalPrice: 280.00,
+                image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-14")
+            },
+            {
+                id: 11,
+                name: "Running Shoes",
+                brand: "Sport Line",
+                price: 130.00,
+                originalPrice: 160.00,
+                image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: true,
+                addedDate: new Date("2023-12-19")
+            },
+            {
+                id: 12,
+                name: "Leather Wallet",
+                brand: "Accessories",
+                price: 75.00,
+                originalPrice: 75.00,
+                image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop",
+                inStock: true,
+                onSale: false,
+                addedDate: new Date("2023-12-16")
+            }
+        ];
+
+        // State management
+        let currentFilter = 'all';
+        let currentSort = 'recent';
+
+        // DOM elements
+        const wishlistGrid = document.getElementById('wishlistGrid');
+        const wishlistCount = document.getElementById('wishlistCount');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const notification = document.getElementById('notification');
+        const logoutModal = document.getElementById('logoutModal');
+
+        // Mobile menu
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFilter = btn.dataset.filter;
+                updateFilterButtons();
+                renderWishlist();
+            });
+        });
+
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === currentFilter) {
+                    btn.classList.add('bg-gold', 'text-charcoal');
+                    btn.classList.remove('text-stone', 'bg-cream', 'border', 'border-beige');
+                } else {
+                    btn.classList.remove('bg-gold', 'text-charcoal');
+                    btn.classList.add('text-stone', 'bg-cream', 'border', 'border-beige');
+                }
+            });
+        }
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            renderWishlist();
+        });
+
+        // Render wishlist
+        function renderWishlist() {
+            // Filter items
+            let filteredItems = [...wishlistItems];
+            if (currentFilter === 'sale') {
+                filteredItems = filteredItems.filter(item => item.onSale);
+            } else if (currentFilter === 'instock') {
+                filteredItems = filteredItems.filter(item => item.inStock);
+            }
+
+            // Sort items
+            switch (currentSort) {
+                case 'recent':
+                    filteredItems.sort((a, b) => b.addedDate - a.addedDate);
+                    break;
+                case 'price-low':
+                    filteredItems.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-high':
+                    filteredItems.sort((a, b) => b.price - a.price);
+                    break;
+                case 'name':
+                    filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+            }
+
+            if (filteredItems.length === 0) {
+                wishlistGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            wishlistGrid.innerHTML = filteredItems.map(item => `
+                <div class="wishlist-card bg-cream rounded-xl border border-beige overflow-hidden fade-in" data-id="${item.id}">
+                    <div class="relative">
+                        <div class="overflow-hidden h-64">
+                            <img src="${item.image}" alt="${item.name}" class="product-image w-full h-full object-cover">
+                        </div>
+                        <button onclick="removeFromWishlist(${item.id})" class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-red-50 transition-colors">
+                            <i class="heart-icon fas fa-heart text-red-500"></i>
+                        </button>
+                        ${item.onSale ? `
+                            <span class="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs rounded">
+                                ${Math.round((item.originalPrice - item.price) / item.originalPrice * 100)}% OFF
+                            </span>
+                        ` : ''}
+                        ${!item.inStock ? `
+                            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                <span class="text-white font-medium">Out of Stock</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="p-4">
+                        <p class="text-xs text-stone mb-1">${item.brand}</p>
+                        <h3 class="font-medium text-charcoal mb-2">${item.name}</h3>
+                        <div class="flex items-baseline gap-2 mb-3">
+                            <span class="text-lg font-semibold text-charcoal">${item.price.toFixed(2)}</span>
+                            ${item.onSale ? `
+                                <span class="text-sm text-stone line-through">${item.originalPrice.toFixed(2)}</span>
+                            ` : ''}
+                        </div>
+                        <button onclick="addToCart(${item.id})" 
+                                class="w-full px-4 py-2 ${item.inStock ? 'bg-gold text-charcoal hover:bg-velvra-gold-dark' : 'bg-stone text-white cursor-not-allowed'} font-medium rounded-lg transition-colors"
+                                ${!item.inStock ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            ${item.inStock ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove from wishlist
+        function removeFromWishlist(itemId) {
+            const card = document.querySelector(`[data-id="${itemId}"]`);
+            const heartIcon = card.querySelector('.heart-icon');
+            
+            heartIcon.classList.add('removing');
+            
+            setTimeout(() => {
+                wishlistItems = wishlistItems.filter(item => item.id !== itemId);
+                updateWishlistCount();
+                renderWishlist();
+                showNotification('Removed from wishlist');
+            }, 500);
+        }
+
+        // Add to cart
+        function addToCart(itemId) {
+            const item = wishlistItems.find(i => i.id === itemId);
+            if (!item || !item.inStock) return;
+
+            // Simulate adding to cart
+            showNotification(`${item.name} added to cart!`);
+            
+            // Optionally remove from wishlist after adding to cart
+            setTimeout(() => {
+                removeFromWishlist(itemId);
+            }, 1000);
+        }
+
+        // Update wishlist count
+        function updateWishlistCount() {
+            wishlistCount.textContent = wishlistItems.length;
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notificationText = document.getElementById('notificationText');
+            notificationText.textContent = message;
+            notification.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateY(100%)';
+            }, 3000);
+        }
+
+        // Logout modal
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            logoutModal.classList.remove('hidden');
+        });
+
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            logoutModal.classList.add('hidden');
+        });
+
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            window.location.href = '#logged-out';
+        });
+
+        // Simulate loading
+        function simulateLoading() {
+            loadingState.classList.remove('hidden');
+            wishlistGrid.classList.add('hidden');
+            
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                wishlistGrid.classList.remove('hidden');
+                renderWishlist();
+            }, 1000);
+        }
+
+        // Initialize
+        simulateLoading();
+        updateWishlistCount();
+    </script>
+</body>
+</html>
