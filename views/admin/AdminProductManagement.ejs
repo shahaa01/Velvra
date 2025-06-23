@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Admin - Product Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .image-gallery {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+        }
+        
+        .image-gallery img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .image-gallery img:hover {
+            transform: scale(1.05);
+        }
+        
+        .stock-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 10;
+        }
+        
+        .filter-dropdown.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <%- include('adminSidebar.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button id="sidebarToggle" class="lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" placeholder="Search products..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff" alt="Admin" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">Admin User</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Product Management Content -->
+        <main class="p-6">
+            <!-- Page Title and Actions -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Product Management</h2>
+                    <p class="text-gray-600 mt-1">Monitor and manage all products in the marketplace</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-3">
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Product
+                    </button>
+                    <div class="relative">
+                        <button id="filterBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+                            <i class="fas fa-filter mr-2"></i>
+                            Filter
+                        </button>
+                        <div id="filterDropdown" class="filter-dropdown w-64 p-4">
+                            <h4 class="font-semibold mb-3">Filter Products</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-sm text-gray-600">Status</label>
+                                    <select class="w-full mt-1 p-2 border border-gray-300 rounded-lg">
+                                        <option>All Status</option>
+                                        <option>Active</option>
+                                        <option>Pending</option>
+                                        <option>Rejected</option>
+                                        <option>Out of Stock</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">Category</label>
+                                    <select class="w-full mt-1 p-2 border border-gray-300 rounded-lg">
+                                        <option>All Categories</option>
+                                        <option>Women's Fashion</option>
+                                        <option>Men's Fashion</option>
+                                        <option>Kids</option>
+                                        <option>Accessories</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">Price Range</label>
+                                    <div class="flex space-x-2 mt-1">
+                                        <input type="number" placeholder="Min" class="w-1/2 p-2 border border-gray-300 rounded-lg">
+                                        <input type="number" placeholder="Max" class="w-1/2 p-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                </div>
+                                <button class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Products</p>
+                            <p class="text-2xl font-bold text-gray-800">1,234</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-box text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Active</p>
+                            <p class="text-2xl font-bold text-gray-800">1,089</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Pending</p>
+                            <p class="text-2xl font-bold text-gray-800">45</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Out of Stock</p>
+                            <p class="text-2xl font-bold text-gray-800">23</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-exclamation-circle text-red-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Low Stock</p>
+                            <p class="text-2xl font-bold text-gray-800">67</p>
+                        </div>
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-orange-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex space-x-2">
+                    <button id="gridView" class="p-2 bg-purple-600 text-white rounded-lg">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button id="listView" class="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600">Showing <span class="font-medium">1-12</span> of <span class="font-medium">1,234</span> products</p>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="productsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Product cards will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Products Table (hidden by default) -->
+            <div id="productsTable" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-center mt-8">
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">Previous</button>
+                    <button class="px-3 py-1 bg-purple-600 text-white rounded-md text-sm">1</button>
+                    <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">2</button>
+                    <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">3</button>
+                    <span class="px-3 py-1">...</span>
+                    <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">12</button>
+                    <button class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Product Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="modalContent">
+                    <!-- Modal content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock product data
+        const mockProducts = [
+            {
+                id: 1,
+                name: 'Premium Leather Jacket',
+                seller: 'Fashion Hub',
+                category: 'Men\'s Fashion',
+                price: 299.99,
+                originalPrice: 399.99,
+                stock: 45,
+                status: 'active',
+                rating: 4.5,
+                reviews: 124,
+                sold: 234,
+                images: [
+                    'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300',
+                    'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300',
+                    'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300'
+                ],
+                description: 'High-quality genuine leather jacket with modern design.',
+                sizes: ['S', 'M', 'L', 'XL'],
+                colors: ['Black', 'Brown']
+            },
+            {
+                id: 2,
+                name: 'Designer Silk Dress',
+                seller: 'Style Central',
+                category: 'Women\'s Fashion',
+                price: 189.99,
+                originalPrice: null,
+                stock: 3,
+                status: 'active',
+                rating: 4.8,
+                reviews: 89,
+                sold: 156,
+                images: [
+                    'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=300'
+                ],
+                description: 'Elegant silk dress perfect for special occasions.',
+                sizes: ['XS', 'S', 'M', 'L'],
+                colors: ['Red', 'Navy', 'Black']
+            },
+            {
+                id: 3,
+                name: 'Kids Winter Coat',
+                seller: 'Kids Paradise',
+                category: 'Kids',
+                price: 79.99,
+                originalPrice: 99.99,
+                stock: 0,
+                status: 'outofstock',
+                rating: 4.6,
+                reviews: 45,
+                sold: 78,
+                images: [
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300'
+                ],
+                description: 'Warm and comfortable winter coat for kids.',
+                sizes: ['4-5Y', '6-7Y', '8-9Y'],
+                colors: ['Blue', 'Pink']
+            },
+            {
+                id: 4,
+                name: 'Luxury Watch',
+                seller: 'Premium Styles',
+                category: 'Accessories',
+                price: 599.99,
+                originalPrice: null,
+                stock: 12,
+                status: 'pending',
+                rating: 0,
+                reviews: 0,
+                sold: 0,
+                images: [
+                    'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=300'
+                ],
+                description: 'Swiss-made luxury watch with sapphire crystal.',
+                sizes: [],
+                colors: ['Silver', 'Gold']
+            },
+            {
+                id: 5,
+                name: 'Canvas Backpack',
+                seller: 'Trendy Boutique',
+                category: 'Accessories',
+                price: 49.99,
+                originalPrice: 59.99,
+                stock: 89,
+                status: 'active',
+                rating: 4.3,
+                reviews: 234,
+                sold: 567,
+                images: [
+                    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300'
+                ],
+                description: 'Durable canvas backpack for everyday use.',
+                sizes: [],
+                colors: ['Gray', 'Black', 'Navy']
+            }
+        ];
+
+        let currentView = 'grid';
+        let filteredProducts = [...mockProducts];
+
+        // Render products grid
+        function renderProductsGrid() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '';
+            container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+
+            filteredProducts.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer';
+                card.onclick = () => viewProduct(product.id);
+                
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${product.images[0]}" alt="${product.name}" class="w-full h-56 object-cover">
+                        ${product.originalPrice ? `
+                            <span class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                                -${Math.round((1 - product.price / product.originalPrice) * 100)}%
+                            </span>
+                        ` : ''}
+                        ${product.status === 'pending' ? `
+                            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                <span class="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold">
+                                    Pending Approval
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-semibold text-gray-800 line-clamp-2">${product.name}</h3>
+                            <div class="flex items-center space-x-1">
+                                ${getStockIndicator(product.stock)}
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-2">${product.seller}</p>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <span class="text-lg font-bold text-gray-900">${product.price}</span>
+                                ${product.originalPrice ? `
+                                    <span class="text-sm text-gray-500 line-through ml-1">${product.originalPrice}</span>
+                                ` : ''}
+                            </div>
+                            ${product.rating > 0 ? `
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                    <span>${product.rating}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <span>${product.sold} sold</span>
+                            <span>${product.stock} in stock</span>
+                        </div>
+                        
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex space-x-2">
+                            ${product.status === 'pending' ? `
+                                <button onclick="event.stopPropagation(); approveProduct(${product.id})" class="flex-1 bg-green-600 text-white py-1 rounded-lg text-sm hover:bg-green-700">
+                                    Approve
+                                </button>
+                                <button onclick="event.stopPropagation(); rejectProduct(${product.id})" class="flex-1 bg-red-600 text-white py-1 rounded-lg text-sm hover:bg-red-700">
+                                    Reject
+                                </button>
+                            ` : `
+                                <button onclick="event.stopPropagation(); editProduct(${product.id})" class="flex-1 bg-purple-600 text-white py-1 rounded-lg text-sm hover:bg-purple-700">
+                                    Edit
+                                </button>
+                                <button onclick="event.stopPropagation(); toggleProductStatus(${product.id})" class="flex-1 bg-gray-200 text-gray-700 py-1 rounded-lg text-sm hover:bg-gray-300">
+                                    ${product.status === 'active' ? 'Deactivate' : 'Activate'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Render products table
+        function renderProductsTable() {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '';
+
+            filteredProducts.forEach(product => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <img src="${product.images[0]}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover mr-3">
+                            <div>
+                                <div class="font-medium text-gray-900">${product.name}</div>
+                                <div class="text-sm text-gray-500">ID: #${product.id.toString().padStart(5, '0')}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.seller}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                            <div class="font-medium text-gray-900">${product.price}</div>
+                            ${product.originalPrice ? `<div class="text-sm text-gray-500 line-through">${product.originalPrice}</div>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            ${getStockIndicator(product.stock)}
+                            <span class="ml-2 text-sm">${product.stock}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${getStatusBadge(product.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="viewProduct(${product.id})" class="text-purple-600 hover:text-purple-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editProduct(${product.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteProduct(${product.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStockIndicator(stock) {
+            if (stock === 0) {
+                return '<span class="stock-indicator bg-red-500"></span>';
+            } else if (stock < 10) {
+                return '<span class="stock-indicator bg-yellow-500"></span>';
+            } else {
+                return '<span class="stock-indicator bg-green-500"></span>';
+            }
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                active: '<span class="status-badge bg-green-100 text-green-800">Active</span>',
+                pending: '<span class="status-badge bg-yellow-100 text-yellow-800">Pending</span>',
+                rejected: '<span class="status-badge bg-red-100 text-red-800">Rejected</span>',
+                outofstock: '<span class="status-badge bg-gray-100 text-gray-800">Out of Stock</span>'
+            };
+            return badges[status] || '';
+        }
+
+        // View switching
+        document.getElementById('gridView').addEventListener('click', function() {
+            currentView = 'grid';
+            this.classList.add('bg-purple-600', 'text-white');
+            this.classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById('listView').classList.remove('bg-purple-600', 'text-white');
+            document.getElementById('listView').classList.add('bg-gray-200', 'text-gray-700');
+            
+            document.getElementById('productsContainer').classList.remove('hidden');
+            document.getElementById('productsTable').classList.add('hidden');
+            renderProductsGrid();
+        });
+
+        document.getElementById('listView').addEventListener('click', function() {
+            currentView = 'list';
+            this.classList.add('bg-purple-600', 'text-white');
+            this.classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById('gridView').classList.remove('bg-purple-600', 'text-white');
+            document.getElementById('gridView').classList.add('bg-gray-200', 'text-gray-700');
+            
+            document.getElementById('productsContainer').classList.add('hidden');
+            document.getElementById('productsTable').classList.remove('hidden');
+            renderProductsTable();
+        });
+
+        // Filter dropdown
+        document.getElementById('filterBtn').addEventListener('click', function() {
+            document.getElementById('filterDropdown').classList.toggle('show');
+        });
+
+        // Close filter dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#filterBtn') && !e.target.closest('#filterDropdown')) {
+                document.getElementById('filterDropdown').classList.remove('show');
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            filteredProducts = mockProducts.filter(product => 
+                product.name.toLowerCase().includes(search) ||
+                product.seller.toLowerCase().includes(search) ||
+                product.category.toLowerCase().includes(search)
+            );
+            if (currentView === 'grid') {
+                renderProductsGrid();
+            } else {
+                renderProductsTable();
+            }
+        });
+
+        // Product actions
+        function viewProduct(id) {
+            const product = mockProducts.find(p => p.id === id);
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <img src="${product.images[0]}" alt="${product.name}" class="w-full h-96 object-cover rounded-lg mb-4">
+                        <div class="image-gallery">
+                            ${product.images.map((img, index) => `
+                                <img src="${img}" alt="${product.name} ${index + 1}" class="border-2 border-gray-200">
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h4 class="text-2xl font-bold text-gray-800">${product.name}</h4>
+                                <p class="text-gray-600">${product.category}</p>
+                            </div>
+                            ${getStatusBadge(product.status)}
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 mb-4">
+                            ${product.rating > 0 ? `
+                                <div class="flex items-center">
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                    <span class="ml-1 font-medium">${product.rating}</span>
+                                    <span class="text-gray-500 ml-1">(${product.reviews} reviews)</span>
+                                </div>
+                            ` : '<span class="text-gray-500">No reviews yet</span>'}
+                            <span class="text-gray-500">|</span>
+                            <span class="text-gray-600">${product.sold} sold</span>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-baseline space-x-2 mb-2">
+                                <span class="text-3xl font-bold text-gray-900">${product.price}</span>
+                                ${product.originalPrice ? `
+                                    <span class="text-xl text-gray-500 line-through">${product.originalPrice}</span>
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-sm">
+                                        ${Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${getStockIndicator(product.stock)}
+                                <span class="text-sm ${product.stock === 0 ? 'text-red-600' : product.stock < 10 ? 'text-yellow-600' : 'text-green-600'}">
+                                    ${product.stock === 0 ? 'Out of stock' : product.stock < 10 ? `Only ${product.stock} left` : `${product.stock} in stock`}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h5 class="font-semibold text-gray-800 mb-2">Description</h5>
+                            <p class="text-gray-600">${product.description}</p>
+                        </div>
+                        
+                        ${product.sizes.length > 0 ? `
+                            <div class="mb-6">
+                                <h5 class="font-semibold text-gray-800 mb-2">Available Sizes</h5>
+                                <div class="flex flex-wrap gap-2">
+                                    ${product.sizes.map(size => `
+                                        <span class="px-3 py-1 border border-gray-300 rounded-lg text-sm">${size}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${product.colors.length > 0 ? `
+                            <div class="mb-6">
+                                <h5 class="font-semibold text-gray-800 mb-2">Available Colors</h5>
+                                <div class="flex flex-wrap gap-2">
+                                    ${product.colors.map(color => `
+                                        <span class="px-3 py-1 border border-gray-300 rounded-lg text-sm">${color}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="border-t pt-4">
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                                <span>Seller</span>
+                                <span class="font-medium text-gray-800">${product.seller}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm text-gray-600">
+                                <span>Product ID</span>
+                                <span class="font-medium text-gray-800">#${product.id.toString().padStart(5, '0')}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex space-x-3">
+                            ${product.status === 'pending' ? `
+                                <button onclick="approveProduct(${product.id})" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-check mr-2"></i>Approve Product
+                                </button>
+                                <button onclick="rejectProduct(${product.id})" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-times mr-2"></i>Reject Product
+                                </button>
+                            ` : `
+                                <button onclick="editProduct(${product.id})" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                    <i class="fas fa-edit mr-2"></i>Edit Product
+                                </button>
+                                <button onclick="deleteProduct(${product.id})" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-trash mr-2"></i>Delete Product
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showModal();
+        }
+
+        function approveProduct(id) {
+            if (confirm('Are you sure you want to approve this product?')) {
+                const product = mockProducts.find(p => p.id === id);
+                product.status = 'active';
+                if (currentView === 'grid') {
+                    renderProductsGrid();
+                } else {
+                    renderProductsTable();
+                }
+                closeModal();
+                showNotification('Product approved successfully!', 'success');
+            }
+        }
+
+        function rejectProduct(id) {
+            if (confirm('Are you sure you want to reject this product?')) {
+                const product = mockProducts.find(p => p.id === id);
+                product.status = 'rejected';
+                if (currentView === 'grid') {
+                    renderProductsGrid();
+                } else {
+                    renderProductsTable();
+                }
+                closeModal();
+                showNotification('Product rejected', 'error');
+            }
+        }
+
+        function editProduct(id) {
+            alert('Opening product editor for product #' + id);
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                const index = mockProducts.findIndex(p => p.id === id);
+                mockProducts.splice(index, 1);
+                filteredProducts = filteredProducts.filter(p => p.id !== id);
+                if (currentView === 'grid') {
+                    renderProductsGrid();
+                } else {
+                    renderProductsTable();
+                }
+                closeModal();
+                showNotification('Product deleted', 'error');
+            }
+        }
+
+        function toggleProductStatus(id) {
+            const product = mockProducts.find(p => p.id === id);
+            product.status = product.status === 'active' ? 'inactive' : 'active';
+            if (currentView === 'grid') {
+                renderProductsGrid();
+            } else {
+                renderProductsTable();
+            }
+            showNotification(`Product ${product.status === 'active' ? 'activated' : 'deactivated'}`, 'success');
+        }
+
+        // Modal functions
+        function showModal() {
+            document.getElementById('productModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('show');
+        }
+
+        // Notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-yellow-500'
+            } text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}-circle mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+
+        // Initialize
+        renderProductsGrid();
+    </script>
+</body>
+</html>

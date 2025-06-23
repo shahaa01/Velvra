@@ -14,6 +14,7 @@ class VelvraCart {
     init() {
         this.setupEventListeners();
         this.updateUI();
+        this.updateStockValidation();
     }
 
     setupEventListeners() {
@@ -23,6 +24,10 @@ class VelvraCart {
             if (e.target.classList.contains('increase-btn')) {
                 e.preventDefault();
                 const cartId = e.target.dataset.cartId;
+                
+                // Check if button is disabled
+                if (e.target.disabled) return;
+                
                 await this.handleQuantityChange(cartId, 1);
                 this.quickHaptic(e.target);
             }
@@ -120,6 +125,81 @@ class VelvraCart {
         }, { passive: true });
     }
 
+    // Helper function to get stock for specific color
+    getColorStock(product, colorName) {
+        if (!product.colors || !Array.isArray(product.colors)) return 0;
+        const color = product.colors.find(c => c.name === colorName);
+        return color ? color.stock : 0;
+    }
+
+    // Check if quantity change is allowed based on stock
+    canIncreaseQuantity(cartItemId) {
+        const item = this.getCartItem(cartItemId);
+        if (!item) return false;
+        
+        const currentStock = this.getColorStock(item.product, item.color);
+        return item.quantity < currentStock;
+    }
+
+    // Update stock validation for all items
+    updateStockValidation() {
+        this.cart.items.forEach(item => {
+            this.updateItemStockValidation(item._id);
+        });
+    }
+
+    // Update stock validation for specific item
+    updateItemStockValidation(cartItemId) {
+        const item = this.getCartItem(cartItemId);
+        if (!item) return;
+
+        const currentStock = this.getColorStock(item.product, item.color);
+        const increaseButtons = document.querySelectorAll(`.increase-btn[data-cart-id="${cartItemId}"]`);
+        
+        increaseButtons.forEach(btn => {
+            if (item.quantity >= currentStock) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+    // Show premium stock error message
+    showStockError(cartItemId, message) {
+        // Remove any existing error messages
+        this.removeStockError(cartItemId);
+        
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'stock-error-message text-red-500 text-sm mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg animate-fade-in';
+        errorDiv.textContent = message;
+        errorDiv.style.animation = 'fadeIn 0.3s ease-out';
+        
+        // Find the quantity controls container and insert error message
+        const quantityContainer = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"]`);
+        if (quantityContainer) {
+            quantityContainer.appendChild(errorDiv);
+        }
+        
+        // Auto-remove error message after 3 seconds
+        setTimeout(() => {
+            this.removeStockError(cartItemId);
+        }, 3000);
+    }
+
+    // Remove stock error message
+    removeStockError(cartItemId) {
+        const existingError = document.querySelector(`[data-cart-id="${cartItemId}"] .stock-error-message`);
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
     async handleQuantityChange(cartItemId, delta, newQuantity = null) {
         if (this.isUpdating) return;
 
@@ -127,7 +207,21 @@ class VelvraCart {
         if (!item) return;
 
         const currentQuantity = item.quantity;
-        const updatedQuantity = newQuantity || Math.min(Math.max(1, currentQuantity + delta), 10);
+        let updatedQuantity;
+
+        if (newQuantity !== null) {
+            updatedQuantity = Math.min(Math.max(1, newQuantity), 10);
+        } else {
+            // Check stock limit for increase operations
+            if (delta > 0) {
+                const currentStock = this.getColorStock(item.product, item.color);
+                if (currentQuantity >= currentStock) {
+                    this.showStockError(cartItemId, `Sorry, we only have ${currentStock} of this item in stock.`);
+                    return;
+                }
+            }
+            updatedQuantity = Math.min(Math.max(1, currentQuantity + delta), 10);
+        }
 
         if (updatedQuantity === currentQuantity) return;
 
@@ -137,6 +231,7 @@ class VelvraCart {
 
             // Update UI immediately for better user experience
             this.updateQuantityInDOM(cartItemId, updatedQuantity);
+            this.updateItemStockValidation(cartItemId);
 
             const response = await fetch('/cart/update', {
                 method: 'PUT',
@@ -169,6 +264,7 @@ class VelvraCart {
             this.showErrorMessage(error.message || 'Failed to update quantity');
             // Revert the quantity change on error
             this.updateQuantityInDOM(cartItemId, currentQuantity);
+            this.updateItemStockValidation(cartItemId);
         } finally {
             this.isUpdating = false;
             this.hideLoading(cartItemId);
@@ -195,12 +291,22 @@ class VelvraCart {
         const item = this.getCartItem(cartItemId);
         if (!item || item.color === newColor) return;
 
+        // Check if new color has stock
+        const newColorStock = this.getColorStock(item.product, newColor);
+        if (newColorStock === 0) {
+            this.showStockError(cartItemId, 'This color is currently out of stock.');
+            return;
+        }
+
+        // Check if current quantity exceeds new color stock
+        if (item.quantity > newColorStock) {
+            this.showStockError(cartItemId, `This color only has ${newColorStock} items in stock. Please reduce quantity.`);
+            return;
+        }
+
         try {
             this.isUpdating = true;
             this.showLoading(cartItemId);
-
-            // Update UI immediately for better user experience
-            this.updateColorInDOM(cartItemId, newColor);
 
             const response = await fetch('/cart/update-color', {
                 method: 'PUT',
@@ -213,16 +319,26 @@ class VelvraCart {
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to update color');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update color');
+            }
 
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
+            this.updateColorInDOM(cartItemId, newColor);
+            this.updateItemStockValidation(cartItemId);
+
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
 
         } catch (error) {
             console.error('Error updating color:', error);
-            this.showErrorMessage('Failed to update color');
-            // Revert the color change on error
-            this.updateColorInDOM(cartItemId, item.color);
+            this.showErrorMessage(error.message || 'Failed to update color');
         } finally {
             this.isUpdating = false;
             this.hideLoading(cartItemId);

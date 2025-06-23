@@ -131,6 +131,20 @@ body {
     overflow: hidden;
 }
 
+/* Hide hero section on mobile phones */
+@media (max-width: 767px) {
+    .hero-section {
+        display: none !important;
+    }
+}
+
+/* Show hero section on tablets and desktop */
+@media (min-width: 768px) {
+    .hero-section {
+        display: flex !important;
+    }
+}
+
 .hero-section::before {
     content: '';
     position: absolute;
