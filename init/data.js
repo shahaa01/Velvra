@@ -1,3 +1,4 @@
+//sample products
 const sampleProducts = [
   {
     "name": "Classic Cotton T-Shirt",
