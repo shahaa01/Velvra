@@ -438,4 +438,135 @@ function setNotificationData(notifications, unreadCount) {
 function setUserData(userName, userEmail) {
     VelvraState.user.name = userName || '';
     VelvraState.user.email = userEmail || '';
-} 
+}
+
+// Mobile menu toggle - updated to match userMessage.js pattern
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const closeSidebar = document.getElementById('closeSidebar');
+
+// Only add mobile menu listeners if elements exist
+if (menuToggle && sidebar && sidebarOverlay) {
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        sidebarOverlay.classList.toggle('hidden');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+    });
+
+    if (closeSidebar) {
+        closeSidebar.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// Logout modal
+const logoutBtn = document.getElementById('logoutBtn');
+const logoutModal = document.getElementById('logoutModal');
+const cancelLogout = document.getElementById('cancelLogout');
+const confirmLogout = document.getElementById('confirmLogout');
+
+logoutBtn.addEventListener('click', () => {
+    logoutModal.classList.remove('hidden');
+});
+
+cancelLogout.addEventListener('click', () => {
+    logoutModal.classList.add('hidden');
+});
+
+confirmLogout.addEventListener('click', () => {
+    // Simulate logout
+    window.location.href = '#logged-out';
+});
+
+// Order activity chart
+const ctx = document.getElementById('orderChart').getContext('2d');
+const orderChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Orders',
+            data: [2, 3, 1, 4, 2, 3],
+            borderColor: '#d4af37',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#d4af37',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1a1a1a',
+                titleColor: '#d4af37',
+                bodyColor: '#fff',
+                borderColor: '#d4af37',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: false,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' orders';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: '#a8a196',
+                    font: {
+                        size: 11
+                    }
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: '#a8a196',
+                    font: {
+                        size: 11
+                    }
+                },
+                grid: {
+                    color: '#e8dcc6',
+                    drawBorder: false
+                }
+            }
+        }
+    }
+});
+
+// Add click handlers to quick cards
+document.querySelectorAll('.quick-card').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('span')) {
+            // Navigate based on card content
+            const text = card.querySelector('p').textContent;
+            if (text.includes('Orders')) window.location.href = '/dashboard/orders';
+            else if (text.includes('Wishlist')) window.location.href = '/dashboard/wishlist';
+            else if (text.includes('Messages')) window.location.href = '/dashboard/messages';
+        }
+    });
+}); 

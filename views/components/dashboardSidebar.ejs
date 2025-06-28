@@ -1,0 +1,58 @@
+<aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300">
+    <!-- Mobile Header with Close button -->
+    <div class="lg:hidden flex items-center justify-between p-4 border-b border-beige">
+        <h2 class="text-xl font-bold text-gold brand-font">Menu</h2>
+        <button id="closeSidebar" class="p-2 text-charcoal hover:text-charcoal transition-all duration-300 hover:bg-gold/10 rounded-lg group hover:scale-110" aria-label="Close menu">
+            <i class="fas fa-times text-xl transition-transform duration-300 group-hover:rotate-90"></i>
+        </button>
+    </div>
+    
+    <nav class="p-4">
+        <ul class="space-y-2">
+            <li>
+                <a href="userDashboard.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="orders.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                    <i class="fas fa-shopping-bag w-5"></i>
+                    <span>My Orders</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                    <i class="fas fa-envelope w-5"></i>
+                    <span>Messages</span>
+                    <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">3</span>
+                </a>
+            </li>
+            <li>
+                <a href="issues.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                    <i class="fas fa-exclamation-circle w-5"></i>
+                    <span>Report Issues</span>
+                </a>
+            </li>
+            <li>
+                <a href="wishlist.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                    <i class="fas fa-heart w-5"></i>
+                    <span>Wishlist</span>
+                    <span class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full">12</span>
+                </a>
+            </li>
+            <li>
+                <a href="profile.html" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                    <i class="fas fa-user-circle w-5"></i>
+                    <span>Profile Settings</span>
+                </a>
+            </li>
+            <li class="pt-4 border-t border-beige">
+                <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-red-600">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Log Out</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+</aside>

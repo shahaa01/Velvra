@@ -18,6 +18,10 @@ const { localStore } = require('./middlewares/index');
 const swal = require('sweetalert2');
 const fileUpload = require('express-fileupload');
 const { addAdminContext } = require('./middlewares/adminMiddleware');
+const http = require('http');
+const socketio = require('socket.io');
+const Message = require('./models/message');
+const Conversation = require('./models/conversation');
 
 const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
@@ -29,8 +33,8 @@ const addressRoutes = require('./routes/address');
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.engine('ejs', ejsMate); 
-
 app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(methodOverride('_method'));
@@ -136,7 +140,46 @@ app.use('/dashboard', require('./routes/dashboard'));
 app.use('/search', require('./routes/searchRoute'));
 app.use('/admin', require('./routes/adminRoutes'));
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+const io = socketio(server, { cors: { origin: '*' } });
+
+// Socket.IO real-time messaging logic
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+    socket.on('joinConversation', (conversationId) => {
+        socket.join(conversationId);
+    });
+    socket.on('sendMessage', async (data) => {
+        // data: { conversationId, message }
+        try {
+            // Save message to DB
+            const msgDoc = await Message.create({
+                conversationId: data.conversationId,
+                sender: data.message.sender,
+                senderModel: data.message.senderModel,
+                recipient: data.message.recipient,
+                recipientModel: data.message.recipientModel,
+                order: data.message.order,
+                content: data.message.content,
+                attachments: data.message.attachments || [],
+            });
+            // Update conversation lastMessage
+            await Conversation.findByIdAndUpdate(data.conversationId, { lastMessage: data.message.content });
+            // Emit to room
+            io.to(data.conversationId).emit('receiveMessage', msgDoc);
+        } catch (err) {
+            console.error('Socket message save error:', err);
+        }
+    });
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+// Make io accessible in routes if needed
+app.set('io', io);
+
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Seller - Messages & Complaints</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brand-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .message-row {
+            transition: all 0.2s ease;
+        }
+        
+        .message-row:hover {
+            background-color: rgba(212, 175, 55, 0.05);
+        }
+        
+        .status-badge {
+            transition: all 0.3s ease;
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f8f6f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8941F;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #a8a196;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-pearl">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-charcoal sidebar-transition transform -translate-x-full lg:translate-x-0">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="px-6 py-6 border-b border-stone/20">
+                <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+                <p class="text-xs text-stone mt-1">Seller Dashboard</p>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 overflow-y-auto">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="sellerDashboard.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-home w-5"></i>
+                            <span class="ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="products.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-box w-5"></i>
+                            <span class="ml-3">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-shopping-cart w-5"></i>
+                            <span class="ml-3">Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="inventory.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-warehouse w-5"></i>
+                            <span class="ml-3">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="promotions.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-tag w-5"></i>
+                            <span class="ml-3">Promotions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span class="ml-3">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="payouts.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-dollar-sign w-5"></i>
+                            <span class="ml-3">Payouts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-3 text-pearl bg-gold/20 rounded-lg transition-all">
+                            <i class="fas fa-envelope w-5"></i>
+                            <span class="ml-3">Messages</span>
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store-settings.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-store w-5"></i>
+                            <span class="ml-3">Store Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="account.html" class="flex items-center px-4 py-3 text-stone hover:text-pearl hover:bg-gold/10 rounded-lg transition-all">
+                            <i class="fas fa-user-cog w-5"></i>
+                            <span class="ml-3">Account</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Profile Section -->
+            <div class="px-4 py-4 border-t border-stone/20">
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a" alt="Store" class="w-10 h-10 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-pearl">Fashion Hub</p>
+                        <p class="text-xs text-stone">Premium Seller</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Messages & Complaints</h2>
+                            <p class="text-sm text-stone">Manage customer communications</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <button id="markAllReadBtn" class="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-check-double"></i>
+                            <span class="font-medium">Mark All Read</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Desktop Layout -->
+        <div class="hidden lg:block">
+        <main class="p-4 sm:p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Messages List -->
+                <div class="lg:col-span-1">
+                    <!-- Filter Tabs -->
+                    <div class="bg-cream rounded-xl p-4 border border-beige mb-4">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="filter-tab px-3 py-1.5 text-sm font-medium bg-gold text-charcoal rounded-lg transition-all" data-filter="all">
+                                All <span class="ml-1 text-xs">(8)</span>
+                            </button>
+                            <button class="filter-tab px-3 py-1.5 text-sm font-medium text-stone hover:bg-beige rounded-lg transition-all" data-filter="open">
+                                Open <span class="ml-1 text-xs">(3)</span>
+                            </button>
+                            <button class="filter-tab px-3 py-1.5 text-sm font-medium text-stone hover:bg-beige rounded-lg transition-all" data-filter="replied">
+                                Replied <span class="ml-1 text-xs">(2)</span>
+                            </button>
+                            <button class="filter-tab px-3 py-1.5 text-sm font-medium text-stone hover:bg-beige rounded-lg transition-all" data-filter="resolved">
+                                Resolved <span class="ml-1 text-xs">(3)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Container -->
+                    <div id="messagesContainer" class="space-y-3">
+                        <!-- Loading State -->
+                        <div id="loadingState" class="hidden space-y-3">
+                            <div class="bg-cream rounded-lg p-4 border border-beige">
+                                <div class="loading-skeleton h-4 w-32 mb-2 rounded"></div>
+                                <div class="loading-skeleton h-3 w-full mb-2 rounded"></div>
+                                <div class="loading-skeleton h-3 w-24 rounded"></div>
+                            </div>
+                            <div class="bg-cream rounded-lg p-4 border border-beige">
+                                <div class="loading-skeleton h-4 w-32 mb-2 rounded"></div>
+                                <div class="loading-skeleton h-3 w-full mb-2 rounded"></div>
+                                <div class="loading-skeleton h-3 w-24 rounded"></div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState" class="hidden bg-cream rounded-xl p-8 border border-beige text-center">
+                            <i class="fas fa-inbox text-4xl text-stone mb-4"></i>
+                            <p class="text-stone font-medium">No messages found</p>
+                            <p class="text-sm text-stone mt-1">Messages will appear here when customers contact you</p>
+                        </div>
+
+                        <!-- Messages List -->
+                        <div id="messagesList" class="space-y-3">
+                            <!-- Messages will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Thread -->
+                <div class="lg:col-span-2">
+                    <div id="messageThread" class="bg-cream rounded-xl border border-beige h-full flex flex-col">
+                        <!-- Default State -->
+                        <div id="threadDefaultState" class="flex-1 flex items-center justify-center p-8 text-center">
+                            <div>
+                                <i class="fas fa-comments text-5xl text-stone mb-4"></i>
+                                <p class="text-stone font-medium">Select a message</p>
+                                <p class="text-sm text-stone mt-1">Choose a conversation from the list to view details</p>
+                            </div>
+                        </div>
+
+                        <!-- Active Thread -->
+                        <div id="threadContent" class="hidden flex flex-col h-full">
+                            <!-- Thread Header -->
+                            <div class="p-4 sm:p-6 border-b border-beige">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h3 id="threadTitle" class="font-semibold text-charcoal text-lg"></h3>
+                                        <p id="threadSubject" class="text-sm text-stone mt-1"></p>
+                                        <div class="flex items-center gap-4 mt-2">
+                                            <span id="threadOrderInfo" class="text-xs text-stone"></span>
+                                            <span id="threadStatus" class="text-xs px-2 py-1 rounded-full font-medium"></span>
+                                        </div>
+                                    </div>
+                                    <button id="resolveBtn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                        <i class="fas fa-check mr-2"></i>Mark Resolved
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Messages Container -->
+                            <div id="messagesScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                                <!-- Messages will be populated by JavaScript -->
+                            </div>
+
+                            <!-- Reply Box -->
+                            <div class="p-4 sm:p-6 border-t border-beige">
+                                <div class="space-y-3">
+                                    <textarea 
+                                        id="replyTextarea"
+                                        placeholder="Type your reply..."
+                                        class="w-full px-4 py-3 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold resize-none transition-colors"
+                                        rows="3"
+                                    ></textarea>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2 text-stone">
+                                            <button class="p-2 hover:text-charcoal transition-colors">
+                                                <i class="fas fa-paperclip"></i>
+                                            </button>
+                                            <button class="p-2 hover:text-charcoal transition-colors">
+                                                <i class="fas fa-image"></i>
+                                            </button>
+                                        </div>
+                                        <button id="sendReplyBtn" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fas fa-paper-plane mr-2"></i>Send Reply
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        </div>
+        <!-- Mobile Layout -->
+        <div class="block lg:hidden">
+            <main class="p-2">
+                <!-- Mobile message list and thread, stacked or toggled as needed -->
+                <div id="mobileMessagesList">
+                    <!-- ... message list ... -->
+                </div>
+                <div id="mobileMessageThread" class="hidden">
+                    <!-- ... thread ... -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        // Assume conversationId and sellerId are available from EJS variables
+        const conversationId = '<%= conversationId || "" %>';
+        const sellerId = '<%= seller._id %>';
+        if (conversationId) {
+            socket.emit('joinConversation', conversationId);
+        }
+        // Send message
+        document.getElementById('sendReplyBtn').addEventListener('click', function() {
+            const content = document.getElementById('replyTextarea').value.trim();
+            if (!content) return;
+            const message = {
+                conversationId,
+                sender: sellerId,
+                content,
+                createdAt: new Date()
+            };
+            socket.emit('sendMessage', { conversationId, message });
+            // Optionally update UI immediately
+            addMessageToUI(message, true);
+            document.getElementById('replyTextarea').value = '';
+        });
+        // Listen for new messages
+        socket.on('receiveMessage', function(message) {
+            addMessageToUI(message, false);
+        });
+        function addMessageToUI(message, isOwn) {
+            // Render the message in the messagesScrollContainer
+            const container = document.getElementById('messagesScrollContainer');
+            const div = document.createElement('div');
+            div.className = 'flex ' + (isOwn ? 'justify-end' : 'justify-start') + ' fade-in';
+            div.innerHTML = `<div class="max-w-lg"><div class="${isOwn ? 'bg-gold text-charcoal' : 'bg-white'} px-4 py-3 rounded-lg ${isOwn ? 'rounded-br-none' : 'rounded-bl-none'} shadow-sm"><p class="text-sm">${message.content}</p></div><p class="text-xs text-stone mt-1 ${isOwn ? 'text-right' : ''}">${new Date(message.createdAt).toLocaleTimeString()}</p></div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
