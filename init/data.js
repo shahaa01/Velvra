@@ -1,4 +1,4 @@
-//sample products
+//sample product
 const sampleProducts = [
   {
     "name": "Classic Cotton T-Shirt",
