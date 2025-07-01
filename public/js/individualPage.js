@@ -39,9 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
         colorSelectors[0].click();
     }
 
-    // Set quantity to 1 for in-stock, 0 for out-of-stock
-    let firstColorObj = window.productColors && window.productColors.length > 0 ? window.productColors[0] : null;
-    if (firstColorObj && firstColorObj.stock > 0) {
+    // Set quantity to 1 for in-stock, 0 for out-of-stock (by color+size)
+    const colorName = productState.selectedColor;
+    const sizeName = productState.selectedSize;
+    const maxStock = getStockForColorSize(window.product, colorName, sizeName);
+    if (maxStock > 0) {
         productState.quantity = 1;
         quantityInput.value = 1;
     } else {
@@ -117,8 +119,9 @@ function initializeEventListeners() {
     });
 
     increaseBtn.addEventListener('click', () => {
-        const colorObj = getSelectedColorObj();
-        const maxStock = colorObj ? colorObj.stock : 0;
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
         if (productState.quantity < maxStock) {
             productState.quantity++;
             quantityInput.value = productState.quantity;
@@ -130,8 +133,9 @@ function initializeEventListeners() {
 
     quantityInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
-        const colorObj = getSelectedColorObj();
-        const maxStock = colorObj ? colorObj.stock : 0;
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
         if (value >= 1 && value <= maxStock) {
             productState.quantity = value;
         } else {
