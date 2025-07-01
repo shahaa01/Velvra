@@ -74,6 +74,12 @@ router.post('/toggle', isLoggedIn, async (req, res) => {
             });
         } else {
             // Add new item
+            const colorObj = product.colors.find(c => c.name === color);
+            if (!colorObj) return res.status(400).json({ error: 'Color not available' });
+            const sizeObj = colorObj.sizes.find(s => s.size === size);
+            if (!sizeObj) return res.status(400).json({ error: 'Size not available for this color' });
+            if (sizeObj.stock < quantity) return res.status(400).json({ error: 'Not enough stock for this variant' });
+            
             cart.items.push({ product: productId, size, color, quantity });
             await cart.save();
             

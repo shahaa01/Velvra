@@ -133,6 +133,7 @@ app.use('/auth', authRoutes);
 app.use('/shop', require('./routes/shopRoute'));
 app.use('/product', productRoutes);
 app.use('/seller', require('./routes/sellerRoute'));
+app.use('/seller-dashboard', require('./routes/sellerDashboard'));
 app.use('/cart', cartRoutes);
 app.use('/address', addressRoutes);
 app.use('/payment', require('./routes/paymentRoutes'));
@@ -146,9 +147,12 @@ const io = socketio(server, { cors: { origin: '*' } });
 // Socket.IO real-time messaging logic
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
+    
     socket.on('joinConversation', (conversationId) => {
         socket.join(conversationId);
+        console.log(`User ${socket.id} joined conversation ${conversationId}`);
     });
+    
     socket.on('sendMessage', async (data) => {
         // data: { conversationId, message }
         try {
@@ -163,14 +167,31 @@ io.on('connection', (socket) => {
                 content: data.message.content,
                 attachments: data.message.attachments || [],
             });
+            
             // Update conversation lastMessage
-            await Conversation.findByIdAndUpdate(data.conversationId, { lastMessage: data.message.content });
+            await Conversation.findByIdAndUpdate(data.conversationId, { 
+                lastMessage: data.message.content,
+                updatedAt: new Date()
+            });
+            
             // Emit to room
             io.to(data.conversationId).emit('receiveMessage', msgDoc);
         } catch (err) {
             console.error('Socket message save error:', err);
         }
     });
+    
+    // Typing indicators
+    socket.on('typing', (data) => {
+        // Emit typing indicator to other users in the conversation
+        socket.to(data.conversationId).emit('typing', data);
+    });
+    
+    socket.on('stopTyping', (data) => {
+        // Emit stop typing indicator to other users in the conversation
+        socket.to(data.conversationId).emit('stopTyping', data);
+    });
+    
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });

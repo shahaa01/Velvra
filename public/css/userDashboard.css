@@ -1,26 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
-.brand-font {
-    font-family: 'Playfair Display', serif;
-}
-
-.nav-link {
-    transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-    background-color: rgba(212, 175, 55, 0.1);
-}
-
-.nav-link.active {
-    background-color: rgba(212, 175, 55, 0.2);
-    color: #d4af37;
-    border-left: 3px solid #d4af37;
-}
+/* User Dashboard specific styles only */
 
 .quick-card {
     transition: all 0.3s ease;
@@ -31,86 +9,18 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.mobile-nav-item {
-    transition: all 0.3s ease;
-}
-
-.mobile-nav-item.active {
-    color: #d4af37;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f8f6f0;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #d4af37;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #B8941F;
-}
-
-/* Responsive adjustments - simplified to match userMessage.css */
-@media (max-width: 768px) {
-    .nav-link.active {
-        border-left: none;
-        border-bottom: 3px solid #d4af37;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-    
-    header .container {
-        padding-top: 12px;
-        padding-bottom: 12px;
-    }
-    
-    header h1 {
-        font-size: 1.25rem;
-    }
-    
-    .mobile-nav-item {
-        padding: 8px 4px;
-        font-size: 0.625rem;
-    }
-    
-    .mobile-nav-item i {
-        font-size: 0.875rem;
-        margin-bottom: 2px;
-    }
-}
-
-@media (max-width: 350px) {
-    .mobile-nav-item {
-        font-size: 0.5625rem;
-        padding: 6px 2px;
-    }
-    
-    .mobile-nav-item span {
-        display: none;
-    }
-}
-
-/* Touch targets for mobile */
-@media (max-width: 768px) {
-    button, .nav-link, .mobile-nav-item {
-        min-height: 44px;
-    }
-}
-
 /* Smooth transitions for all responsive changes */
 * {
     transition: padding 0.3s ease, margin 0.3s ease, font-size 0.3s ease;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 } 

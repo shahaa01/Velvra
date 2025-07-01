@@ -4,6 +4,14 @@
     <div class="flex min-h-screen">
         <!-- Sidebar Navigation -->
     <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300">
+        <!-- Mobile Header with Close button -->
+        <div class="lg:hidden flex items-center justify-between p-4 border-b border-beige">
+            <h2 class="text-xl font-bold text-gold brand-font">Menu</h2>
+            <button id="closeSidebar" class="p-2 text-charcoal hover:text-charcoal transition-all duration-300 hover:bg-gold/10 rounded-lg group hover:scale-110" aria-label="Close menu">
+                <i class="fas fa-times text-xl transition-transform duration-300 group-hover:rotate-90"></i>
+            </button>
+        </div>
+        
         <nav class="p-4">
             <ul class="space-y-2">
                 <li>

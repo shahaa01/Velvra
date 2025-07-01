@@ -1,17 +1,4 @@
-/* User Report Issue Styles */
-.nav-link {
-    transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-    background-color: rgba(212, 175, 55, 0.1);
-}
-
-.nav-link.active {
-    background-color: rgba(212, 175, 55, 0.2);
-    color: #d4af37;
-    border-left: 3px solid #d4af37;
-}
+/* User Report Issue specific styles only */
 
 .issue-card {
     transition: all 0.3s ease;
@@ -20,14 +7,6 @@
 .issue-card:hover {
     border-color: rgba(212, 175, 55, 0.5);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.mobile-nav-item {
-    transition: all 0.3s ease;
-}
-
-.mobile-nav-item.active {
-    color: #d4af37;
 }
 
 .file-upload-zone {
@@ -51,30 +30,4 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f8f6f0;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #d4af37;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #B8941F;
-}
-
-@media (max-width: 768px) {
-    .nav-link.active {
-        border-left: none;
-        border-bottom: 3px solid #d4af37;
-    }
 } 

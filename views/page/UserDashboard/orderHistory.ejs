@@ -82,12 +82,15 @@
                                     Rate Product
                                 </button>
                             <% } %>
-                            <% if (order.product && order.product.inStock === false) { %>
-                                <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
-                            <% } else { %>
-                                <button class="text-sm font-medium text-gray-600 hover:text-gray-900">
-                                    Buy Again
-                                </button>
+                            <% if (order.items && order.items.length > 0) { %>
+                                <% const firstItem = order.items[0]; %>
+                                <% if (firstItem.product && firstItem.product.inStock === false) { %>
+                                    <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
+                                <% } else { %>
+                                    <a href="/product/<%= firstItem.product?._id %>" class="text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                        Buy Again
+                                    </a>
+                                <% } %>
                             <% } %>
                         </div>
                     </div>

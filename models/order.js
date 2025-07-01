@@ -104,6 +104,20 @@ const orderSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  trackingNumber: {
+    type: String
+  },
+  deliveryDate: {
+    type: Date
+  },
+  cancellationReason: {
+    type: String
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
   }
 }, { timestamps: true });
 

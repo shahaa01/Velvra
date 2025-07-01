@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.brand-font {
+    font-family: 'Playfair Display', serif;
+}
+
+.kpi-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-transition {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.chart-container {
+    position: relative;
+    min-height: 350px;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        min-height: 250px;
+    }
+}
+
+.trend-up {
+    color: #10b981;
+}
+
+.trend-down {
+    color: #ef4444;
+}
+
+.period-button {
+    transition: all 0.2s ease;
+}
+
+.period-button.active {
+    background-color: #d4af37;
+    color: #1a1a1a;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8f6f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B8941F;
+}
+
+/* ApexCharts custom theme */
+.apexcharts-tooltip {
+    background: #1a1a1a !important;
+    border: 1px solid #d4af37 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.apexcharts-tooltip-title {
+    background: #d4af37 !important;
+    color: #1a1a1a !important;
+}
+
+.apexcharts-tooltip-text {
+    color: #fefcf7 !important;
+}

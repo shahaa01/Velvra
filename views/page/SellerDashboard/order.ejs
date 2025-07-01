@@ -1,0 +1,159 @@
+<% layout('layouts/sellerDashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/sellerDashboardStyles/dashboardOrder.css">') %>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+<!-- Sidebar -->
+<%- include('../../components/sellerDashboardSidebar') %>
+
+   <!-- Main Content -->
+   <div class="lg:ml-64">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-30">
+        <div class="px-4 sm:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Order Management</h2>
+                        <p class="text-sm text-stone">Track and manage customer orders</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                        <i class="fas fa-download"></i>
+                        <span class="hidden sm:inline font-medium">Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Order Management Content -->
+    <main class="p-4 sm:p-6">
+        <!-- Order Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-stone">Total Orders</p>
+                        <p class="text-xl font-bold text-charcoal"><%= stats.totalOrders %></p>
+                    </div>
+                    <i class="fas fa-shopping-cart text-gold"></i>
+                </div>
+            </div>
+            <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-stone">Pending</p>
+                        <p class="text-xl font-bold text-yellow-600"><%= stats.pendingOrders %></p>
+                    </div>
+                    <i class="fas fa-clock text-yellow-600"></i>
+                </div>
+            </div>
+            <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-stone">Processing</p>
+                        <p class="text-xl font-bold text-blue-600"><%= stats.processingOrders %></p>
+                    </div>
+                    <i class="fas fa-box-open text-blue-600"></i>
+                </div>
+            </div>
+            <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-stone">Shipped</p>
+                        <p class="text-xl font-bold text-purple-600"><%= stats.shippedOrders %></p>
+                    </div>
+                    <i class="fas fa-truck text-purple-600"></i>
+                </div>
+            </div>
+            <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-stone">Delivered</p>
+                        <p class="text-xl font-bold text-green-600"><%= stats.deliveredOrders %></p>
+                    </div>
+                    <i class="fas fa-check-circle text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-cream rounded-xl p-4 border border-beige mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="relative">
+                    <input type="search" id="searchInput" placeholder="Search orders..." 
+                           class="w-full pl-10 pr-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                    <i class="fas fa-search absolute left-3 top-3 text-stone"></i>
+                </div>
+                
+                <select id="statusFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="returned">Returned</option>
+                </select>
+                
+                <select id="dateFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                </select>
+                
+                <select id="sortBy" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="amount-high">Amount: High to Low</option>
+                    <option value="amount-low">Amount: Low to High</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="space-y-4" id="ordersList">
+            <!-- Order cards will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <i class="fas fa-shopping-basket text-6xl text-stone mb-4"></i>
+            <h3 class="text-xl font-semibold text-charcoal mb-2">No orders found</h3>
+            <p class="text-stone">Orders will appear here once customers place them</p>
+        </div>
+    </main>
+</div>
+
+<!-- Order Detail Modal -->
+<div id="orderModal" class="modal">
+    <div class="modal-content bg-pearl rounded-xl shadow-xl w-full max-w-4xl mx-4">
+        <div class="p-6 border-b border-beige">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-charcoal">Order Details</h3>
+                <button onclick="closeModal()" class="text-stone hover:text-charcoal">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="modalContent" class="p-6">
+            <!-- Modal content will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<!-- Orders Data for JavaScript -->
+<script>
+    window.ordersData = <%- JSON.stringify(orders) %>;
+    window.statsData = <%- JSON.stringify(stats) %>;
+</script>
+
+<% block('script').append('<script src="/js/sellerDashboardJS/dashboardOrder.js"></script>') %>

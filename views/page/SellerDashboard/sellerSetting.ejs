@@ -1,0 +1,432 @@
+<% layout('layouts/sellerDashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/sellerDashboardStyles/dashboardSetting.css">') %>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+<!-- Sidebar -->
+<%- include('../../components/sellerDashboardSidebar') %>
+
+<!-- Main Content -->
+<div class="lg:ml-64">
+    <!-- Header -->
+    <header class="bg-cream border-b border-beige sticky top-0 z-30">
+        <div class="px-4 sm:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Store Settings</h2>
+                        <p class="text-sm text-gray-700">Manage your store configuration</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="relative p-2 text-gray-700 hover:text-charcoal transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                    </button>
+                    <button id="saveAllBtn" class="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                        <i class="fas fa-save"></i>
+                        <span class="font-medium">Save All Changes</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Settings Content -->
+    <main class="p-4 sm:p-6">
+        <!-- Tabs -->
+        <div class="bg-cream rounded-xl border border-beige mb-6">
+            <div class="flex flex-wrap border-b border-beige">
+                <button class="tab-button px-4 sm:px-6 py-3 text-sm font-medium text-charcoal active" data-tab="profile">
+                    <i class="fas fa-store mr-2"></i>Store Profile
+                </button>
+                <button class="tab-button px-4 sm:px-6 py-3 text-sm font-medium text-gray-700 hover:text-charcoal" data-tab="shipping">
+                    <i class="fas fa-truck mr-2"></i>Shipping
+                </button>
+                <button class="tab-button px-4 sm:px-6 py-3 text-sm font-medium text-gray-700 hover:text-charcoal" data-tab="notifications">
+                    <i class="fas fa-bell mr-2"></i>Notifications
+                </button>
+                <button class="tab-button px-4 sm:px-6 py-3 text-sm font-medium text-gray-700 hover:text-charcoal" data-tab="security">
+                    <i class="fas fa-shield-alt mr-2"></i>Security
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tabContent">
+            <!-- Store Profile Tab -->
+            <div id="profileTab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Basic Information -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                            <h3 class="text-lg font-semibold text-charcoal mb-6">Basic Information</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-charcoal mb-2">Store Name</label>
+                                    <input type="text" id="storeName" value="Fashion Hub" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-charcoal mb-2">Store URL</label>
+                                    <div class="flex items-center">
+                                        <span class="px-4 py-2 bg-beige text-gray-700 rounded-l-lg border border-r-0 border-beige">velvra.com/</span>
+                                        <input type="text" id="storeUrl" value="fashion-hub" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-r-lg focus:outline-none focus:border-gold transition-colors">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-charcoal mb-2">Store Bio</label>
+                                    <textarea id="storeBio" rows="4" class="w-full px-4 py-3 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold resize-none transition-colors">Premium fashion boutique specializing in luxury leather goods, designer handbags, and haute couture. Established 2018.</textarea>
+                                    <p class="text-xs text-gray-700 mt-1">120/200 characters</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-charcoal mb-2">Business Address</label>
+                                    <input type="text" id="address1" placeholder="Street address" value="123 Fashion Avenue" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold mb-2 transition-colors">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" id="city" placeholder="City" value="New York" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                        <input type="text" id="zipCode" placeholder="ZIP code" value="10001" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end">
+                                <button class="save-section-btn px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Store Logo -->
+                    <div class="lg:col-span-1">
+                        <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                            <h3 class="text-lg font-semibold text-charcoal mb-6">Store Logo</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <img id="logoPreview" src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a&size=200" alt="Store Logo" class="w-32 h-32 mx-auto rounded-lg object-cover">
+                                    <button class="absolute bottom-0 right-1/2 translate-x-1/2 translate-y-1/2 bg-charcoal text-pearl p-2 rounded-full hover:bg-charcoal/80 transition-colors">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                
+                                <div id="logoDropZone" class="image-upload-zone border-2 border-dashed border-beige rounded-lg p-6 text-center cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-700 mb-2"></i>
+                                    <p class="text-sm text-gray-700">Drop image here or click to upload</p>
+                                    <p class="text-xs text-gray-700 mt-1">PNG, JPG up to 5MB</p>
+                                    <input type="file" id="logoInput" accept="image/*" class="hidden">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Policy Tab -->
+            <div id="shippingTab" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Shipping Methods -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">Shipping Methods</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-pearl rounded-lg border border-beige">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-charcoal">Standard Shipping</h4>
+                                        <p class="text-sm text-gray-700">5-7 business days</p>
+                                    </div>
+                                    <div class="toggle-switch active" data-toggle="standard-shipping"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" placeholder="Price" value="5.99" class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm focus:outline-none focus:border-gold transition-colors">
+                                    <input type="number" placeholder="Free above" value="50" class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm focus:outline-none focus:border-gold transition-colors">
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 bg-pearl rounded-lg border border-beige">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-charcoal">Express Shipping</h4>
+                                        <p class="text-sm text-gray-700">2-3 business days</p>
+                                    </div>
+                                    <div class="toggle-switch active" data-toggle="express-shipping"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" placeholder="Price" value="12.99" class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm focus:outline-none focus:border-gold transition-colors">
+                                    <input type="number" placeholder="Free above" value="150" class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm focus:outline-none focus:border-gold transition-colors">
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 bg-pearl rounded-lg border border-beige">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-charcoal">International Shipping</h4>
+                                        <p class="text-sm text-gray-700">10-15 business days</p>
+                                    </div>
+                                    <div class="toggle-switch" data-toggle="intl-shipping"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" placeholder="Price" value="25.00" disabled class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm opacity-50 cursor-not-allowed">
+                                    <select disabled class="px-3 py-2 bg-cream border border-beige rounded-lg text-sm opacity-50 cursor-not-allowed">
+                                        <option>Select regions</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Return Policy -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">Return Policy</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Return Window</label>
+                                <select id="returnWindow" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                    <option value="14">14 days</option>
+                                    <option value="30" selected>30 days</option>
+                                    <option value="60">60 days</option>
+                                    <option value="90">90 days</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Return Conditions</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" checked class="mr-2 text-gold focus:ring-gold">
+                                        <span class="text-sm text-charcoal">Customer pays return shipping</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2 text-gold focus:ring-gold">
+                                        <span class="text-sm text-charcoal">Restocking fee applies (15%)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Return Instructions</label>
+                                <textarea id="returnInstructions" rows="4" class="w-full px-4 py-3 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold resize-none transition-colors">Please contact us within 30 days of receiving your order to initiate a return. Items must be unworn, unwashed, and in original condition with tags attached.</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end">
+                            <button class="save-section-btn px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Save Policy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div id="notificationsTab" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Email Notifications -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">Email Notifications</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">New Orders</p>
+                                    <p class="text-sm text-gray-700">Get notified when you receive new orders</p>
+                                </div>
+                                <div class="toggle-switch active" data-toggle="email-orders"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">Messages</p>
+                                    <p class="text-sm text-gray-700">Customer messages and inquiries</p>
+                                </div>
+                                <div class="toggle-switch active" data-toggle="email-messages"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">Low Stock Alerts</p>
+                                    <p class="text-sm text-gray-700">When inventory falls below threshold</p>
+                                </div>
+                                <div class="toggle-switch active" data-toggle="email-stock"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">Payout Updates</p>
+                                    <p class="text-sm text-gray-700">Payment processing notifications</p>
+                                </div>
+                                <div class="toggle-switch active" data-toggle="email-payouts"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3">
+                                <div>
+                                    <p class="font-medium text-charcoal">Marketing & Tips</p>
+                                    <p class="text-sm text-gray-700">Velvra news and selling tips</p>
+                                </div>
+                                <div class="toggle-switch" data-toggle="email-marketing"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SMS Notifications -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">SMS Notifications</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-charcoal mb-2">Phone Number</label>
+                            <div class="flex gap-2">
+                                <input type="tel" id="phoneNumber" value="+1 (555) 123-4567" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                <button class="px-4 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">Verify</button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">Urgent Orders</p>
+                                    <p class="text-sm text-gray-700">High-value or priority orders</p>
+                                </div>
+                                <div class="toggle-switch" data-toggle="sms-urgent"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3 border-b border-beige">
+                                <div>
+                                    <p class="font-medium text-charcoal">Security Alerts</p>
+                                    <p class="text-sm text-gray-700">Login attempts and account changes</p>
+                                </div>
+                                <div class="toggle-switch active" data-toggle="sms-security"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between py-3">
+                                <div>
+                                    <p class="font-medium text-charcoal">Daily Summary</p>
+                                    <p class="text-sm text-gray-700">Sales recap at end of day</p>
+                                </div>
+                                <div class="toggle-switch" data-toggle="sms-summary"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-pearl rounded-lg border border-beige">
+                            <p class="text-sm text-gray-700">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                SMS rates may apply. Carrier charges depend on your mobile plan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div id="securityTab" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Password Settings -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">Password Settings</h3>
+                        
+                        <form id="passwordForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Current Password</label>
+                                <input type="password" id="currentPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">New Password</label>
+                                <input type="password" id="newPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                <div class="mt-2">
+                                    <div class="text-xs text-gray-700">Password strength: <span id="passwordStrength" class="font-medium">-</span></div>
+                                    <div class="w-full bg-beige rounded-full h-2 mt-1">
+                                        <div id="passwordStrengthBar" class="h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end">
+                                <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Two-Factor Authentication -->
+                    <div class="settings-section bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                        <h3 class="text-lg font-semibold text-charcoal mb-6">Two-Factor Authentication</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-pearl rounded-lg border border-beige">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-charcoal">Enable 2FA</h4>
+                                        <p class="text-sm text-gray-700 mt-1">Add an extra layer of security to your account</p>
+                                    </div>
+                                    <div class="toggle-switch" data-toggle="2fa"></div>
+                                </div>
+                                
+                                <div id="2faSetup" class="hidden mt-4 space-y-4">
+                                    <div class="text-center p-4 bg-cream rounded-lg">
+                                        <div class="inline-block p-4 bg-white rounded-lg">
+                                            <div id="qrCode" class="w-32 h-32 bg-charcoal"></div>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mt-2">Scan with your authenticator app</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-charcoal mb-2">Verification Code</label>
+                                        <input type="text" id="verificationCode" placeholder="Enter 6-digit code" class="w-full px-4 py-2 bg-cream border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                                    </div>
+                                    
+                                    <button class="w-full px-4 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                        Verify & Enable
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 bg-pearl rounded-lg border border-beige">
+                                <h4 class="font-medium text-charcoal mb-3">Active Sessions</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between py-2 border-b border-beige">
+                                        <div>
+                                            <p class="text-sm font-medium text-charcoal">Chrome on Windows</p>
+                                            <p class="text-xs text-gray-700">New York, US • Current session</p>
+                                        </div>
+                                        <span class="text-xs text-green-600">Active</span>
+                                    </div>
+                                    <div class="flex items-center justify-between py-2">
+                                        <div>
+                                            <p class="text-sm font-medium text-charcoal">Safari on iPhone</p>
+                                            <p class="text-xs text-gray-700">New York, US • 2 hours ago</p>
+                                        </div>
+                                        <button class="text-xs text-red-600 hover:underline">Revoke</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Success Notification -->
+<div id="successNotification" class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+    <div class="flex items-center gap-2">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationMessage">Settings saved successfully!</span>
+    </div>
+</div>
+<% block('script').append('<script src="/js/sellerDashboardJS/dashboardSettings.js"></script>') %>
+

@@ -1,11 +1,16 @@
 const { boolean } = require('joi');
 const mongoose = require('mongoose');
 
+// New schema for size-stock under each color
+const sizeStockSchema = new mongoose.Schema({
+  size: { type: String, required: true },
+  stock: { type: Number, required: true, default: 0 }
+});
+
 const colorSchema = new mongoose.Schema({
   name: { type: String, required: true },      // e.g., "Red"
   hex: { type: String, required: true },       // e.g., "#FF0000"
-  stock: { type: Number, required: true },     // e.g., 2
-  inStock: { type: Boolean, required: true }   // true if stock > 0
+  sizes: [sizeStockSchema]                     // Array of { size, stock }
 });
 
 const productSchema = new mongoose.Schema({
@@ -25,8 +30,9 @@ const productSchema = new mongoose.Schema({
 
   colors: [colorSchema],
 
+  // Optionally keep top-level sizes for UI, but not for stock logic
   sizes: {
-    type: [mongoose.Schema.Types.Mixed], // supports both strings (e.g. 'M') and numbers (e.g. 42)
+    type: [mongoose.Schema.Types.Mixed],
     default: ['S', 'M', 'L', 'XL'],
     validate: {
       validator: function (arr) {
@@ -49,15 +55,8 @@ const productSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-//auto set inStock for color variants, and sale and salePrice of each Product
+// Remove color-level stock/inStock logic in pre-save
 productSchema.pre('save', function (next) {
-  // Auto-update inStock for colors
-  if (this.colors && Array.isArray(this.colors)) {
-    this.colors.forEach((color) => {
-      color.inStock = color.stock > 0;
-    });
-  }
-
   // Auto-set sale and salePrice
   if (typeof this.salePercentage === 'number' && this.salePercentage > 0) {
     this.sale = true;

@@ -549,7 +549,7 @@
                           </span>
                         <% } %>
                     </div>
-                    <% if (!product.inStock) { %>
+                    <% if (!isProductInStock(product)) { %>
                       <div class="mt-2 text-center">
                         <span class="block text-[#D4AF37] font-light text-lg tracking-wide italic">Out of Stock</span>
                       </div>
@@ -629,6 +629,8 @@
 <!-- Filter Overlay -->
 <div class="filter-overlay" id="filterOverlay"></div>
 <% block('script').append('<script src="/js/shop.js"></script>') %>
+
+<% function isProductInStock(product) { return product.colors && product.colors.some(c => c.sizes && c.sizes.some(s => s.stock > 0)); } %>
 
 
 

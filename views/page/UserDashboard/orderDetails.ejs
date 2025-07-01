@@ -182,12 +182,15 @@
                                 Rate Products
                             </button>
                         <% } %>
-                        <% if (order.product && order.product.inStock === false) { %>
-                            <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
-                        <% } else if (order.orderStatus !== 'cancelled') { %>
-                            <button class="w-full action-btn secondary py-3 rounded-lg font-medium">
-                                Buy Again
-                            </button>
+                        <% if (order.items && order.items.length > 0) { %>
+                            <% const firstItem = order.items[0]; %>
+                            <% if (firstItem.product && firstItem.product.inStock === false) { %>
+                                <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
+                            <% } else if (order.orderStatus !== 'cancelled') { %>
+                                <a href="/product/<%= firstItem.product?._id %>" class="w-full action-btn secondary py-3 rounded-lg font-medium inline-block text-center">
+                                    Buy Again
+                                </a>
+                            <% } %>
                         <% } %>
                         <button onclick="downloadInvoice('<%= order._id %>')" class="w-full action-btn secondary py-3 rounded-lg font-medium">
                             Download Invoice

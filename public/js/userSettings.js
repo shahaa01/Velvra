@@ -4,11 +4,19 @@
 const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
+const closeSidebar = document.getElementById('closeSidebar');
 
 if (menuToggle) {
     menuToggle.addEventListener('click', () => {
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
+    });
+}
+
+if (closeSidebar) {
+    closeSidebar.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
     });
 }
 

@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.brand-font {
+    font-family: 'Playfair Display', serif;
+}
+
+.sidebar-transition {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.message-row {
+    transition: all 0.2s ease;
+}
+
+.message-row:hover {
+    background-color: rgba(212, 175, 55, 0.05);
+}
+
+.status-badge {
+    transition: all 0.3s ease;
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8f6f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B8941F;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #a8a196;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-10px);
+    }
+}

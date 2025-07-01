@@ -1,26 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
-.brand-font {
-    font-family: 'Playfair Display', serif;
-}
-
-.nav-link {
-    transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-    background-color: rgba(212, 175, 55, 0.1);
-}
-
-.nav-link.active {
-    background-color: rgba(212, 175, 55, 0.2);
-    color: #d4af37;
-    border-left: 3px solid #d4af37;
-}
+/* User Orders specific styles only */
 
 .order-card {
     transition: all 0.3s ease;
@@ -31,32 +9,34 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.mobile-nav-item {
-    transition: all 0.3s ease;
-}
-
-.mobile-nav-item.active {
-    color: #d4af37;
-}
-
 .loading-skeleton {
-    background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: loading 1.5s infinite;
 }
 
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .timeline-dot {
@@ -78,28 +58,162 @@ body {
     display: none;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+/* User Orders CSS */
+
+/* Hide scrollbars but keep functionality */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
 }
 
-::-webkit-scrollbar-track {
-    background: #f8f6f0;
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
 }
 
-::-webkit-scrollbar-thumb {
-    background: #d4af37;
-    border-radius: 4px;
+/* Mobile navigation styles */
+.mobile-nav-item {
+    transition: all 0.3s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #B8941F;
+.mobile-nav-item:hover {
+    background-color: rgba(212, 175, 55, 0.1);
 }
 
-@media (max-width: 768px) {
-    .nav-link.active {
-        border-left: none;
-        border-bottom: 3px solid #d4af37;
+.mobile-nav-item.active {
+    background-color: rgba(212, 175, 55, 0.2);
+    color: #D4AF37;
+}
+
+/* Navigation link styles */
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(212, 175, 55, 0.1);
+    transform: translateX(4px);
+}
+
+.nav-link.active {
+    background-color: rgba(212, 175, 55, 0.2);
+    color: #D4AF37;
+}
+
+/* Filter tab styles */
+.filter-tab {
+    transition: all 0.3s ease;
+}
+
+.filter-tab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Order status badges */
+.order-status-delivered {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.order-status-shipped {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.order-status-processing {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.order-status-returned {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Modal animations */
+.modal-enter {
+    animation: modalEnter 0.3s ease-out;
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
     }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Notification animations */
+.notification-enter {
+    animation: notificationEnter 0.3s ease-out;
+}
+
+@keyframes notificationEnter {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .order-card {
+        margin-bottom: 1rem;
+    }
+    
+    .filter-tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .filter-tab {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+        min-width: auto;
+    }
+    
+    .filter-tab span {
+        font-size: 0.625rem;
+        padding: 0.125rem 0.375rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-tab {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .filter-tab span {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.25rem;
+    }
+}
+
+/* Button hover effects */
+.btn-gold:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.btn-pearl:hover {
+    background-color: #f5f5f4;
+    transform: translateY(-1px);
+}
+
+/* Image placeholder */
+.image-placeholder {
+    background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 } 

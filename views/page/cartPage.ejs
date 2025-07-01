@@ -8,6 +8,13 @@ function isColorInStock(product, colorName) {
     const color = product.colors.find(c => c.name === colorName);
     return color ? color.inStock : false;
 }
+
+function getStockForColorSize(product, colorName, sizeName) {
+    const color = product.colors.find(c => c.name === colorName);
+    if (!color) return 0;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock : 0;
+}
 %>
 
 <!-- Main Container -->

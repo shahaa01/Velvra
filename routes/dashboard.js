@@ -5,50 +5,144 @@ const { isLoggedIn } = require('../middlewares/authMiddleware');
 const Wishlist = require('../models/wishlist');
 const Message = require('../models/message');
 const Conversation = require('../models/conversation');
+const mongoose = require('mongoose');
 
 // Main Dashboard
 router.get('/', isLoggedIn, async (req, res) => {
-        try {
-            const orders = await Order.find({ user: req.user._id })
-                .populate('items.product')
-                .sort({ createdAt: -1 })
+    try {
+        // Get recent orders with product details
+        const orders = await Order.find({ user: req.user._id })
+            .populate('items.product')
+            .populate('items.seller')
+            .sort({ createdAt: -1 })
             .limit(5);
 
-        // Calculate stats
-            const ordersByStatus = await Order.aggregate([
-                { $match: { user: req.user._id } },
-                { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
-            ]);
+        // Calculate comprehensive stats
+        const ordersByStatus = await Order.aggregate([
+            { $match: { user: req.user._id } },
+            { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+        ]);
+
+        // Get wishlist count
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const wishlistCount = wishlist ? wishlist.products.length : 0;
+
+        // Get unread messages count
+        const unreadMessagesCount = await Message.countDocuments({
+            recipient: req.user._id,
+            recipientModel: 'User',
+            isRead: false
+        });
+
+        // Calculate order statistics
         const stats = {
-                    activeOrders: ordersByStatus.find(s => s._id === 'processing')?.count || 0,
+            activeOrders: ordersByStatus.find(s => s._id === 'processing')?.count || 0,
             deliveredOrders: ordersByStatus.find(s => s._id === 'delivered')?.count || 0,
-            // Add more as needed
+            totalOrders: ordersByStatus.reduce((sum, s) => sum + s.count, 0),
+            wishlistCount: wishlistCount,
+            unreadMessages: unreadMessagesCount
         };
+
+        // Get order activity data for chart (last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        console.log('Six months ago date:', sixMonthsAgo);
+        console.log('User ID:', req.user._id);
+        
+        const orderActivity = await Order.aggregate([
+            { 
+                $match: { 
+                    user: req.user._id,
+                    createdAt: { $gte: sixMonthsAgo }
+                } 
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' }
+                    },
+                    count: { $sum: 1 },
+                    total: { $sum: '$total' }
+                }
+            },
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
+        ]);
+
+        console.log('Order activity data:', orderActivity);
+        console.log('Order activity JSON:', JSON.stringify(orderActivity));
+
+        // If no order activity data, create a fallback with current month
+        let finalOrderActivity = orderActivity;
+        if (orderActivity.length === 0) {
+            const currentDate = new Date();
+            finalOrderActivity = [{
+                _id: {
+                    year: currentDate.getFullYear(),
+                    month: currentDate.getMonth() + 1
+                },
+                count: 0,
+                total: 0
+            }];
+            console.log('Using fallback order activity data:', finalOrderActivity);
+        }
 
         res.render('page/UserDashboard/userDashboard', {
             title: 'Dashboard - Velvra',
             user: req.user,
             orders,
-            stats
+            stats,
+            orderActivity: finalOrderActivity
         });
-        } catch (error) {
-            res.status(500).render('error', { error: 'Failed to load dashboard' });
-        }
-    });
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        res.status(500).render('error', { error: 'Failed to load dashboard' });
+    }
+});
 
 // Orders List
 router.get('/orders', isLoggedIn, async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id })
             .populate('items.product')
+            .populate('items.seller')
             .sort({ createdAt: -1 });
+
+        // Get stats for sidebar navigation
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const wishlistCount = wishlist ? wishlist.products.length : 0;
+
+        const unreadMessagesCount = await Message.countDocuments({
+            recipient: req.user._id,
+            recipientModel: 'User',
+            isRead: false
+        });
+
+        // Calculate order statistics for filtering
+        const orderStats = await Order.aggregate([
+            { $match: { user: req.user._id } },
+            { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+        ]);
+
+        const stats = {
+            wishlistCount: wishlistCount,
+            unreadMessages: unreadMessagesCount,
+            totalOrders: orders.length,
+            processingOrders: orderStats.find(s => s._id === 'processing')?.count || 0,
+            shippedOrders: orderStats.find(s => s._id === 'shipped')?.count || 0,
+            deliveredOrders: orderStats.find(s => s._id === 'delivered')?.count || 0,
+            returnedOrders: orderStats.find(s => s._id === 'cancelled')?.count || 0
+        };
 
         res.render('page/UserDashboard/userOrders', {
             title: 'My Orders - Velvra',
             user: req.user,
-            orders
+            orders,
+            stats
         });
     } catch (error) {
+        console.error('Orders route error:', error);
         res.status(500).render('error', { error: 'Failed to load orders' });
     }
 });
@@ -72,6 +166,139 @@ router.get('/orders/:orderId', isLoggedIn, async (req, res) => {
         });
     } catch (error) {
         res.status(500).render('error', { error: 'Failed to load order details' });
+    }
+});
+
+// Get order sellers for contact selection
+router.get('/orders/:orderId/sellers', isLoggedIn, async (req, res) => {
+    try {
+        console.log('Seller API called for order:', req.params.orderId);
+        
+        const order = await Order.findById(req.params.orderId)
+            .populate('items.product')
+            .populate('items.seller');
+        
+        if (!order) {
+            console.log('Order not found:', req.params.orderId);
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        
+        if (order.user.toString() !== req.user._id.toString()) {
+            console.log('Access denied for user:', req.user._id);
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+        
+        console.log('Order items:', order.items.length);
+        
+        // Extract seller information from order items
+        const sellers = order.items.map(item => {
+            const sellerInfo = {
+                id: item.seller?._id || item.seller,
+                name: item.seller?.brandName || 'Unknown Seller',
+                productName: item.product?.name || 'Product'
+            };
+            console.log('Seller info:', sellerInfo);
+            return sellerInfo;
+        });
+        
+        console.log('Returning sellers:', sellers);
+        res.json({ success: true, sellers });
+    } catch (error) {
+        console.error('Get order sellers error:', error);
+        res.status(500).json({ success: false, error: 'Failed to load seller information' });
+    }
+});
+
+// Download Invoice
+router.get('/orders/:orderId/invoice', isLoggedIn, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate('items.product')
+            .populate('user');
+        
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        if (order.user._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // For now, we'll create a simple HTML invoice and convert it to PDF
+        // In a production environment, you'd use a proper PDF library like puppeteer or jsPDF
+        
+        const invoiceHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Invoice - Order ${order.orderNumber}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .invoice-details { margin-bottom: 30px; }
+                    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                    .items-table th, .items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                    .items-table th { background-color: #f8f9fa; }
+                    .total { text-align: right; font-weight: bold; font-size: 18px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>VELVRA</h1>
+                    <h2>INVOICE</h2>
+                </div>
+                
+                <div class="invoice-details">
+                    <p><strong>Order Number:</strong> ${order.orderNumber}</p>
+                    <p><strong>Order Date:</strong> ${order.createdAt.toLocaleDateString()}</p>
+                    <p><strong>Customer:</strong> ${order.user.firstName} ${order.user.lastName || ''}</p>
+                    <p><strong>Email:</strong> ${order.user.email}</p>
+                </div>
+                
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Size</th>
+                            <th>Color</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.items.map(item => `
+                            <tr>
+                                <td>${item.product?.name || 'Product'}</td>
+                                <td>${item.size}</td>
+                                <td>${item.color}</td>
+                                <td>${item.quantity}</td>
+                                <td>₹${item.price.toLocaleString()}</td>
+                                <td>₹${item.totalPrice.toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <div class="total">
+                    <p>Subtotal: ₹${order.subtotal.toLocaleString()}</p>
+                    <p>Shipping: ₹${order.shippingCost.toLocaleString()}</p>
+                    ${order.discount > 0 ? `<p>Discount: -₹${order.discount.toLocaleString()}</p>` : ''}
+                    <p>Total: ₹${order.total.toLocaleString()}</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Set headers for PDF download
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${order.orderNumber}.html"`);
+        res.send(invoiceHTML);
+
+    } catch (error) {
+        console.error('Invoice generation error:', error);
+        res.status(500).json({ error: 'Failed to generate invoice' });
     }
 });
 
@@ -111,10 +338,28 @@ router.get('/wishlist', isLoggedIn, async (req, res) => {
 // Messages (Inbox)
 router.get('/messages', isLoggedIn, async (req, res) => {
     try {
+        console.log('Messages route accessed with query:', req.query);
+        
         // If order and seller are provided, find or create the conversation
         if (req.query.order && req.query.seller) {
             const orderId = req.query.order;
             const sellerId = req.query.seller;
+            
+            console.log('Creating/finding conversation for order:', orderId, 'seller:', sellerId);
+            
+            // Validate seller ID is not null or invalid
+            if (!sellerId || sellerId === 'null' || sellerId === 'undefined') {
+                console.log('Invalid seller ID:', sellerId);
+                return res.status(400).render('error', { error: 'Invalid seller information. Please contact support.' });
+            }
+            
+            // Validate seller exists
+            const seller = await mongoose.model('Seller').findById(sellerId);
+            if (!seller) {
+                console.log('Seller not found:', sellerId);
+                return res.status(404).render('error', { error: 'Seller not found. Please contact support.' });
+            }
+            
             // Find existing conversation
             let conversation = await Conversation.findOne({
                 'participants': {
@@ -125,7 +370,9 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                 },
                 order: orderId
             });
+            
             if (!conversation) {
+                console.log('Creating new conversation');
                 conversation = await Conversation.create({
                     participants: [
                         { id: req.user._id, model: 'User' },
@@ -133,27 +380,85 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                     ],
                     order: orderId
                 });
+            } else {
+                console.log('Found existing conversation:', conversation._id);
             }
+            
             return res.redirect(`/dashboard/messages/${conversation._id}`);
         }
+
+        console.log('Loading all conversations for user:', req.user._id);
+        
         // Find all conversations where user is a participant
         const conversations = await Conversation.find({
             'participants.id': req.user._id,
             'participants.model': 'User'
-        }).sort({ updatedAt: -1 });
-        // For each conversation, get the latest message
-        const messagesByConversation = {};
-        for (const convo of conversations) {
-            messagesByConversation[convo._id] = await Message.find({ conversationId: convo._id })
-                .sort({ createdAt: 1 });
+        }).populate('order').sort({ updatedAt: -1 });
+
+        console.log('Found conversations:', conversations.length);
+
+        // Get comprehensive data for each conversation
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            // Get the other participant (seller)
+            const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) {
+                console.log('No seller participant found for conversation:', conversation._id);
+                continue; // Skip if no seller participant
+            }
+            
+            const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!seller) {
+                console.log('Seller not found for participant:', sellerParticipant.id);
+                continue; // Skip if seller doesn't exist
+            }
+            
+            // Get messages for this conversation
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1); // Get latest message
+            
+            // Get unread count for this conversation
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            // Get order details if exists
+            let orderDetails = null;
+            if (conversation.order) {
+                orderDetails = await Order.findById(conversation.order)
+                    .populate('items.product')
+                    .populate('items.seller');
+            }
+
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                seller: seller,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: orderDetails,
+                latestMessage: messages[0] || null
+            });
         }
+
+        console.log('Processed conversations:', conversationsWithDetails.length);
+
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
+
         res.render('page/UserDashboard/userMessage', {
             title: 'Messages - Velvra',
             user: req.user,
-            conversations,
-            messagesByConversation
+            conversations: conversationsWithDetails,
+            stats: stats,
+            currentConversationId: null
         });
     } catch (error) {
+        console.error('Messages route error:', error);
         res.status(500).render('error', { error: 'Failed to load messages' });
     }
 });
@@ -161,21 +466,211 @@ router.get('/messages', isLoggedIn, async (req, res) => {
 // Single Conversation
 router.get('/messages/:conversationId', isLoggedIn, async (req, res) => {
     try {
-        const conversation = await Conversation.findById(req.params.conversationId);
-        if (!conversation) return res.status(404).render('error', { error: 'Conversation not found' });
+        const conversation = await Conversation.findById(req.params.conversationId)
+            .populate('order');
+        
+        if (!conversation) {
+            return res.status(404).render('error', { error: 'Conversation not found' });
+        }
+
         // Check user is a participant
         const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
-        if (!isParticipant) return res.status(403).render('error', { error: 'Access denied' });
-        const messages = await Message.find({ conversationId: conversation._id }).sort({ createdAt: 1 });
+        if (!isParticipant) {
+            return res.status(403).render('error', { error: 'Access denied' });
+        }
+
+        // Get the seller participant
+        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+        const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+
+        // Get all messages for this conversation
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: 1 });
+
+        // Mark messages as read
+        await Message.updateMany(
+            {
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            },
+            { isRead: true }
+        );
+
+        // Get order details if exists
+        let orderDetails = null;
+        if (conversation.order) {
+            orderDetails = await Order.findById(conversation.order)
+                .populate('items.product')
+                .populate('items.seller');
+        }
+
+        // Get all conversations for sidebar
+        const allConversations = await Conversation.find({
+            'participants.id': req.user._id,
+            'participants.model': 'User'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        const conversationsWithDetails = [];
+        for (const conv of allConversations) {
+            const sellerParticipant = conv.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) continue; // Skip if no seller participant
+            
+            const convSeller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!convSeller) continue; // Skip if seller doesn't exist
+            
+            const unreadCount = await Message.countDocuments({
+                conversationId: conv._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            conversationsWithDetails.push({
+                _id: conv._id,
+                seller: convSeller,
+                lastMessage: conv.lastMessage,
+                updatedAt: conv.updatedAt,
+                unreadCount: unreadCount,
+                order: conv.order
+            });
+        }
+
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
+
         res.render('page/UserDashboard/userMessage', {
             title: 'Messages - Velvra',
             user: req.user,
-            conversations: [conversation],
-            messagesByConversation: { [conversation._id]: messages },
-            conversationId: conversation._id
+            conversations: conversationsWithDetails,
+            currentConversation: {
+                _id: conversation._id,
+                seller: seller,
+                messages: messages,
+                order: orderDetails
+            },
+            stats: stats,
+            currentConversationId: conversation._id
         });
     } catch (error) {
+        console.error('Single conversation route error:', error);
         res.status(500).render('error', { error: 'Failed to load conversation' });
+    }
+});
+
+// API endpoint to send a message
+router.post('/messages/:conversationId/send', isLoggedIn, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const conversationId = req.params.conversationId;
+
+        if (!content || !content.trim()) {
+            return res.status(400).json({ error: 'Message content is required' });
+        }
+
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Get the seller participant
+        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+
+        // Create the message
+        const message = await Message.create({
+            conversationId: conversationId,
+            sender: req.user._id,
+            senderModel: 'User',
+            recipient: sellerParticipant.id,
+            recipientModel: 'Seller',
+            order: conversation.order,
+            content: content.trim()
+        });
+
+        // Update conversation's last message
+        conversation.lastMessage = content.trim();
+        conversation.updatedAt = new Date();
+        await conversation.save();
+
+        // Populate sender details for response
+        await message.populate('sender', 'firstName lastName');
+
+        res.json({
+            success: true,
+            message: message
+        });
+    } catch (error) {
+        console.error('Send message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// API endpoint to mark messages as read
+router.post('/messages/:conversationId/read', isLoggedIn, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
+
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Mark all unread messages as read
+        await Message.updateMany(
+            {
+                conversationId: conversationId,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            },
+            { isRead: true }
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark as read error:', error);
+        res.status(500).json({ error: 'Failed to mark messages as read' });
+    }
+});
+
+// API endpoint to get conversation messages
+router.get('/messages/:conversationId/messages', isLoggedIn, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
+
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Get messages
+        const messages = await Message.find({ conversationId: conversationId })
+            .populate('sender', 'firstName lastName')
+            .sort({ createdAt: 1 });
+
+        res.json({ success: true, messages: messages });
+    } catch (error) {
+        console.error('Get messages error:', error);
+        res.status(500).json({ error: 'Failed to get messages' });
     }
 });
 
@@ -193,6 +688,284 @@ router.get('/settings', isLoggedIn, (req, res) => {
         title: 'Profile Settings - Velvra',
         user: req.user
     });
+});
+
+// Get Order Tracking Data
+router.get('/orders/:orderId/tracking', isLoggedIn, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate('items.product')
+            .populate('user');
+        
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        if (order.user._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Generate tracking data based on order status and timestamps
+        const trackingData = generateTrackingData(order);
+        
+        res.json({
+            success: true,
+            tracking: trackingData,
+            order: {
+                orderNumber: order.orderNumber,
+                status: order.orderStatus,
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt
+            }
+        });
+    } catch (error) {
+        console.error('Tracking error:', error);
+        res.status(500).json({ error: 'Failed to load tracking data' });
+    }
+});
+
+// Send Message to Seller
+router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
+    try {
+        const { message, sellerId } = req.body;
+        const orderId = req.params.orderId;
+
+        if (!message || !sellerId) {
+            return res.status(400).json({ error: 'Message and seller ID are required' });
+        }
+
+        // Verify order belongs to user
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Find or create conversation
+        let conversation = await Conversation.findOne({
+            'participants': {
+                $all: [
+                    { $elemMatch: { id: req.user._id, model: 'User' } },
+                    { $elemMatch: { id: sellerId, model: 'Seller' } }
+                ]
+            },
+            order: orderId
+        });
+
+        if (!conversation) {
+            conversation = await Conversation.create({
+                participants: [
+                    { id: req.user._id, model: 'User' },
+                    { id: sellerId, model: 'Seller' }
+                ],
+                order: orderId,
+                lastMessage: message
+            });
+        } else {
+            conversation.lastMessage = message;
+            conversation.updatedAt = new Date();
+            await conversation.save();
+        }
+
+        // Create message
+        const newMessage = await Message.create({
+            conversationId: conversation._id,
+            sender: req.user._id,
+            senderModel: 'User',
+            recipient: sellerId,
+            recipientModel: 'Seller',
+            order: orderId,
+            content: message
+        });
+
+        res.json({
+            success: true,
+            message: 'Message sent successfully',
+            conversationId: conversation._id
+        });
+    } catch (error) {
+        console.error('Message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Get Order Statistics (for filtering)
+router.get('/orders/stats', isLoggedIn, async (req, res) => {
+    try {
+        const orderStats = await Order.aggregate([
+            { $match: { user: req.user._id } },
+            { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+        ]);
+
+        const stats = {
+            total: orderStats.reduce((sum, stat) => sum + stat.count, 0),
+            processing: orderStats.find(s => s._id === 'processing')?.count || 0,
+            shipped: orderStats.find(s => s._id === 'shipped')?.count || 0,
+            delivered: orderStats.find(s => s._id === 'delivered')?.count || 0,
+            returned: orderStats.find(s => s._id === 'cancelled')?.count || 0
+        };
+
+        res.json({ success: true, stats });
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ error: 'Failed to load statistics' });
+    }
+});
+
+// Helper function to get comprehensive dashboard stats
+async function getDashboardStats(userId) {
+    try {
+        // Get order statistics
+        const ordersByStatus = await Order.aggregate([
+            { $match: { user: userId } },
+            { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+        ]);
+
+        // Get wishlist count
+        const wishlist = await Wishlist.findOne({ user: userId });
+        const wishlistCount = wishlist ? wishlist.products.length : 0;
+
+        // Get unread messages count
+        const unreadMessagesCount = await Message.countDocuments({
+            recipient: userId,
+            recipientModel: 'User',
+            isRead: false
+        });
+
+        // Calculate order statistics
+        const stats = {
+            totalOrders: ordersByStatus.reduce((sum, s) => sum + s.count, 0),
+            processingOrders: ordersByStatus.find(s => s._id === 'processing')?.count || 0,
+            shippedOrders: ordersByStatus.find(s => s._id === 'shipped')?.count || 0,
+            deliveredOrders: ordersByStatus.find(s => s._id === 'delivered')?.count || 0,
+            returnedOrders: ordersByStatus.find(s => s._id === 'cancelled')?.count || 0,
+            wishlistCount: wishlistCount,
+            unreadMessages: unreadMessagesCount
+        };
+
+        return stats;
+    } catch (error) {
+        console.error('Error getting dashboard stats:', error);
+        return {
+            totalOrders: 0,
+            processingOrders: 0,
+            shippedOrders: 0,
+            deliveredOrders: 0,
+            returnedOrders: 0,
+            wishlistCount: 0,
+            unreadMessages: 0
+        };
+    }
+}
+
+// Helper function to generate tracking data
+function generateTrackingData(order) {
+    const trackingSteps = [
+        {
+            step: 'Order Placed',
+            status: 'completed',
+            timestamp: order.createdAt,
+            description: 'Order confirmed and payment processed'
+        }
+    ];
+
+    // Add processing step if order is beyond pending
+    if (['confirmed', 'processing', 'shipped', 'delivered'].includes(order.orderStatus)) {
+        trackingSteps.push({
+            step: 'Processing',
+            status: order.orderStatus === 'processing' ? 'current' : 'completed',
+            timestamp: order.orderStatus === 'processing' ? new Date() : new Date(order.createdAt.getTime() + 24 * 60 * 60 * 1000),
+            description: 'Order is being prepared for shipment'
+        });
+    }
+
+    // Add shipped step if order is shipped or delivered
+    if (['shipped', 'delivered'].includes(order.orderStatus)) {
+        trackingSteps.push({
+            step: 'Shipped',
+            status: order.orderStatus === 'shipped' ? 'current' : 'completed',
+            timestamp: order.orderStatus === 'shipped' ? new Date() : new Date(order.createdAt.getTime() + 48 * 60 * 60 * 1000),
+            description: 'Order has been shipped and is on its way'
+        });
+    }
+
+    // Add delivered step if order is delivered
+    if (order.orderStatus === 'delivered') {
+        trackingSteps.push({
+            step: 'Delivered',
+            status: 'completed',
+            timestamp: new Date(order.updatedAt),
+            description: 'Order has been successfully delivered'
+        });
+    }
+
+    // Add cancelled step if order is cancelled
+    if (order.orderStatus === 'cancelled') {
+        trackingSteps.push({
+            step: 'Order Cancelled',
+            status: 'cancelled',
+            timestamp: new Date(order.updatedAt),
+            description: 'Order has been cancelled'
+        });
+    }
+
+    return trackingSteps;
+}
+
+// Test route to check sellers
+router.get('/test-sellers', isLoggedIn, async (req, res) => {
+    try {
+        const Seller = mongoose.model('Seller');
+        const sellers = await Seller.find().limit(5);
+        console.log('Found sellers:', sellers.length);
+        sellers.forEach(seller => {
+            console.log('Seller:', seller._id, seller.brandName);
+        });
+        res.json({ success: true, sellers: sellers.map(s => ({ id: s._id, name: s.brandName })) });
+    } catch (error) {
+        console.error('Test sellers error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Test route to check order structure
+router.get('/test-order/:orderId', isLoggedIn, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate('items.product')
+            .populate('items.seller');
+        
+        if (!order) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        
+        console.log('Order found:', order._id);
+        console.log('Order items:', order.items.length);
+        
+        order.items.forEach((item, index) => {
+            console.log(`Item ${index}:`, {
+                product: item.product?.name || 'No product',
+                seller: item.seller?.brandName || 'No seller',
+                sellerId: item.seller?._id || item.seller || 'No seller ID'
+            });
+        });
+        
+        res.json({ 
+            success: true, 
+            orderId: order._id,
+            items: order.items.map(item => ({
+                product: item.product?.name || 'No product',
+                seller: item.seller?.brandName || 'No seller',
+                sellerId: item.seller?._id || item.seller || 'No seller ID'
+            }))
+        });
+    } catch (error) {
+        console.error('Test order error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 module.exports = router;

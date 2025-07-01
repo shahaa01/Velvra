@@ -1,0 +1,283 @@
+<% layout('layouts/sellerDashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/sellerDashboardStyles/dashboardPerformance.css">') %>
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <%- include('../../components/sellerDashboardSidebar') %>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Performance & Analytics</h2>
+                            <p class="text-sm text-gray-700">Track your store's performance metrics</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <!-- Time Period Selector -->
+                        <div class="hidden sm:flex items-center bg-pearl rounded-lg p-1 border border-beige">
+                            <button class="period-button px-3 py-1 rounded-md text-sm active" data-period="week">Week</button>
+                            <button class="period-button px-3 py-1 rounded-md text-sm" data-period="month">Month</button>
+                            <button class="period-button px-3 py-1 rounded-md text-sm" data-period="quarter">Quarter</button>
+                        </div>
+                        <button class="flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-download"></i>
+                            <span class="hidden sm:inline font-medium">Export</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Analytics Content -->
+        <main class="p-4 sm:p-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-gray-700">Total Views</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">45.2K</h3>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-eye text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">12.5%</span>
+                        <span class="text-gray-700 ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-gray-700">Clicks</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">8,734</h3>
+                        </div>
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <i class="fas fa-mouse-pointer text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">8.3%</span>
+                        <span class="text-gray-700 ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-gray-700">Sales</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">$12.4K</h3>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-dollar-sign text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-up trend-up mr-1"></i>
+                        <span class="trend-up font-medium">15.2%</span>
+                        <span class="text-gray-700 ml-1">vs last period</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-gray-700">Return Rate</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-charcoal mt-1">2.1%</h3>
+                        </div>
+                        <div class="p-3 bg-red-100 rounded-lg">
+                            <i class="fas fa-undo text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-xs">
+                        <i class="fas fa-arrow-down trend-down mr-1"></i>
+                        <span class="trend-down font-medium">0.5%</span>
+                        <span class="text-gray-700 ml-1">vs last period</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Period Selector -->
+            <div class="sm:hidden mb-6">
+                <select class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold text-charcoal">
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                </select>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Sales Chart -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-charcoal">Sales Overview</h3>
+                        <div class="flex items-center space-x-4 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-gold rounded-full mr-2"></div>
+                                <span class="text-gray-700">Revenue</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-stone rounded-full mr-2"></div>
+                                <span class="text-gray-700">Orders</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="salesChart"></div>
+                    </div>
+                </div>
+
+                <!-- Conversion Funnel -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Conversion Funnel</h3>
+                    <div class="chart-container">
+                        <div id="conversionChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Product Views -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Product Views by Category</h3>
+                    <div class="chart-container">
+                        <div id="categoryChart"></div>
+                    </div>
+                </div>
+
+                <!-- Traffic Sources -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Traffic Sources</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-700">Direct</span>
+                                <span class="text-sm font-medium text-charcoal">35%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-gold" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-700">Search</span>
+                                <span class="text-sm font-medium text-charcoal">28%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-velvra-gold-light" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-700">Social Media</span>
+                                <span class="text-sm font-medium text-charcoal">22%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-beige" style="width: 22%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-gray-700">Email</span>
+                                <span class="text-sm font-medium text-charcoal">15%</span>
+                            </div>
+                            <div class="bg-pearl rounded-full h-2 overflow-hidden">
+                                <div class="h-full bg-stone" style="width: 15%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-6">Top Performing Products</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Leather Jacket</p>
+                                    <p class="text-xs text-gray-700">45 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$13.5K</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Silk Dress</p>
+                                    <p class="text-xs text-gray-700">38 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$7.2K</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=40&h=40&fit=crop" 
+                                     alt="Product" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                <div>
+                                    <p class="font-medium text-charcoal text-sm">Designer Bag</p>
+                                    <p class="text-xs text-gray-700">28 sold</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-charcoal">$12.6K</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div class="bg-cream rounded-xl p-4 sm:p-6 border border-beige">
+                <h3 class="text-lg font-semibold text-charcoal mb-6">Performance Summary</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-700 mb-1">Avg. Order Value</p>
+                        <p class="text-2xl font-bold text-charcoal">$127.50</p>
+                        <p class="text-xs text-green-600 mt-1">↑ $12.50 vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700 mb-1">Conversion Rate</p>
+                        <p class="text-2xl font-bold text-charcoal">3.2%</p>
+                        <p class="text-xs text-green-600 mt-1">↑ 0.4% vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700 mb-1">Customer Retention</p>
+                        <p class="text-2xl font-bold text-charcoal">68%</p>
+                        <p class="text-xs text-green-600 mt-1">↑ 5% vs last period</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700 mb-1">Avg. Rating</p>
+                        <p class="text-2xl font-bold text-charcoal">4.7</p>
+                        <p class="text-xs text-gray-700 mt-1">
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star text-gold"></i>
+                            <i class="fas fa-star-half-alt text-gold"></i>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+<% block('script').append(`
+    <script src="/js/sellerDashboardJS/dashboardPerformance.js"></script>
+`); %>

@@ -7,16 +7,18 @@ let addressSaved = false;
 const urlParams = new URLSearchParams(window.location.search);
 const isBuyNow = urlParams.has('productId') && urlParams.has('size') && urlParams.has('color') && urlParams.has('quantity');
 
-// Helper function to get stock for specific color
-function getColorStock(product, colorName) {
+// Helper function to get stock for specific color and size
+function getStockForColorSize(product, colorName, sizeName) {
     if (!product.colors || !Array.isArray(product.colors)) return 0;
     const color = product.colors.find(c => c.name === colorName);
-    return color ? color.stock : 0;
+    if (!color) return 0;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock : 0;
 }
 
 // Check if quantity change is allowed based on stock
 function canIncreaseQuantity(product, colorName, currentQuantity) {
-    const currentStock = getColorStock(product, colorName);
+    const currentStock = getStockForColorSize(product, colorName, product.size);
     return currentQuantity < currentStock;
 }
 
@@ -59,7 +61,7 @@ function updateStockValidation() {
         const colorName = window.buyNowItem?.color;
         
         if (productData && colorName) {
-            const currentStock = getColorStock(productData, colorName);
+            const currentStock = getStockForColorSize(productData, colorName, productData.size);
             const increaseBtn = document.querySelector('.increase-btn');
             
             if (increaseBtn) {
@@ -81,7 +83,7 @@ function updateStockValidation() {
             const item = window.cart?.items?.find(item => item._id === cartItemId);
             
             if (item) {
-                const currentStock = getColorStock(item.product, item.color);
+                const currentStock = getStockForColorSize(item.product, item.color, item.product.size);
                 const increaseBtn = itemElement.querySelector('.increase-btn');
                 
                 if (increaseBtn) {
@@ -112,7 +114,7 @@ function updateQuantity(change) {
         const colorName = window.buyNowItem?.color;
         
         if (productData && colorName) {
-            const currentStock = getColorStock(productData, colorName);
+            const currentStock = getStockForColorSize(productData, colorName, productData.size);
             if (quantity >= currentStock) {
                 showStockError(`Sorry, we only have ${currentStock} of this item in stock.`);
                 return;
@@ -556,7 +558,7 @@ async function updateQuantity(cartItemId, change) {
         
         // Check stock limit for increase operations
         if (change > 0) {
-            const currentStock = getColorStock(item.product, item.color);
+            const currentStock = getStockForColorSize(item.product, item.color, item.product.size);
             if (currentQuantity >= currentStock) {
                 showStockError(`Sorry, we only have ${currentStock} of this item in stock.`);
                 return;

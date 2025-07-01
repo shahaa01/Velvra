@@ -464,9 +464,17 @@ function getSelectedColorObj() {
     return window.productColors.find(c => c.name === productState.selectedColor);
 }
 
+function getStockForColorSize(product, colorName, sizeName) {
+    const color = product.colors.find(c => c.name === colorName);
+    if (!color) return 0;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock : 0;
+}
+
 function updateQuantityUI() {
-    const colorObj = getSelectedColorObj();
-    const maxStock = colorObj ? colorObj.stock : 0;
+    const colorName = productState.selectedColor;
+    const sizeName = productState.selectedSize;
+    const maxStock = getStockForColorSize(window.product, colorName, sizeName);
     quantityInput.max = maxStock;
     if (productState.quantity > maxStock) {
         productState.quantity = maxStock;
@@ -474,8 +482,8 @@ function updateQuantityUI() {
     }
     // Show stock left if less than 5
     const stockMsg = document.getElementById('stockMessage');
-    if (colorObj && colorObj.stock < 5 && colorObj.stock > 0) {
-        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${colorObj.stock} item${colorObj.stock > 1 ? 's' : ''} of this color left in stock</span>`;
+    if (maxStock < 5 && maxStock > 0) {
+        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${maxStock} item${maxStock > 1 ? 's' : ''} of this variant left in stock</span>`;
     } else {
         stockMsg.innerHTML = '';
     }
@@ -483,7 +491,7 @@ function updateQuantityUI() {
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     const buyNowContainer = document.getElementById('buyNowContainer');
-    if (colorObj && colorObj.stock === 0) {
+    if (maxStock === 0) {
         addToCartBtn.disabled = true;
         addToCartBtn.style.opacity = 0.5;
         addToCartBtn.style.cursor = 'not-allowed';

@@ -1,3 +1,15 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.brand-font {
+    font-family: 'Playfair Display', serif;
+}
+
 /* Navigation styles */
 .nav-link {
     transition: all 0.3s ease;
@@ -19,6 +31,25 @@
 
 .mobile-nav-item.active {
     color: #d4af37;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8f6f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B8941F;
 }
 
 /* Responsive adjustments - matching userMessage.css exactly */

@@ -125,11 +125,13 @@ class VelvraCart {
         }, { passive: true });
     }
 
-    // Helper function to get stock for specific color
-    getColorStock(product, colorName) {
+    // Helper function to get stock for specific color and size
+    getStockForColorSize(product, colorName, sizeName) {
         if (!product.colors || !Array.isArray(product.colors)) return 0;
         const color = product.colors.find(c => c.name === colorName);
-        return color ? color.stock : 0;
+        if (!color) return 0;
+        const sizeObj = color.sizes.find(s => s.size === sizeName);
+        return sizeObj ? sizeObj.stock : 0;
     }
 
     // Check if quantity change is allowed based on stock
@@ -137,7 +139,7 @@ class VelvraCart {
         const item = this.getCartItem(cartItemId);
         if (!item) return false;
         
-        const currentStock = this.getColorStock(item.product, item.color);
+        const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
         return item.quantity < currentStock;
     }
 
@@ -153,7 +155,7 @@ class VelvraCart {
         const item = this.getCartItem(cartItemId);
         if (!item) return;
 
-        const currentStock = this.getColorStock(item.product, item.color);
+        const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
         const increaseButtons = document.querySelectorAll(`.increase-btn[data-cart-id="${cartItemId}"]`);
         
         increaseButtons.forEach(btn => {
@@ -214,7 +216,7 @@ class VelvraCart {
         } else {
             // Check stock limit for increase operations
             if (delta > 0) {
-                const currentStock = this.getColorStock(item.product, item.color);
+                const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
                 if (currentQuantity >= currentStock) {
                     this.showStockError(cartItemId, `Sorry, we only have ${currentStock} of this item in stock.`);
                     return;
@@ -292,7 +294,7 @@ class VelvraCart {
         if (!item || item.color === newColor) return;
 
         // Check if new color has stock
-        const newColorStock = this.getColorStock(item.product, newColor);
+        const newColorStock = this.getStockForColorSize(item.product, newColor, item.size);
         if (newColorStock === 0) {
             this.showStockError(cartItemId, 'This color is currently out of stock.');
             return;
