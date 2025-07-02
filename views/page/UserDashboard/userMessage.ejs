@@ -1,7 +1,7 @@
 <% layout('layouts/dashboardBoilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/userMessage.css">') %>
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen h-screen overflow-hidden">
     <!-- Sidebar Navigation -->
     <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300">
         <!-- Mobile Header with Close button -->
@@ -70,8 +70,8 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden" style="height: calc(100vh - 64px);">
-        <div class="h-full flex">
+    <main class="flex-1 h-screen flex flex-col overflow-hidden" style="height: calc(100vh - 64px);">
+        <div class="h-full flex overflow-hidden">
             <!-- Conversations List -->
             <div id="conversationsList" class="w-full md:w-96 lg:w-80 xl:w-96 bg-cream border-r border-beige h-full overflow-hidden flex flex-col">
                 <!-- Header -->
@@ -87,7 +87,7 @@
                 </div>
                 
                 <!-- Conversations Container -->
-                <div id="conversationsContainer" class="flex-1 overflow-y-auto p-2">
+                <div id="conversationsContainer" class="flex-1 overflow-y-auto p-2 min-h-0">
                     <!-- Loading skeleton will be inserted here -->
                 </div>
                 
@@ -107,7 +107,7 @@
             </div>
 
             <!-- Chat Window -->
-            <div id="chatWindow" class="hidden md:flex flex-1 flex-col bg-pearl">
+            <div id="chatWindow" class="hidden md:flex flex-1 flex-col bg-pearl h-full overflow-hidden">
                 <!-- Default State (No chat selected) -->
                 <div id="noChatSelected" class="flex-1 flex items-center justify-center">
                     <div class="text-center">
@@ -122,7 +122,7 @@
                 <!-- Active Chat -->
                 <div id="activeChat" class="hidden flex-1 flex flex-col h-full relative">
                     <!-- Chat Header - Fixed at top -->
-                    <div class="absolute top-0 left-0 right-0 bg-cream p-4 border-b border-beige flex items-center justify-between z-10">
+                    <div class="absolute top-0 left-0 right-0 bg-cream p-4 border-b border-beige flex items-center justify-between z-10 flex-shrink-0">
                         <div class="flex items-center space-x-3">
                             <button id="backToList" class="md:hidden mr-2 text-charcoal">
                                 <i class="fas fa-arrow-left text-xl"></i>
@@ -136,8 +136,8 @@
                     </div>
 
                     <!-- Messages Container - Scrollable middle section -->
-                    <div class="flex-1 overflow-y-auto pt-20 pb-20">
-                        <div id="messagesContainer" class="p-4 space-y-4">
+                    <div class="flex-1 pt-20 pb-20 min-h-0 flex flex-col">
+                        <div id="messagesContainer" class="flex-1 p-4 space-y-4 overflow-y-auto min-h-0">
                             <!-- Messages will be inserted here -->
                         </div>
 
@@ -155,7 +155,7 @@
                     </div>
 
                     <!-- Message Input - Fixed at bottom -->
-                    <div class="absolute bottom-0 left-0 right-0 bg-cream p-4 border-t border-beige z-10">
+                    <div class="absolute bottom-0 left-0 right-0 bg-cream p-4 border-t border-beige z-10 flex-shrink-0">
                         <div class="flex items-center space-x-2">
                             <button class="p-2 text-charcoal hover:text-charcoal transition-colors">
                                 <i class="fas fa-paperclip text-lg"></i>

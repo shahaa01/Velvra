@@ -112,12 +112,11 @@
         let currentFilter = 'all';
         let sellerId = null;
 
-        // DOM elements
+        // DOM elements (updated for new EJS structure)
         const messagesContainer = document.getElementById('messagesContainer');
         const messagesList = document.getElementById('messagesList');
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
-        const threadContent = document.getElementById('threadContent');
         const threadDefaultState = document.getElementById('threadDefaultState');
         const replyTextarea = document.getElementById('replyTextarea');
         const sendReplyBtn = document.getElementById('sendReplyBtn');
@@ -125,6 +124,13 @@
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebar = document.getElementById('sidebar');
         const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const sellerActiveChat = document.getElementById('sellerActiveChat');
+        const sellerChatName = document.getElementById('sellerChatName');
+        const sellerChatAvatar = document.getElementById('sellerChatAvatar');
+        const sellerChatStatus = document.getElementById('sellerChatStatus');
+        const sellerMessagesScrollArea = document.getElementById('sellerMessagesScrollArea');
+        const sellerMobileChatWindow = document.getElementById('sellerMobileChatWindow');
+        const sellerBackToList = document.getElementById('sellerBackToList');
 
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
@@ -279,23 +285,22 @@
             selectedConversationId = conversationId;
             currentConversation = conversations.find(c => c._id === conversationId);
             if (!currentConversation) return;
-            // Join socket room
             socket.emit('joinConversation', conversationId);
-            // Mark as read
             fetch(`/seller-dashboard/api/messages/${conversationId}/read`, { method: 'POST' });
-            // Show thread
             threadDefaultState.classList.add('hidden');
-            threadContent.classList.remove('hidden');
-            // Load messages
-            loadMessages(conversationId);
-            // Update thread header
+            sellerActiveChat.classList.remove('hidden');
+            if (window.innerWidth < 1024) {
+                sellerActiveChat.classList.add('mobile-fullscreen');
+            } else {
+                sellerActiveChat.classList.remove('mobile-fullscreen');
+            }
             const user = currentConversation.user;
-            document.getElementById('threadTitle').textContent = user.firstName + ' ' + (user.lastName || '');
-            document.getElementById('threadSubject').textContent = currentConversation.lastMessage || '';
-            document.getElementById('threadOrderInfo').textContent = currentConversation.order ? `Order: ${currentConversation.order.orderNumber || currentConversation.order._id}` : 'General Inquiry';
-            document.getElementById('threadStatus').textContent = 'Active';
-            document.getElementById('threadStatus').className = 'text-xs px-2 py-1 rounded-full font-medium bg-gold text-charcoal';
-            resolveBtn.style.display = 'block';
+            sellerChatName.textContent = user.firstName + ' ' + (user.lastName || '');
+            sellerChatAvatar.src = user.firstName
+                ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + (user.lastName || ''))}&background=a8a196&color=fff`
+                : 'https://ui-avatars.com/api/?name=User&background=a8a196&color=fff';
+            sellerChatStatus.textContent = currentConversation.order ? `Order: ${currentConversation.order.orderNumber || currentConversation.order._id}` : 'Active';
+            loadMessages(conversationId);
         }
 
         function loadMessages(conversationId) {
@@ -306,7 +311,6 @@
                     if (data.success) {
                         currentMessages = data.messages;
                         renderThreadMessages();
-                        scrollToBottom();
                     } else {
                         currentMessages = [];
                         renderThreadMessages();
@@ -322,6 +326,7 @@
             const container = messagesScrollContainer();
             if (!currentMessages.length) {
                 container.innerHTML = `<div class="text-center text-gray-700 py-8">No messages yet. Start the conversation!</div>`;
+                scrollToBottom();
                 return;
             }
             container.innerHTML = currentMessages.map(msg => {
@@ -350,6 +355,7 @@
                     </div>
                 `;
             }).join('');
+            scrollToBottom();
         }
 
         function messagesScrollContainer() {
@@ -408,7 +414,7 @@
         }
 
         function scrollToBottom() {
-            const container = messagesScrollContainer();
+            const container = sellerMessagesScrollArea;
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
             }, 100);
@@ -477,6 +483,14 @@
                         showNotification('All messages marked as read');
                     });
                 });
+            }
+            // Update event for back button (desktop/mobile)
+            if (sellerBackToList) {
+                sellerBackToList.onclick = () => {
+                    sellerActiveChat.classList.add('hidden');
+                    sellerActiveChat.classList.remove('mobile-fullscreen');
+                    threadDefaultState.classList.remove('hidden');
+                };
             }
         }
 

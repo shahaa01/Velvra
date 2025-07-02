@@ -342,4 +342,15 @@ button:active {
 /* Smooth transitions for all responsive changes */
 * {
     transition: padding 0.3s ease, margin 0.3s ease, font-size 0.3s ease;
+}
+
+html, body, .min-h-screen, .h-screen, .flex-1 {
+  overflow: hidden !important;
+}
+
+#conversationsContainer, #messagesContainer {
+  overflow-y: auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  scroll-behavior: smooth;
 } 
