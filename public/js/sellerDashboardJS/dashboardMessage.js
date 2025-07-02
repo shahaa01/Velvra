@@ -137,25 +137,59 @@
         function initializeSocket() {
             socket = io();
             // Listen for real-time messages
-            socket.on('receiveMessage', (message) => {
-                console.log('🔔 Seller received message via socket:', message);
-                console.log('Current conversation ID:', currentConversation?._id);
-                console.log('Message conversation ID:', message.conversationId);
-                
-                // Always refresh the conversation list in real time
-                loadConversations();
-                // If the message is for the currently open conversation, update the thread
+            socket.on('receiveMessage', async (message) => {
+                console.log('🔔 Seller received message via socket. Refreshing conversation list.', message);
+                let conv = conversations.find(c => c._id === message.conversationId);
                 if (currentConversation && message.conversationId === currentConversation._id) {
-                    console.log('✅ Adding message to current seller conversation UI');
-                    // Add all messages to show the full conversation
                     currentMessages.push(message);
                     renderThreadMessages();
                     scrollToBottom();
+                    // Mark as read on the server
+                    fetch(`/seller-dashboard/api/messages/${message.conversationId}/read`, { method: 'POST' });
+                    if (conv) conv.unreadCount = 0;
                 } else {
-                    console.log('⚠️ Message not for current seller conversation or no conversation selected');
-                    // Show a notification for new messages in other conversations
-                    showNotification('New message received');
+                    if (conv) {
+                        conv.unreadCount = (conv.unreadCount || 0) + 1;
+                        conv.lastMessage = message.content;
+                        conv.updatedAt = message.createdAt;
+                        upsertConversation(conv);
+                        console.log('DEBUG: Updated existing conversation in real time:', conv);
+                        renderMessagesList();
+                    } else {
+                        // Fetch the new conversation from the server and add it
+                        try {
+                            const res = await fetch(`/seller-dashboard/api/messages`);
+                            const data = await res.json();
+                            if (data.success && data.conversations) {
+                                const newConv = data.conversations.find(c => c._id === message.conversationId);
+                                if (newConv) {
+                                    newConv.unreadCount = 1;
+                                    newConv.lastMessage = message.content;
+                                    newConv.updatedAt = message.createdAt;
+                                    upsertConversation(newConv);
+                                    console.log('DEBUG: Added new conversation in real time:', newConv);
+                                    renderMessagesList();
+                                    // Join the new conversation room
+                                    socket.emit('joinConversation', newConv._id);
+                                } else {
+                                    console.warn('DEBUG: New conversation not found in API response:', message.conversationId);
+                                }
+                            } else {
+                                console.warn('DEBUG: API did not return conversations:', data);
+                            }
+                        } catch (err) {
+                            console.error('Failed to fetch new conversation:', err);
+                        }
+                    }
                 }
+                // Debug: log conversations and check DOM
+                console.log('Sidebar conversations:', conversations.map(c => ({id: c._id, unread: c.unreadCount, last: c.lastMessage})));
+                setTimeout(() => {
+                    document.querySelectorAll('.message-row.unread-debug').forEach(row => {
+                        const style = window.getComputedStyle(row);
+                        console.log('DEBUG: Row', row.dataset.conversationId, 'borderLeftWidth:', style.borderLeftWidth, 'borderLeftColor:', style.borderLeftColor, 'background:', style.backgroundColor);
+                    });
+                }, 100);
             });
         }
 
@@ -168,6 +202,7 @@
                     if (data.success) {
                         conversations = data.conversations;
                         renderMessagesList();
+                        joinAllConversationRooms();
                     } else {
                         conversations = [];
                         renderMessagesList();
@@ -210,7 +245,7 @@
                 const timestamp = formatTime(conv.updatedAt);
                 const isUnread = conv.unreadCount > 0;
                 return `
-                    <div class="message-row bg-cream rounded-lg p-4 border border-beige cursor-pointer hover:border-gold transition-all ${isUnread ? 'border-l-4 border-l-gold' : ''}" data-conversation-id="${conv._id}">
+                    <div class="message-row bg-cream rounded-lg p-4 border border-beige cursor-pointer hover:border-gold transition-all ${isUnread ? 'border-l-4 border-l-gold unread-debug' : ''}" data-conversation-id="${conv._id}" style="${isUnread ? 'background:#fffbe6;' : ''}">
                         <div class="flex items-start justify-between mb-2">
                             <h4 class="font-medium text-charcoal ${isUnread ? 'font-semibold' : ''}">${user.firstName} ${user.lastName || ''}</h4>
                             <span class="text-xs text-gray-700">${timestamp}</span>
@@ -228,6 +263,14 @@
                 row.addEventListener('click', () => {
                     const conversationId = row.dataset.conversationId;
                     selectConversation(conversationId);
+                });
+            });
+            // Debug: force repaint and log computed style
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.message-row.unread-debug').forEach(row => {
+                    row.classList.add('force-repaint');
+                    const style = window.getComputedStyle(row);
+                    console.log('DEBUG: Row', row.dataset.conversationId, 'borderLeftWidth:', style.borderLeftWidth, 'borderLeftColor:', style.borderLeftColor, 'background:', style.backgroundColor);
                 });
             });
         }
@@ -434,5 +477,24 @@
                         showNotification('All messages marked as read');
                     });
                 });
+            }
+        }
+
+        // Utility: update or insert conversation by _id
+        function upsertConversation(convObj) {
+            const idx = conversations.findIndex(c => c._id === convObj._id);
+            if (idx !== -1) {
+                conversations[idx] = { ...conversations[idx], ...convObj };
+            } else {
+                conversations.unshift(convObj);
+            }
+        }
+
+        function joinAllConversationRooms() {
+            if (socket && Array.isArray(conversations)) {
+                conversations.forEach(conv => {
+                    socket.emit('joinConversation', conv._id);
+                });
+                console.log('DEBUG: Joined all conversation rooms:', conversations.map(c => c._id));
             }
         }

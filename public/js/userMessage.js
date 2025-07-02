@@ -56,23 +56,51 @@ function initializeSocket() {
     }
     
     // Listen for new messages
-    socket.on('receiveMessage', (message) => {
-        console.log('🔔 User received message via socket:', message);
-        console.log('Current conversation ID:', currentConversation?._id);
-        console.log('Message conversation ID:', message.conversationId);
-        
-        // Add all messages to show complete conversation
+    socket.on('receiveMessage', async (message) => {
+        console.log('🔔 User received message via socket. Refreshing conversation list.', message);
+        let conv = window.backendData.conversations.find(c => c._id === message.conversationId);
+        if (!conv) {
+            // Poll the backend for up to 3 seconds to fetch the new conversation
+            let found = false;
+            for (let i = 0; i < 6; i++) {
+                try {
+                    const res = await fetch('/dashboard/api/messages');
+                    const data = await res.json();
+                    if (data.success && data.conversations) {
+                        const newConv = data.conversations.find(c => c._id === message.conversationId);
+                        if (newConv) {
+                            newConv.unreadCount = 1;
+                            newConv.lastMessage = message.content;
+                            newConv.updatedAt = message.createdAt;
+                            window.backendData.conversations.unshift(newConv);
+                            conv = newConv;
+                            joinAllConversationRooms();
+                            console.log('DEBUG: Added new conversation in real time after polling:', newConv);
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch new conversation:', err);
+                }
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            if (!conv) {
+                console.warn('DEBUG: New conversation not found after polling:', message.conversationId);
+            }
+        }
         if (currentConversation && message.conversationId === currentConversation._id) {
-            console.log('✅ Adding message to current conversation UI');
             addMessageToUI(message, false);
             scrollToBottom();
+            markMessagesAsRead(message.conversationId);
+            if (conv) conv.unreadCount = 0;
         } else {
-            console.log('⚠️ Message not for current conversation or no conversation selected');
+            if (conv) conv.unreadCount = (conv.unreadCount || 0) + 1;
         }
-        
-        // Update conversation list in real-time
-        console.log('🔄 Updating conversation list');
-        updateConversationList();
+        if (conv) {
+            conv.lastMessage = message.content;
+            conv.updatedAt = message.createdAt;
+        }
+        renderConversations();
     });
     
     // Listen for typing indicators
@@ -121,6 +149,7 @@ function loadConversations() {
             } else {
                 renderConversations();
                 emptyState.classList.add('hidden');
+                joinAllConversationRooms();
             }
         }, 300);
     } else {
@@ -135,6 +164,7 @@ function loadConversations() {
                     window.backendData.conversations = data.conversations;
                     renderConversations();
                     emptyState.classList.add('hidden');
+                    joinAllConversationRooms();
                 }
             })
             .catch(error => {
@@ -523,7 +553,6 @@ async function sendMessage(isMobileView = false) {
         const data = await response.json();
         if (data.success) {
             addMessageToUI(data.message, true);
-            updateConversationList();
             // Emit to socket for real-time
             console.log('📤 Emitting message via socket:', {
                 conversationId: currentConversation._id,
@@ -549,21 +578,6 @@ async function sendMessage(isMobileView = false) {
         console.error('Error sending message:', error);
         alert('Failed to send message. Please try again.');
     }
-}
-
-// Update conversation list by fetching fresh data from backend
-function updateConversationList() {
-    fetch('/dashboard/api/messages')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.conversations) {
-                window.backendData.conversations = data.conversations;
-                renderConversations();
-            }
-        })
-        .catch(error => {
-            console.error('Error updating conversations:', error);
-        });
 }
 
 // Show typing indicator
@@ -708,5 +722,14 @@ function setupEventListeners() {
                 }, 1000);
             }
         });
+    }
+}
+
+function joinAllConversationRooms() {
+    if (socket && Array.isArray(window.backendData.conversations)) {
+        window.backendData.conversations.forEach(conv => {
+            socket.emit('joinConversation', conv._id);
+        });
+        console.log('DEBUG: Joined all conversation rooms:', window.backendData.conversations.map(c => c._id));
     }
 }

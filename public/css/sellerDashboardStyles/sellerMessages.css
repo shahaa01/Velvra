@@ -88,3 +88,9 @@ body {
         transform: translateY(-10px);
     }
 }
+
+/* Unread conversation row styling */
+.message-row.unread-debug {
+    border-left: 4px solid #d4af37 !important;
+    background: #fffbe6;
+}
