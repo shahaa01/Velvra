@@ -1,5 +1,14 @@
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
+
+<%
+// Check if the default color and size combination is in stock
+const defaultColor = product.colors[0];
+const defaultSize = product.sizes[0];
+const defaultColorObj = product.colors.find(c => c.name === defaultColor.name);
+const defaultSizeObj = defaultColorObj?.sizes.find(s => s.size === defaultSize);
+const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
+%>
 <section class="mainSection bg-velvra-pearl font-montserrat">
     <!-- Product Detail Page -->
     <main class="luxury-gradient min-h-screen">
@@ -151,7 +160,7 @@
                                     data-logged-in="<%= currentUser ? 'true' : 'false' %>"
                                     data-product-id="<%= product._id %>"
                                     data-in-cart="<%= isInCart ? 'true' : 'false' %>"
-                                    <%= !product.inStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' %>>
+                                    <%= !defaultInStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' %>>
                                 <span class="relative z-10 flex items-center justify-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8m-8 0V9a2 2 0 012-2h4a2 2 0 012 2v4"></path>
@@ -163,7 +172,7 @@
                         </div>
                         <div id="stockMessage" class="mt-3 text-center"></div>
                         <div id="quantityError" class="mt-2 text-center"></div>
-                        <% if (!product.inStock) { %>
+                            <% if (!defaultInStock) { %>
                         <div class="flex items-center justify-center mt-6">
                           <span class="text-[#D4AF37] font-light text-2xl italic tracking-wide">Out of Stock</span>
                         </div>
@@ -400,17 +409,10 @@
                         <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= simProduct.brand || 'VELVRA' %></p>
                         <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= simProduct.name %></h3>
                         
-                        <div class="color-options flex gap-2 mb-4">
-                            <% for(let j = 0; j < Math.min(3, simProduct.colors.length); j++) { %>
-                                <% const color = simProduct.colors[j]; %>
-                                <button class="color-option w-6 h-6 rounded-full border-2 border-gray-200 hover:border-velvra-gold transition-all duration-200" style="background-color: <%= color.hex %>" data-color="<%= color.name %>"></button>
-                            <% } %>
-                        </div>
-                        
                         <div class="flex items-baseline space-x-2">
                             <span class="text-xl font-semibold text-velvra-charcoal">₹<%= simProduct.salePrice || simProduct.price %></span>
                             <% if(simProduct.sale) { %>
-                                <span class="text-sm text-velvra-stone line-through">₹<%= simProduct.price %></span>
+                                <span class="text-sm text-red line-through decoration-red-500">₹<%= simProduct.price %></span>
                             <% } %>
                         </div>
                     </div>
@@ -427,7 +429,7 @@
 </main>
 <script src="/js/infiniteScroll.js"></script>
 <script>
-  window.productColors = <%- JSON.stringify(product.colors) %>;
+  window.product = <%- JSON.stringify(product) %>;
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>
