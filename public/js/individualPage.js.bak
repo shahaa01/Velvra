@@ -1,5 +1,5 @@
-// State Management - Use state from EJS if available, otherwise default
-let productState = window.productState || {
+// State Management
+let productState = {
     selectedColor: 'Charcoal',
     selectedSize: 'M',
     quantity: 1,
@@ -86,16 +86,6 @@ function initializeEventListeners() {
             // Update state and UI
             productState.selectedColor = color;
             selectedColorSpan.textContent = color;
-            
-            // Reset quantity to 1 for the new color/size combination
-            const maxStock = getStockForColorSize(window.product, color, productState.selectedSize);
-            if (maxStock > 0) {
-                productState.quantity = 1;
-                quantityInput.value = 1;
-            } else {
-                productState.quantity = 0;
-                quantityInput.value = 0;
-            }
             updateQuantityUI();
         });
     });
@@ -116,17 +106,6 @@ function initializeEventListeners() {
             // Update state and UI
             productState.selectedSize = size;
             selectedSizeSpan.textContent = size;
-            
-            // Reset quantity to 1 for the new size/color combination
-            const maxStock = getStockForColorSize(window.product, productState.selectedColor, size);
-            if (maxStock > 0) {
-                productState.quantity = 1;
-                quantityInput.value = 1;
-            } else {
-                productState.quantity = 0;
-                quantityInput.value = 0;
-            }
-            updateQuantityUI();
         });
     });
 
@@ -253,31 +232,6 @@ function initializeEventListeners() {
             });
             return;
         }
-        
-        // Validate stock availability for selected color/size combination
-        const colorName = productState.selectedColor;
-        const sizeName = productState.selectedSize;
-        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
-        
-        if (maxStock === 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Out of Stock',
-                text: `Sorry, ${colorName} color in size ${sizeName} is currently out of stock.`,
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        if (productState.quantity > maxStock) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Insufficient Stock',
-                text: `Only ${maxStock} item${maxStock > 1 ? 's' : ''} available for ${colorName} in size ${sizeName}.`,
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
 
         try {
             // Show loading state
@@ -388,31 +342,6 @@ function initializeEventListeners() {
                 icon: 'warning',
                 title: 'Select Size',
                 text: 'Please select a size before proceeding.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        // Validate stock availability for selected color/size combination
-        const colorName = productState.selectedColor;
-        const sizeName = productState.selectedSize;
-        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
-        
-        if (maxStock === 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Out of Stock',
-                text: `Sorry, ${colorName} color in size ${sizeName} is currently out of stock.`,
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        if (productState.quantity > maxStock) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Insufficient Stock',
-                text: `Only ${maxStock} item${maxStock > 1 ? 's' : ''} available for ${colorName} in size ${sizeName}.`,
                 confirmButtonText: 'OK'
             });
             return;
@@ -535,9 +464,6 @@ if (!document.querySelector('style[data-heart-animation]')) {
 }
 
 // --- Stock/Quantity Logic ---
-function getSelectedColorObj() {
-    return window.productColors.find(c => c.name === productState.selectedColor);
-}
 
 function getStockForColorSize(product, colorName, sizeName) {
     const color = product.colors.find(c => c.name === colorName);

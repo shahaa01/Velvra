@@ -676,6 +676,22 @@ router.post('/api/orders/:orderId/cancel', isLoggedIn, async (req, res) => {
         order.orderStatus = 'cancelled';
         order.cancellationReason = reason;
         order.updatedAt = new Date();
+
+        // Restore inventory for cancelled items
+        for (const item of order.items) {
+            const productDoc = await Product.findById(item.product);
+            if (productDoc) {
+                const colorObj = productDoc.colors.find(c => c.name === item.color);
+                if (colorObj) {
+                    const sizeObj = colorObj.sizes.find(s => s.size === item.size);
+                    if (sizeObj) {
+                        sizeObj.stock = sizeObj.stock + item.quantity;
+                    }
+                }
+                await productDoc.save();
+            }
+        }
+
         await order.save();
 
         res.json({
@@ -866,6 +882,155 @@ router.get('/api/chart-data/:period', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Chart data API error:', error);
         res.status(500).json({ error: 'Failed to fetch chart data' });
+    }
+});
+
+// --- SELLER MESSAGING API ENDPOINTS ---
+
+// Get all conversations for the seller (JSON)
+router.get('/api/messages', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+
+        // Find all conversations where seller is a participant
+        const conversations = await Conversation.find({
+            'participants.id': seller._id,
+            'participants.model': 'Seller'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        // Get comprehensive data for each conversation
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            // Get the other participant (user)
+            const userParticipant = conversation.participants.find(p => p.model === 'User');
+            if (!userParticipant) continue;
+            const user = await mongoose.model('User').findById(userParticipant.id);
+            if (!user) continue;
+            // Get latest message
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1);
+            // Get unread count for this conversation
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: seller._id,
+                recipientModel: 'Seller',
+                isRead: false
+            });
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                user: user,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: conversation.order,
+                latestMessage: messages[0] || null
+            });
+        }
+        res.json({ success: true, conversations: conversationsWithDetails });
+    } catch (error) {
+        console.error('Seller API: Get conversations error:', error);
+        res.status(500).json({ error: 'Failed to load conversations' });
+    }
+});
+
+// Get all messages for a conversation (JSON)
+router.get('/api/messages/:conversationId/messages', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Get messages
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: 1 });
+        // Ensure sender is always a string (ObjectId)
+        const messagesWithSenderId = messages.map(msg => ({
+            ...msg.toObject(),
+            sender: msg.sender.toString(),
+            senderId: msg.sender.toString(),
+        }));
+        res.json({ success: true, messages: messagesWithSenderId });
+    } catch (error) {
+        console.error('Seller API: Get messages error:', error);
+        res.status(500).json({ error: 'Failed to get messages' });
+    }
+});
+
+// Send a message as the seller
+router.post('/api/messages/:conversationId/send', isLoggedIn, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Get the user participant
+        const userParticipant = conversation.participants.find(p => p.model === 'User');
+        if (!userParticipant) return res.status(400).json({ error: 'User participant not found' });
+        // Create the message
+        const message = await Message.create({
+            conversationId: conversation._id,
+            sender: seller._id,
+            senderModel: 'Seller',
+            recipient: userParticipant.id,
+            recipientModel: 'User',
+            order: conversation.order,
+            content: content.trim()
+        });
+        // Update conversation's last message
+        conversation.lastMessage = content.trim();
+        conversation.updatedAt = new Date();
+        await conversation.save();
+        // Populate sender details for response
+        await message.populate('sender', 'brandName');
+        res.json({ success: true, message });
+    } catch (error) {
+        console.error('Seller API: Send message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Mark all messages as read for the seller
+router.post('/api/messages/:conversationId/read', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Mark all unread messages as read
+        await Message.updateMany({
+            conversationId: conversation._id,
+            recipient: seller._id,
+            recipientModel: 'Seller',
+            isRead: false
+        }, { isRead: true });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Seller API: Mark as read error:', error);
+        res.status(500).json({ error: 'Failed to mark messages as read' });
+    }
+});
+
+// Get seller profile data
+router.get('/profile', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        res.json({ success: true, sellerId: seller._id.toString() });
+    } catch (error) {
+        console.error('Seller profile error:', error);
+        res.status(500).json({ error: 'Failed to get seller profile' });
     }
 });
 

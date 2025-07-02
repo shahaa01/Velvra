@@ -14,7 +14,9 @@ async function main() {
 
   //lets save all the product in the database
   for (let product of products) {
-    product.seller = new mongoose.Types.ObjectId('6860c2fbfbb1cd95813132b5');
+    // Remove any existing seller field to avoid conflicts
+    delete product.seller;
+    product.seller = new mongoose.Types.ObjectId('68531b04ebbacff2e2905f9a');
     product.price = Math.floor(Math.random() * (10000 - 300 + 1)) + 300;
 
     // Define available sizes for this product
@@ -35,8 +37,15 @@ async function main() {
     // (not needed in new schema)
     // product.colors.forEach(c => { delete c.stock; delete c.inStock; });
 
+    // Log for debugging
+    console.log('Saving product:', product.name, 'with seller:', product.seller);
+
     const newProduct = new Product(product);
-    await newProduct.save();
+    try {
+      await newProduct.save();
+    } catch (err) {
+      console.error('Error saving product:', product.name, err);
+    }
   }
   
 }

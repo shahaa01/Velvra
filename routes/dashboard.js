@@ -192,13 +192,26 @@ router.get('/orders/:orderId/sellers', isLoggedIn, async (req, res) => {
         
         // Extract seller information from order items
         const sellers = order.items.map(item => {
-            const sellerInfo = {
-                id: item.seller?._id || item.seller,
-                name: item.seller?.brandName || 'Unknown Seller',
+            let sellerId = null;
+            let sellerName = 'Unknown Seller';
+            if (item.seller && item.seller._id) {
+                sellerId = item.seller._id;
+                sellerName = item.seller.brandName || 'Unknown Seller';
+            } else if (typeof item.seller === 'string' || item.seller instanceof mongoose.Types.ObjectId) {
+                sellerId = item.seller;
+            } else {
+                console.warn('Order item has invalid seller:', item.seller);
+            }
+            // Defensive: ensure sellerId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(sellerId)) {
+                console.warn('Invalid sellerId for order item:', sellerId);
+                sellerId = null;
+            }
+            return {
+                id: sellerId,
+                name: sellerName,
                 productName: item.product?.name || 'Product'
             };
-            console.log('Seller info:', sellerInfo);
-            return sellerInfo;
         });
         
         console.log('Returning sellers:', sellers);
@@ -460,6 +473,51 @@ router.get('/messages', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Messages route error:', error);
         res.status(500).render('error', { error: 'Failed to load messages' });
+    }
+});
+
+// API endpoint to get all user conversations
+router.get('/api/messages', isLoggedIn, async (req, res) => {
+    try {
+        const conversations = await Conversation.find({
+            'participants.id': req.user._id,
+            'participants.model': 'User'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) continue; 
+
+            const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!seller) continue;
+
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1);
+
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                seller: seller,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: conversation.order,
+                latestMessage: messages[0] || null
+            });
+        }
+
+        res.json({ success: true, conversations: conversationsWithDetails });
+    } catch (error) {
+        console.error('API: Get conversations error:', error);
+        res.status(500).json({ error: 'Failed to get conversations' });
     }
 });
 
@@ -928,6 +986,93 @@ router.get('/test-sellers', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Test sellers error:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Cancel Order Route
+router.put('/orders/:orderId/cancel', isLoggedIn, async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        
+        // Find the order and verify ownership
+        const order = await Order.findById(orderId)
+            .populate('items.product')
+            .populate('items.seller');
+        
+        if (!order) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Order not found' 
+            });
+        }
+        
+        // Verify order belongs to the user
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Access denied' 
+            });
+        }
+        
+        // Check if order can be cancelled (only pending or processing)
+        if (!['pending', 'processing'].includes(order.orderStatus)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Cannot cancel order with status: ${order.orderStatus}` 
+            });
+        }
+        
+        // Update order status to cancelled
+        order.orderStatus = 'cancelled';
+        order.updatedAt = new Date();
+        
+        // Restore inventory for cancelled items
+        for (const item of order.items) {
+            const productDoc = await require('../models/product').findById(item.product);
+            if (productDoc) {
+                const colorObj = productDoc.colors.find(c => c.name === item.color);
+                if (colorObj) {
+                    const sizeObj = colorObj.sizes.find(s => s.size === item.size);
+                    if (sizeObj) {
+                        sizeObj.stock = sizeObj.stock + item.quantity;
+                    }
+                }
+                await productDoc.save();
+            }
+        }
+        
+        // Add cancellation metadata
+        if (!order.metadata) {
+            order.metadata = {};
+        }
+        order.metadata.cancelledAt = new Date();
+        order.metadata.cancelledBy = req.user._id;
+        order.metadata.cancellationReason = 'User requested cancellation';
+        
+        await order.save();
+        
+        // TODO: Here you could add logic to:
+        // 1. Restore inventory for cancelled items
+        // 2. Process refund if payment was made
+        // 3. Notify sellers about cancellation
+        // 4. Send confirmation email to user
+        
+        console.log(`Order ${order.orderNumber} cancelled by user ${req.user._id}`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Order cancelled successfully',
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            newStatus: 'cancelled'
+        });
+        
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to cancel order. Please try again.' 
+        });
     }
 });
 

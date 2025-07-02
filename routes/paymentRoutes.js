@@ -187,6 +187,19 @@ router.post('/create-buyNow-order', isLoggedIn, async (req, res) => {
 
         await order.save();
 
+        // Decrement product stock for buy now
+        const productDoc = await Product.findById(productId);
+        if (productDoc) {
+            const colorObj = productDoc.colors.find(c => c.name === color);
+            if (colorObj) {
+                const sizeObj = colorObj.sizes.find(s => s.size === size);
+                if (sizeObj) {
+                    sizeObj.stock = Math.max(0, sizeObj.stock - parseInt(quantity));
+                }
+            }
+            await productDoc.save();
+        }
+
         res.json({
             success: true,
             order: order,
@@ -240,6 +253,21 @@ router.post('/create-order', isLoggedIn, async (req, res) => {
         });
 
         await order.save();
+
+        // Decrement product stock for each item in the order
+        for (const item of orderItems) {
+            const productDoc = await Product.findById(item.product);
+            if (productDoc) {
+                const colorObj = productDoc.colors.find(c => c.name === item.color);
+                if (colorObj) {
+                    const sizeObj = colorObj.sizes.find(s => s.size === item.size);
+                    if (sizeObj) {
+                        sizeObj.stock = Math.max(0, sizeObj.stock - item.quantity);
+                    }
+                }
+                await productDoc.save();
+            }
+        }
 
         // Clear the cart
         cart.items = [];

@@ -112,8 +112,9 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     <div class="mb-8">
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Color</h3>
                         <div class="flex space-x-3">
-                            <% for(let prodColor of product.colors) { %>
-                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300" 
+                            <% for(let i = 0; i < product.colors.length; i++) { %>
+                            <% const prodColor = product.colors[i]; %>
+                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
                                     style="background-color: <%= prodColor.hex %>" 
                                     data-color="<%= prodColor.name %>"
                                     title="<%= prodColor.name %>"></button>
@@ -430,6 +431,12 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
 <script src="/js/infiniteScroll.js"></script>
 <script>
   window.product = <%- JSON.stringify(product) %>;
+  // Initialize product state with first available color/size
+  window.productState = {
+    selectedColor: '<%= product.colors[0].name %>',
+    selectedSize: '<%= product.sizes[0] %>',
+    quantity: 1
+  };
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>

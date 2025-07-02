@@ -3,10 +3,12 @@
 
 <!-- Helper function to check if specific color is in stock -->
 <% 
-function isColorInStock(product, colorName) {
+function isColorInStock(product, colorName, sizeName) {
     if (!product.colors || !Array.isArray(product.colors)) return false;
     const color = product.colors.find(c => c.name === colorName);
-    return color ? color.inStock : false;
+    if (!color) return false;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock > 0 : false;
 }
 
 function getStockForColorSize(product, colorName, sizeName) {
@@ -108,8 +110,8 @@ function getStockForColorSize(product, colorName, sizeName) {
                     
                     <!-- Quantity Controls -->
                     <div class="quantity-controls-mobile" data-cart-id="<%= item._id %>">
-                        <% if (!isColorInStock(item.product, item.color)) { %>
-                            <span class="text-[#D4AF37] font-light text-sm italic">Out of Stock</span>
+                    <% if (!isColorInStock(item.product, item.color, item.size)) { %>
+                            <span class="text-[#D4AF37] font-light text-sm italic stock-status" id="stock-mobile-<%= item._id %>">Out of Stock</span>
                         <% } else { %>
                             <div class="quantity-controls-row">
                                 <button class="quantity-btn-mobile decrease-btn" data-cart-id="<%= item._id %>">−</button>
@@ -218,8 +220,8 @@ function getStockForColorSize(product, colorName, sizeName) {
                                             </span>
                                             <% } %>
                                         </div>
-                                        <% if (!isColorInStock(item.product, item.color)) { %>
-                                          <span class="text-[#D4AF37] font-light text-lg italic ml-4">Out of Stock</span>
+                                        <% if (!isColorInStock(item.product, item.color, item.size)) { %>
+                                          <span class="text-[#D4AF37] font-light text-lg italic ml-4 stock-status" id="stock-desktop-<%= item._id %>">Out of Stock</span>
                                         <% } else { %>
                                         <div class="quantity-controls-mobile" data-cart-id="<%= item._id %>">
                                             <div class="quantity-controls-row">

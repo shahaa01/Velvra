@@ -252,6 +252,7 @@ async function showSellerSelectionModal(orderId) {
             
             // Remove duplicates based on seller ID
             const uniqueSellers = validSellers.filter((seller, index, self) => 
+                seller.id && seller.id !== 'null' && seller.id !== null &&
                 index === self.findIndex(s => s.id === seller.id)
             );
             
@@ -364,20 +365,29 @@ function hideLoadingState() {
 
 // Notification system
 function showNotification(message, type = 'success') {
-    const notificationText = document.getElementById('notificationText');
-    const notification = document.getElementById('notification');
+    // Create a toast notification dynamically
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : 
+                   type === 'error' ? 'bg-red-500' : 'bg-blue-500';
     
-    notificationText.textContent = message;
+    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white text-sm font-medium ${bgColor} shadow-lg transition-all duration-300 opacity-0 translate-x-full`;
+    toast.textContent = message;
     
-    // Update notification style based on type
-    notification.className = `fixed bottom-20 lg:bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50 ${
-        type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-    }`;
+    document.body.appendChild(toast);
     
-    notification.style.transform = 'translateY(0)';
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-x-full');
+    });
     
+    // Animate out and remove after 3 seconds
     setTimeout(() => {
-        notification.style.transform = 'translateY(100%)';
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
     }, 3000);
 }
 
@@ -396,6 +406,152 @@ function initOrderActions() {
     // No need to intercept them anymore
 }
 
+// Cancel Order functionality
+async function cancelOrder(orderId) {
+    try {
+        // Show confirmation dialog using SweetAlert
+        const result = await Swal.fire({
+            title: 'Cancel Order?',
+            text: 'Are you sure you want to cancel this order? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Cancel Order',
+            cancelButtonText: 'Keep Order',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        // Show loading state
+        showLoadingState();
+        const cancelBtn = document.getElementById(`cancelBtn-${orderId}`);
+        if (cancelBtn) {
+            cancelBtn.disabled = true;
+            cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Cancelling...';
+        }
+
+        // Send cancel request to backend
+        const response = await fetch(`/dashboard/orders/${orderId}/cancel`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to cancel order');
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Update UI immediately
+            updateOrderStatusInDOM(orderId, 'cancelled');
+            
+            // Show success message
+            await Swal.fire({
+                title: 'Order Cancelled!',
+                text: 'Your order has been successfully cancelled. Thank You!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#059669'
+            });
+            
+            showNotification('Order cancelled successfully', 'success');
+        } else {
+            throw new Error(data.message || 'Failed to cancel order');
+        }
+
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        
+        // Reset button state
+        const cancelBtn = document.getElementById(`cancelBtn-${orderId}`);
+        if (cancelBtn) {
+            cancelBtn.disabled = false;
+            cancelBtn.innerHTML = '<i class="fas fa-times mr-2"></i>Cancel Order';
+        }
+        
+        // Show error message
+        await Swal.fire({
+            title: 'Cancellation Failed',
+            text: error.message || 'Unable to cancel the order. Please try again or contact support.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc2626'
+        });
+        
+        showNotification('Failed to cancel order', 'error');
+    } finally {
+        hideLoadingState();
+    }
+}
+
+// Update order status in DOM without page reload
+function updateOrderStatusInDOM(orderId, newStatus) {
+    try {
+        // Find the order card
+        const orderCards = document.querySelectorAll('.order-card');
+        
+        orderCards.forEach(card => {
+            const detailsLink = card.querySelector(`a[href*="/dashboard/orders/${orderId}"]`);
+            if (detailsLink) {
+                // Update status badge - find it more specifically
+                const statusBadges = card.querySelectorAll('span');
+                let statusBadge = null;
+                
+                // Look for the status badge by checking for typical status text patterns
+                statusBadges.forEach(span => {
+                    const text = span.textContent.toLowerCase();
+                    if (text.includes('pending') || text.includes('processing') || 
+                        text.includes('shipped') || text.includes('delivered') || 
+                        text.includes('cancelled') || text.includes('returned')) {
+                        statusBadge = span;
+                    }
+                });
+                
+                if (statusBadge) {
+                    statusBadge.className = 'mt-2 sm:mt-0 inline-block px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700';
+                    statusBadge.textContent = 'Cancelled';
+                }
+                
+                // Hide cancel button
+                const cancelBtn = card.querySelector(`#cancelBtn-${orderId}`);
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none';
+                }
+                
+                // Hide track order button if exists
+                const trackBtn = card.querySelector(`button[onclick*="showTrackingModal('${orderId}')"]`);
+                if (trackBtn) {
+                    trackBtn.style.display = 'none';
+                }
+                
+                // Add cancelled message
+                const actionsDiv = card.querySelector('.flex.flex-wrap.gap-2');
+                if (actionsDiv) {
+                    const existingCancelledMsg = actionsDiv.querySelector('.cancelled-message');
+                    if (!existingCancelledMsg) {
+                        const cancelledMsg = document.createElement('span');
+                        cancelledMsg.className = 'cancelled-message px-4 py-2 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200';
+                        cancelledMsg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Order Cancelled';
+                        actionsDiv.appendChild(cancelledMsg);
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error updating DOM:', error);
+        // Don't throw the error, just log it to prevent breaking the flow
+    }
+}
+
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
@@ -405,4 +561,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Set initial filter
     updateFilterUI('all');
-}); 
+});

@@ -103,9 +103,14 @@
         ];
 
         // State management
-        let currentFilter = 'all';
-        let selectedMessageId = null;
+        let conversations = [];
+        let currentConversation = null;
+        let currentMessages = [];
+        let socket = null;
         let isLoading = false;
+        let selectedConversationId = null;
+        let currentFilter = 'all';
+        let sellerId = null;
 
         // DOM elements
         const messagesContainer = document.getElementById('messagesContainer');
@@ -121,46 +126,73 @@
         const sidebar = document.getElementById('sidebar');
         const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
 
-        // Mobile menu functionality
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            mobileMenuOverlay.classList.toggle('hidden');
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeSocket();
+            loadConversations();
+            setupUIEvents();
+            fetch('/seller-dashboard/profile').then(res => res.json()).then(data => { sellerId = data.sellerId; });
         });
 
-        mobileMenuOverlay.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            mobileMenuOverlay.classList.add('hidden');
-        });
-
-        // Filter functionality
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                currentFilter = tab.dataset.filter;
-                updateFilterTabs();
-                renderMessages();
-            });
-        });
-
-        function updateFilterTabs() {
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                if (tab.dataset.filter === currentFilter) {
-                    tab.classList.add('bg-gold', 'text-charcoal');
-                    tab.classList.remove('text-gray-700', 'hover:bg-beige');
+        function initializeSocket() {
+            socket = io();
+            // Listen for real-time messages
+            socket.on('receiveMessage', (message) => {
+                console.log('🔔 Seller received message via socket:', message);
+                console.log('Current conversation ID:', currentConversation?._id);
+                console.log('Message conversation ID:', message.conversationId);
+                
+                // Always refresh the conversation list in real time
+                loadConversations();
+                // If the message is for the currently open conversation, update the thread
+                if (currentConversation && message.conversationId === currentConversation._id) {
+                    console.log('✅ Adding message to current seller conversation UI');
+                    // Add all messages to show the full conversation
+                    currentMessages.push(message);
+                    renderThreadMessages();
+                    scrollToBottom();
                 } else {
-                    tab.classList.remove('bg-gold', 'text-charcoal');
-                    tab.classList.add('text-gray-700', 'hover:bg-beige');
+                    console.log('⚠️ Message not for current seller conversation or no conversation selected');
+                    // Show a notification for new messages in other conversations
+                    showNotification('New message received');
                 }
             });
         }
 
-        // Render messages list
-        function renderMessages() {
-            const filteredMessages = messagesData.filter(msg => {
-                if (currentFilter === 'all') return true;
-                return msg.status === currentFilter;
-            });
+        function loadConversations() {
+            isLoading = true;
+            showLoadingState();
+            fetch('/seller-dashboard/api/messages')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        conversations = data.conversations;
+                        renderMessagesList();
+                    } else {
+                        conversations = [];
+                        renderMessagesList();
+                    }
+                })
+                .catch(() => {
+                    conversations = [];
+                    renderMessagesList();
+                })
+                .finally(() => {
+                    isLoading = false;
+                });
+        }
 
-            if (filteredMessages.length === 0) {
+        function showLoadingState() {
+            loadingState.classList.remove('hidden');
+            messagesList.classList.add('hidden');
+            emptyState.classList.add('hidden');
+        }
+
+        function renderMessagesList() {
+            loadingState.classList.add('hidden');
+            let filtered = conversations;
+
+            if (!filtered || !filtered.length) {
                 messagesList.classList.add('hidden');
                 emptyState.classList.remove('hidden');
                 return;
@@ -168,274 +200,239 @@
 
             messagesList.classList.remove('hidden');
             emptyState.classList.add('hidden');
-
-            messagesList.innerHTML = filteredMessages.map(msg => `
-                <div class="message-row bg-cream rounded-lg p-4 border border-beige cursor-pointer hover:border-gold transition-all ${msg.unread ? 'border-l-4 border-l-gold' : ''}" data-message-id="${msg.id}">
-                    <div class="flex items-start justify-between mb-2">
-                        <h4 class="font-medium text-charcoal ${msg.unread ? 'font-semibold' : ''}">${msg.buyer}</h4>
-                        <span class="text-xs text-gray-700">${formatTime(msg.date)}</span>
+            messagesList.innerHTML = filtered.map(conv => {
+                // Safeguard against null user
+                const user = conv.user || {}; 
+                const avatar = user.firstName ?
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + (user.lastName || ''))}&background=a8a196&color=fff` :
+                    'https://ui-avatars.com/api/?name=User&background=a8a196&color=fff';
+                const lastMessage = conv.lastMessage || 'No messages yet';
+                const timestamp = formatTime(conv.updatedAt);
+                const isUnread = conv.unreadCount > 0;
+                return `
+                    <div class="message-row bg-cream rounded-lg p-4 border border-beige cursor-pointer hover:border-gold transition-all ${isUnread ? 'border-l-4 border-l-gold' : ''}" data-conversation-id="${conv._id}">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="font-medium text-charcoal ${isUnread ? 'font-semibold' : ''}">${user.firstName} ${user.lastName || ''}</h4>
+                            <span class="text-xs text-gray-700">${timestamp}</span>
+                        </div>
+                        <p class="text-sm text-charcoal font-medium mb-1">${lastMessage}</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="status-badge text-xs px-2 py-1 rounded-full font-medium bg-beige text-charcoal">Chat</span>
+                            ${conv.order ? `<span class="text-xs text-gray-700">Order: ${conv.order.orderNumber || conv.order._id}</span>` : ''}
+                        </div>
                     </div>
-                    <p class="text-sm text-charcoal font-medium mb-1">${msg.subject}</p>
-                    <p class="text-sm text-gray-700 line-clamp-2">${msg.preview}</p>
-                    <div class="flex items-center justify-between mt-3">
-                        <span class="status-badge text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(msg.status)}">
-                            ${msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}
-                        </span>
-                        ${msg.isComplaint ? '<i class="fas fa-exclamation-triangle text-yellow-600"></i>' : ''}
-                    </div>
-                </div>
-            `).join('');
-
+                `;
+            }).join('');
             // Add click handlers
             document.querySelectorAll('.message-row').forEach(row => {
                 row.addEventListener('click', () => {
-                    const messageId = parseInt(row.dataset.messageId);
-                    selectMessage(messageId);
+                    const conversationId = row.dataset.conversationId;
+                    selectConversation(conversationId);
                 });
             });
         }
 
-        // Select and display message thread
-        function selectMessage(messageId) {
-            selectedMessageId = messageId;
-            const message = messagesData.find(m => m.id === messageId);
-            
-            if (!message) return;
-
+        function selectConversation(conversationId) {
+            selectedConversationId = conversationId;
+            currentConversation = conversations.find(c => c._id === conversationId);
+            if (!currentConversation) return;
+            // Join socket room
+            socket.emit('joinConversation', conversationId);
             // Mark as read
-            message.unread = false;
-            renderMessages();
-
-            // Show thread content
+            fetch(`/seller-dashboard/api/messages/${conversationId}/read`, { method: 'POST' });
+            // Show thread
             threadDefaultState.classList.add('hidden');
             threadContent.classList.remove('hidden');
-
+            // Load messages
+            loadMessages(conversationId);
             // Update thread header
-            document.getElementById('threadTitle').textContent = message.buyer;
-            document.getElementById('threadSubject').textContent = message.subject;
-            document.getElementById('threadOrderInfo').textContent = message.orderId ? `Order: ${message.orderId} - ${message.product}` : 'General Inquiry';
-            
-            const statusEl = document.getElementById('threadStatus');
-            statusEl.textContent = message.status.charAt(0).toUpperCase() + message.status.slice(1);
-            statusEl.className = `text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(message.status)}`;
-
-            // Update resolve button
-            resolveBtn.style.display = message.status === 'resolved' ? 'none' : 'block';
-
-            // Render messages
-            renderThreadMessages(message);
+            const user = currentConversation.user;
+            document.getElementById('threadTitle').textContent = user.firstName + ' ' + (user.lastName || '');
+            document.getElementById('threadSubject').textContent = currentConversation.lastMessage || '';
+            document.getElementById('threadOrderInfo').textContent = currentConversation.order ? `Order: ${currentConversation.order.orderNumber || currentConversation.order._id}` : 'General Inquiry';
+            document.getElementById('threadStatus').textContent = 'Active';
+            document.getElementById('threadStatus').className = 'text-xs px-2 py-1 rounded-full font-medium bg-gold text-charcoal';
+            resolveBtn.style.display = 'block';
         }
 
-        // Render thread messages
-        function renderThreadMessages(message) {
-            const container = document.getElementById('messagesScrollContainer');
-            
-            container.innerHTML = message.messages.map(msg => `
-                <div class="flex ${msg.sender === 'seller' ? 'justify-end' : 'justify-start'} fade-in">
-                    <div class="max-w-lg">
-                        <div class="flex items-end gap-2 ${msg.sender === 'seller' ? 'flex-row-reverse' : ''}">
-                            <img src="https://ui-avatars.com/api/?name=${msg.sender === 'seller' ? 'Fashion+Hub' : message.buyer}&background=${msg.sender === 'seller' ? 'd4af37' : 'a8a196'}&color=${msg.sender === 'seller' ? '1a1a1a' : 'ffffff'}" 
-                                alt="${msg.sender}" 
-                                class="w-8 h-8 rounded-full">
-                            <div class="${msg.sender === 'seller' ? 'bg-gold text-charcoal' : 'bg-white'} px-4 py-3 rounded-lg ${msg.sender === 'seller' ? 'rounded-br-none' : 'rounded-bl-none'} shadow-sm">
-                                <p class="text-sm">${msg.content}</p>
-                                ${msg.attachments ? `
-                                    <div class="mt-2 space-y-1">
-                                        ${msg.attachments.map(att => `
-                                            <div class="flex items-center gap-2 text-xs ${msg.sender === 'seller' ? 'text-charcoal/70' : 'text-gray-700'}">
-                                                <i class="fas fa-paperclip"></i>
-                                                <span>${att}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-700 mt-1 ${msg.sender === 'seller' ? 'text-right' : ''}">${formatTime(msg.timestamp)}</p>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Scroll to bottom
-            container.scrollTop = container.scrollHeight;
+        function loadMessages(conversationId) {
+            messagesScrollContainer().innerHTML = '';
+            fetch(`/seller-dashboard/api/messages/${conversationId}/messages`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        currentMessages = data.messages;
+                        renderThreadMessages();
+                        scrollToBottom();
+                    } else {
+                        currentMessages = [];
+                        renderThreadMessages();
+                    }
+                })
+                .catch(() => {
+                    currentMessages = [];
+                    renderThreadMessages();
+                });
         }
 
-        // Send reply functionality
-        sendReplyBtn.addEventListener('click', sendReply);
-        replyTextarea.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendReply();
+        function renderThreadMessages() {
+            const container = messagesScrollContainer();
+            if (!currentMessages.length) {
+                container.innerHTML = `<div class="text-center text-gray-700 py-8">No messages yet. Start the conversation!</div>`;
+                return;
             }
-        });
+            container.innerHTML = currentMessages.map(msg => {
+                const messageSenderId = (typeof msg.sender === 'object' && msg.sender !== null) 
+                    ? msg.sender._id.toString() 
+                    : msg.sender.toString();
+
+                const currentSellerId = sellerId?.toString();
+                const isOwn = msg.senderModel === 'Seller' && messageSenderId === currentSellerId;
+                const user = currentConversation.user || {};
+                const avatar = isOwn
+                    ? `https://ui-avatars.com/api/?name=Seller&background=d4af37&color=1a1a1a`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + (user.lastName || ''))}&background=a8a196&color=fff`;
+                const timestamp = formatTime(msg.createdAt);
+                return `
+                    <div class="flex ${isOwn ? 'justify-end' : 'justify-start'} fade-in">
+                        <div class="max-w-lg">
+                            <div class="flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
+                                <img src="${avatar}" alt="${isOwn ? 'Seller' : (user.firstName || 'User')}" class="w-8 h-8 rounded-full">
+                                <div class="${isOwn ? 'bg-gold text-charcoal' : 'bg-white'} px-4 py-3 rounded-lg ${isOwn ? 'rounded-br-none' : 'rounded-bl-none'} shadow-sm">
+                                    <p class="text-sm">${msg.content}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-700 mt-1 ${isOwn ? 'text-right' : ''}">${timestamp}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function messagesScrollContainer() {
+            return document.getElementById('messagesScrollContainer');
+        }
 
         function sendReply() {
             const content = replyTextarea.value.trim();
-            if (!content || !selectedMessageId) return;
-
-            const message = messagesData.find(m => m.id === selectedMessageId);
-            if (!message) return;
-
-            // Disable send button and show loading
+            if (!content || !selectedConversationId) return;
             sendReplyBtn.disabled = true;
             sendReplyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
-
-            // Simulate sending
-            setTimeout(() => {
-                // Add reply to messages
-                message.messages.push({
-                    sender: 'seller',
-                    content: content,
-                    timestamp: new Date()
+            fetch(`/seller-dashboard/api/messages/${selectedConversationId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Optimistically add to UI
+                        currentMessages.push(data.message);
+                        renderThreadMessages();
+                        scrollToBottom();
+                        // Emit to socket for real-time delivery to user
+                        console.log('📤 Seller emitting message via socket:', {
+                            conversationId: selectedConversationId,
+                            sender: sellerId,
+                            senderModel: 'Seller',
+                            content: data.message.content
+                        });
+                        socket.emit('sendMessage', {
+                            conversationId: selectedConversationId,
+                            message: {
+                                conversationId: selectedConversationId,
+                                sender: sellerId,
+                                senderModel: 'Seller',
+                                content: data.message.content,
+                                createdAt: data.message.createdAt,
+                                _id: data.message._id
+                            }
+                        });
+                        replyTextarea.value = '';
+                        // Refresh conversations list to update last message
+                        loadConversations();
+                    } else {
+                        showNotification('Failed to send message');
+                    }
+                })
+                .catch(() => {
+                    showNotification('Failed to send message');
+                })
+                .finally(() => {
+                    sendReplyBtn.disabled = false;
+                    sendReplyBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Reply';
                 });
-
-                // Update status
-                if (message.status === 'open') {
-                    message.status = 'replied';
-                }
-
-                // Clear textarea
-                replyTextarea.value = '';
-
-                // Re-render
-                renderThreadMessages(message);
-                renderMessages();
-
-                // Reset button
-                sendReplyBtn.disabled = false;
-                sendReplyBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Reply';
-
-                // Show success indicator
-                showNotification('Reply sent successfully!');
-            }, 1000);
         }
 
-        // Resolve functionality
-        resolveBtn.addEventListener('click', () => {
-            if (!selectedMessageId) return;
+        function scrollToBottom() {
+            const container = messagesScrollContainer();
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 100);
+        }
 
-            const message = messagesData.find(m => m.id === selectedMessageId);
-            if (!message) return;
-
-            // Update status
-            message.status = 'resolved';
-            
-            // Add system message
-            message.messages.push({
-                sender: 'system',
-                content: 'This conversation has been marked as resolved.',
-                timestamp: new Date()
-            });
-
-            // Re-render
-            renderThreadMessages(message);
-            renderMessages();
-            resolveBtn.style.display = 'none';
-
-            showNotification('Conversation marked as resolved');
-        });
-
-        // Mark all as read
-        document.getElementById('markAllReadBtn').addEventListener('click', () => {
-            messagesData.forEach(msg => msg.unread = false);
-            renderMessages();
-            showNotification('All messages marked as read');
-        });
-
-        // Utility functions
-        function formatTime(date) {
+        function formatTime(dateString) {
+            const date = new Date(dateString);
             const now = new Date();
-            const diff = now - date;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-
-            if (minutes < 60) return `${minutes}m ago`;
-            if (hours < 24) return `${hours}h ago`;
-            if (days < 7) return `${days}d ago`;
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
             return date.toLocaleDateString();
         }
 
-        function getStatusColor(status) {
-            switch (status) {
-                case 'open':
-                    return 'bg-yellow-100 text-yellow-800';
-                case 'replied':
-                    return 'bg-blue-100 text-blue-800';
-                case 'resolved':
-                    return 'bg-green-100 text-green-800';
-                default:
-                    return 'bg-gray-100 text-gray-800';
-            }
-        }
-
         function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'fixed bottom-4 right-4 bg-charcoal text-pearl px-6 py-3 rounded-lg shadow-lg z-50 fade-in';
-            notification.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-check-circle text-green-400"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            // Simple notification (replace with your own if needed)
+            alert(message);
         }
 
-        // Simulate loading state
-        function simulateLoading() {
-            loadingState.classList.remove('hidden');
-            messagesList.classList.add('hidden');
-            
-            setTimeout(() => {
-                loadingState.classList.add('hidden');
-                renderMessages();
-            }, 1000);
-        }
-
-        // Initialize
-        renderMessages();
-
-        // Simulate new message arrival
-        setTimeout(() => {
-            const newMessage = {
-                id: 6,
-                buyer: "Alex Thompson",
-                subject: "Bulk order inquiry",
-                preview: "Hi, I'm interested in placing a bulk order for my boutique...",
-                status: "open",
-                date: new Date(),
-                orderId: null,
-                product: null,
-                unread: true,
-                messages: [
-                    {
-                        sender: "buyer",
-                        content: "Hi, I'm interested in placing a bulk order for my boutique. Do you offer wholesale prices?",
-                        timestamp: new Date()
-                    }
-                ]
-            };
-            
-            messagesData.unshift(newMessage);
-            renderMessages();
-            
-            // Update notification badge
-            const badge = document.querySelector('.bg-red-500');
-            if (badge) {
-                const count = messagesData.filter(m => m.unread).length;
-                badge.textContent = count;
+        function setupUIEvents() {
+            // Mobile menu functionality
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    mobileMenuOverlay.classList.toggle('hidden');
+                });
             }
-            
-            showNotification('New message received!');
-        }, 5000);
-
-        // Error simulation
-        window.addEventListener('error', (e) => {
-            console.error('Error occurred:', e);
-            showNotification('An error occurred. Please try again.');
-        });
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                    mobileMenuOverlay.classList.add('hidden');
+                });
+            }
+            // Filter functionality (if you want to implement status filtering)
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    currentFilter = tab.dataset.filter;
+                    renderMessagesList();
+                });
+            });
+            // Send reply
+            if (sendReplyBtn) {
+                sendReplyBtn.addEventListener('click', sendReply);
+            }
+            if (replyTextarea) {
+                replyTextarea.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendReply();
+                    }
+                });
+            }
+            // Mark all as read
+            const markAllReadBtn = document.getElementById('markAllReadBtn');
+            if (markAllReadBtn) {
+                markAllReadBtn.addEventListener('click', () => {
+                    Promise.all(conversations.map(conv =>
+                        fetch(`/seller-dashboard/api/messages/${conv._id}/read`, { method: 'POST' })
+                    )).then(() => {
+                        loadConversations();
+                        showNotification('All messages marked as read');
+                    });
+                });
+            }
+        }

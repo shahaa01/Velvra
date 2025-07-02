@@ -156,28 +156,25 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', async (data) => {
         // data: { conversationId, message }
         try {
-            // Save message to DB
-            const msgDoc = await Message.create({
+            console.log('📡 Socket received sendMessage event:', {
                 conversationId: data.conversationId,
                 sender: data.message.sender,
                 senderModel: data.message.senderModel,
-                recipient: data.message.recipient,
-                recipientModel: data.message.recipientModel,
-                order: data.message.order,
-                content: data.message.content,
-                attachments: data.message.attachments || [],
+                content: data.message.content?.substring(0, 50) + '...'
             });
             
-            // Update conversation lastMessage
-            await Conversation.findByIdAndUpdate(data.conversationId, { 
-                lastMessage: data.message.content,
-                updatedAt: new Date()
+            // Don't create duplicate message - it's already saved via REST API
+            // Just emit the message to other participants in the room
+            socket.to(data.conversationId).emit('receiveMessage', {
+                ...data.message,
+                sender: data.message.sender.toString(),
+                recipient: data.message.recipient?.toString(),
+                conversationId: data.conversationId
             });
             
-            // Emit to room
-            io.to(data.conversationId).emit('receiveMessage', msgDoc);
+            console.log(`📢 Message forwarded to conversation room ${data.conversationId}, excluding sender ${socket.id}`);
         } catch (err) {
-            console.error('Socket message save error:', err);
+            console.error('Socket message forward error:', err);
         }
     });
     

@@ -15,6 +15,10 @@ class VelvraCart {
         this.setupEventListeners();
         this.updateUI();
         this.updateStockValidation();
+        // Initialize stock status display for all items
+        this.cart.items.forEach(item => {
+            this.updateStockStatusDisplay(item._id);
+        });
     }
 
     setupEventListeners() {
@@ -363,6 +367,100 @@ class VelvraCart {
         colorDisplays.forEach(display => {
             display.textContent = newColor;
         });
+        
+        // Update the cart item data
+        const item = this.getCartItem(cartItemId);
+        if (item) {
+            item.color = newColor;
+        }
+        
+    // Update stock status display
+        this.updateStockStatusDisplay(cartItemId);
+    }
+    
+    // Update stock status display for specific item
+    updateStockStatusDisplay(cartItemId) {
+        const item = this.getCartItem(cartItemId);
+        if (!item) return;
+        
+        const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
+        const isInStock = currentStock > 0;
+        
+        // Update mobile stock status
+        const mobileStockEl = document.getElementById(`stock-mobile-${cartItemId}`);
+        const mobileQuantityControls = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"] .quantity-controls-row`);
+        
+        if (mobileStockEl || mobileQuantityControls) {
+            if (isInStock) {
+                // Hide existing out of stock message and show quantity controls
+                if (mobileStockEl) {
+                    mobileStockEl.style.display = 'none';
+                }
+                if (mobileQuantityControls) {
+                    mobileQuantityControls.style.display = 'flex';
+                }
+            } else {
+                // Show out of stock message and hide quantity controls
+                if (mobileStockEl) {
+                    mobileStockEl.style.display = 'inline';
+                    mobileStockEl.textContent = 'Out of Stock';
+                } else {
+                    // Create new out of stock element if it doesn't exist
+                    const quantityContainer = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"]`);
+                    if (quantityContainer) {
+                        const outOfStockEl = document.createElement('span');
+                        outOfStockEl.className = 'text-[#D4AF37] font-light text-sm italic stock-status';
+                        outOfStockEl.id = `stock-mobile-${cartItemId}`;
+                        outOfStockEl.textContent = 'Out of Stock';
+                        quantityContainer.appendChild(outOfStockEl);
+                    }
+                }
+                if (mobileQuantityControls) {
+                    mobileQuantityControls.style.display = 'none';
+                }
+            }
+        }
+        
+        // Update desktop stock status
+        const desktopStockEl = document.getElementById(`stock-desktop-${cartItemId}`);
+        const desktopQuantityControls = document.querySelector(`[data-cart-id="${cartItemId}"] .quantity-controls-mobile .quantity-controls-row`);
+        
+        if (desktopStockEl || desktopQuantityControls) {
+            if (isInStock) {
+                // Hide existing out of stock message and show quantity controls
+                if (desktopStockEl) {
+                    desktopStockEl.style.display = 'none';
+                }
+                if (desktopQuantityControls) {
+                    desktopQuantityControls.style.display = 'flex';
+                }
+            } else {
+                // Show out of stock message and hide quantity controls
+                if (desktopStockEl) {
+                    desktopStockEl.style.display = 'inline';
+                    desktopStockEl.textContent = 'Out of Stock';
+                } else {
+                    // Create new out of stock element if it doesn't exist for desktop
+                    const desktopItem = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"]`);
+                    if (desktopItem) {
+                        const priceSection = desktopItem.querySelector('.flex.items-center.justify-between');
+                        if (priceSection) {
+                            const outOfStockEl = document.createElement('span');
+                            outOfStockEl.className = 'text-[#D4AF37] font-light text-lg italic ml-4 stock-status';
+                            outOfStockEl.id = `stock-desktop-${cartItemId}`;
+                            outOfStockEl.textContent = 'Out of Stock';
+                            priceSection.appendChild(outOfStockEl);
+                        }
+                    }
+                }
+                if (desktopQuantityControls) {
+                    desktopQuantityControls.style.display = 'none';
+                }
+            }
+        }
+        
+        // Also update the item's stock validation
+        this.updateItemStockValidation(cartItemId);
     }
 
     async handleRemoveItem(cartItemId) {

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Utility Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .run-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .run-button:hover {
+            background-color: #0056b3;
+        }
+        .run-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .summary {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .summary.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .summary.failure {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Utility Function Tests</h1>
+        <p>This page tests the <code>getStockForColorSize</code> function with various edge cases including:</p>
+        <ul>
+            <li>Case-insensitive color and size matching</li>
+            <li>Colors and sizes with spaces and special characters</li>
+            <li>Invalid input handling</li>
+            <li>Edge cases with stock values</li>
+            <li>Unicode character support</li>
+        </ul>
+        
+        <button id="runTests" class="run-button">Run Tests</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        import { getStockForColorSize } from './stock.js';
+        
+        // Mock product data for testing
+        const mockProduct = {
+            colors: [
+                {
+                    name: 'Red',
+                    sizes: [
+                        { size: 'S', stock: 5 },
+                        { size: 'M', stock: 10 },
+                        { size: 'L', stock: 0 }
+                    ]
+                },
+                {
+                    name: 'Blue',
+                    sizes: [
+                        { size: 'XS', stock: 3 },
+                        { size: 'XXL', stock: 7 }
+                    ]
+                },
+                {
+                    name: 'Navy Blue',
+                    sizes: [
+                        { size: 'M', stock: 15 }
+                    ]
+                },
+                {
+                    name: ' Forest Green ',
+                    sizes: [
+                        { size: ' L ', stock: 8 }
+                    ]
+                },
+                {
+                    name: 'Off-White',
+                    sizes: [
+                        { size: 'S/M', stock: 12 }
+                    ]
+                },
+                {
+                    name: 'Café Noir',
+                    sizes: [{ size: 'M', stock: 5 }]
+                }
+            ]
+        };
+
+        // Test suite definitions
+        const testSuites = [
+            {
+                name: 'Basic Functionality',
+                tests: [
+                    {
+                        name: 'Valid color and size',
+                        test: () => getStockForColorSize(mockProduct, 'Red', 'M') === 10
+                    },
+                    {
+                        name: 'Out of stock item',
+                        test: () => getStockForColorSize(mockProduct, 'Red', 'L') === 0
+                    },
+                    {
+                        name: 'Non-existent color',
+                        test: () => getStockForColorSize(mockProduct, 'Purple', 'M') === 0
+                    },
+                    {
+                        name: 'Non-existent size',
+                        test: () => getStockForColorSize(mockProduct, 'Red', 'XXL') === 0
+                    }
+                ]
+            },
+            {
+                name: 'Color Name Edge Cases',
+                tests: [
+                    {
+                        name: 'Case-insensitive color matching',
+                        test: () => getStockForColorSize(mockProduct, 'red', 'M') === 10 &&
+                                  getStockForColorSize(mockProduct, 'RED', 'M') === 10
+                    },
+                    {
+                        name: 'Colors with spaces',
+                        test: () => getStockForColorSize(mockProduct, 'Navy Blue', 'M') === 15 &&
+                                  getStockForColorSize(mockProduct, 'navy blue', 'M') === 15
+                    },
+                    {
+                        name: 'Colors with leading/trailing spaces',
+                        test: () => getStockForColorSize(mockProduct, 'Forest Green', 'L') === 8 &&
+                                  getStockForColorSize(mockProduct, ' forest green ', ' l ') === 8
+                    },
+                    {
+                        name: 'Colors with special characters',
+                        test: () => getStockForColorSize(mockProduct, 'Off-White', 'S/M') === 12 &&
+                                  getStockForColorSize(mockProduct, 'off-white', 's/m') === 12
+                    },
+                    {
+                        name: 'Unicode characters',
+                        test: () => getStockForColorSize(mockProduct, 'Café Noir', 'M') === 5
+                    }
+                ]
+            },
+            {
+                name: 'Size Name Edge Cases',
+                tests: [
+                    {
+                        name: 'Case-insensitive size matching',
+                        test: () => getStockForColorSize(mockProduct, 'Red', 's') === 5 &&
+                                  getStockForColorSize(mockProduct, 'Blue', 'xs') === 3
+                    },
+                    {
+                        name: 'Sizes with spaces',
+                        test: () => getStockForColorSize(mockProduct, 'Forest Green', ' L ') === 8
+                    },
+                    {
+                        name: 'Complex size names',
+                        test: () => getStockForColorSize(mockProduct, 'Off-White', 'S/M') === 12 &&
+                                  getStockForColorSize(mockProduct, 'Blue', 'XXL') === 7
+                    }
+                ]
+            },
+            {
+                name: 'Input Validation',
+                tests: [
+                    {
+                        name: 'Null/undefined product',
+                        test: () => getStockForColorSize(null, 'Red', 'M') === 0 &&
+                                  getStockForColorSize(undefined, 'Red', 'M') === 0
+                    },
+                    {
+                        name: 'Product without colors',
+                        test: () => getStockForColorSize({}, 'Red', 'M') === 0 &&
+                                  getStockForColorSize({ colors: null }, 'Red', 'M') === 0
+                    },
+                    {
+                        name: 'Empty color/size names',
+                        test: () => getStockForColorSize(mockProduct, '', 'M') === 0 &&
+                                  getStockForColorSize(mockProduct, 'Red', '') === 0 &&
+                                  getStockForColorSize(mockProduct, null, 'M') === 0 &&
+                                  getStockForColorSize(mockProduct, 'Red', null) === 0
+                    }
+                ]
+            },
+            {
+                name: 'Stock Value Edge Cases',
+                tests: [
+                    {
+                        name: 'Invalid stock values',
+                        test: () => {
+                            const productWithInvalidStock = {
+                                colors: [{
+                                    name: 'Test',
+                                    sizes: [
+                                        { size: 'S', stock: 'invalid' },
+                                        { size: 'M', stock: null },
+                                        { size: 'L', stock: undefined },
+                                        { size: 'XL', stock: -5 }
+                                    ]
+                                }]
+                            };
+                            return getStockForColorSize(productWithInvalidStock, 'Test', 'S') === 0 &&
+                                   getStockForColorSize(productWithInvalidStock, 'Test', 'M') === 0 &&
+                                   getStockForColorSize(productWithInvalidStock, 'Test', 'XL') === 0;
+                        }
+                    },
+                    {
+                        name: 'String stock values',
+                        test: () => {
+                            const productWithStringStock = {
+                                colors: [{
+                                    name: 'Test',
+                                    sizes: [
+                                        { size: 'S', stock: '15' },
+                                        { size: 'M', stock: '0' }
+                                    ]
+                                }]
+                            };
+                            return getStockForColorSize(productWithStringStock, 'Test', 'S') === 15 &&
+                                   getStockForColorSize(productWithStringStock, 'Test', 'M') === 0;
+                        }
+                    }
+                ]
+            }
+        ];
+
+        function runAllTests() {
+            const resultsDiv = document.getElementById('results');
+            const runButton = document.getElementById('runTests');
+            
+            runButton.disabled = true;
+            runButton.textContent = 'Running Tests...';
+            resultsDiv.innerHTML = '';
+
+            let totalTests = 0;
+            let passedTests = 0;
+            let allResults = [];
+
+            testSuites.forEach(suite => {
+                const suiteDiv = document.createElement('div');
+                suiteDiv.className = 'test-section';
+                suiteDiv.innerHTML = `<h3>${suite.name}</h3>`;
+                
+                suite.tests.forEach(test => {
+                    totalTests++;
+                    const testDiv = document.createElement('div');
+                    testDiv.className = 'test-result';
+                    
+                    try {
+                        const result = test.test();
+                        if (result) {
+                            passedTests++;
+                            testDiv.className += ' test-pass';
+                            testDiv.textContent = `✓ ${test.name}`;
+                        } else {
+                            testDiv.className += ' test-fail';
+                            testDiv.textContent = `✗ ${test.name} - Test returned false`;
+                        }
+                    } catch (error) {
+                        testDiv.className += ' test-fail';
+                        testDiv.textContent = `✗ ${test.name} - Error: ${error.message}`;
+                    }
+                    
+                    suiteDiv.appendChild(testDiv);
+                });
+                
+                resultsDiv.appendChild(suiteDiv);
+            });
+
+            // Add summary
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = `summary ${passedTests === totalTests ? 'success' : 'failure'}`;
+            summaryDiv.textContent = `Tests completed: ${passedTests}/${totalTests} passed`;
+            
+            if (passedTests === totalTests) {
+                summaryDiv.textContent += ' 🎉';
+            }
+            
+            resultsDiv.insertBefore(summaryDiv, resultsDiv.firstChild);
+
+            runButton.disabled = false;
+            runButton.textContent = 'Run Tests Again';
+        }
+
+        document.getElementById('runTests').addEventListener('click', runAllTests);
+    </script>
+</body>
+</html>
