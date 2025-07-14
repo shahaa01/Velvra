@@ -400,10 +400,15 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     <% if(simProduct.salePercentage) { %>
                         <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= simProduct.salePercentage %>% Off</div>
                     <% } %>
-                    <figure class="aspect-[4/5] relative overflow-hidden">
-                        <a href="/product/<%= simProduct._id %>">
-                            <img src="<%= simProduct.images[0] %>" alt="<%= simProduct.name %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                    <figure class="aspect-[4/5] relative overflow-hidden product-image-container">
+                        <a href="/product/<%= simProduct._id %>"> 
+                            <% for(let j = 0; j < simProduct.images.length; j++) { %>
+                                <img src="<%= simProduct.images[j] %>" alt="<%= simProduct.name %>" class="product-image <%= j === 0 ? 'active' : '' %> w-full h-full object-cover transition-transform duration-700" data-index="<%= j %>">
+                            <% } %>
                         </a>
+                        <% if(simProduct.images.length > 1) { %>
+                            <div class="image-counter absolute bottom-2 right-2 bg-white/80 text-xs rounded-full px-2 py-0.5 shadow-sm"><span class="current-image">1</span>/<%= simProduct.images.length %></div>
+                        <% } %>
                     </figure>
 
                     <div class="p-6">

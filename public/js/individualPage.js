@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         quantityInput.value = 0;
     }
     updateQuantityUI();
+
+    // === Related Products Image Carousel ===
+    initRelatedProductsCarousel();
 });
 
 function initializeEventListeners() {
@@ -598,6 +601,36 @@ function showQuantityError(msg) {
     const errDiv = document.getElementById('quantityError');
     errDiv.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1rem;">${msg}</span>`;
     setTimeout(() => { errDiv.innerHTML = ''; }, 2500);
+}
+
+// === Related Products Image Carousel ===
+function initRelatedProductsCarousel() {
+    const relatedProducts = document.getElementById('relatedProducts');
+    if (!relatedProducts) return;
+    const cards = relatedProducts.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        const images = card.querySelectorAll('.product-image');
+        const counter = card.querySelector('.image-counter .current-image');
+        if (images.length > 1) {
+            let currentIndex = 0;
+            let interval = null;
+            card.addEventListener('mouseenter', () => {
+                interval = setInterval(() => {
+                    images[currentIndex].classList.remove('active');
+                    currentIndex = (currentIndex + 1) % images.length;
+                    images[currentIndex].classList.add('active');
+                    if (counter) counter.textContent = (currentIndex + 1);
+                }, 2000);
+            });
+            card.addEventListener('mouseleave', () => {
+                clearInterval(interval);
+                images.forEach(img => img.classList.remove('active'));
+                images[0].classList.add('active');
+                currentIndex = 0;
+                if (counter) counter.textContent = '1';
+            });
+        }
+    });
 }
 
 // ... rest of the existing code (InfiniteHorizontalScroll class, etc.) ...
