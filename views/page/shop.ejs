@@ -483,73 +483,49 @@
         <div class="product-grid" id="productGrid">
             <!-- Product Card  -->
             <% for(let product of products) { %>
-            <article class="product-card">
-                <button class="wishlist-btn">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <% if(product.salePercentage && product.salePercentage > 0) { %>
-                    <!-- Sale badge removed: bottom right badge deleted -->
+            <article class="product-card group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative flex flex-col">
+              <button class="wishlist-btn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
+              <figure class="product-image-container aspect-[3/4] w-full overflow-hidden bg-gray-50 flex items-center justify-center">
+                <% if(product.images && product.images.length > 0) { %>
+                  <a href="/product/<%= product._id %>" class="product-link block w-full h-full">
+                    <% for(let i = 0; i < product.images.length; i++) { %>
+                      <img src="<%= product.images[i] %>" alt="<%= product.name %>" class="product-image <%= i === 0 ? 'active' : '' %> w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-index="<%= i %>">
+                    <% } %>
+                  </a>
+                  <% if(product.images.length > 1) { %>
+                    <div class="image-counter absolute bottom-2 right-2 bg-white/80 text-xs rounded-full px-2 py-0.5 shadow-sm">1/<%= product.images.length %></div>
+                  <% } %>
+                <% } else { %>
+                  <div class="flex items-center justify-center w-full h-full text-gray-400 text-sm">No Image Available</div>
                 <% } %>
-                
-                <figure class="product-image-container">
-                    <% if(product.images && product.images.length > 0) { %>
-                        <!-- Image carousel container -->
-                        <a href="/product/<%= product._id %>" class="product-link">
-                            <% for(let i = 0; i < product.images.length; i++) { %>
-                                <img src="<%= product.images[i] %>" 
-                                     alt="<%= product.name %>" 
-                                     class="product-image <%= i === 0 ? 'active' : '' %>"
-                                     data-index="<%= i %>">
-                            <% } %>
-                        </a>
-                        
-                        <!-- Image counter (only show if multiple images) -->
-                        <% if(product.images.length > 1) { %>
-                            <div class="image-counter">
-                                <span class="current-image">1</span>
-                                <span class="separator">/</span>
-                                <span class="total-images"><%= product.images.length %></span>
-                            </div>
-                        <% } %>
-                    <% } else { %>
-                        <!-- Fallback when no images -->
-                        <div style="position: absolute; inset: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
-                            No Image Available
-                        </div>
-                    <% } %>
-                </figure>
-
-                <div class="product-info">
-                    <p class="product-brand"><%= product.brand %></p>
-                    <h3 class="product-name"><%= product.name %></h3>
-                    
-                    <div class="color-options">
-                        <% for(let productColor of product.colors) { %>
-                        <button class="color-option selected" style="background-color: <%= productColor.hex %>" data-color="<%= productColor.name %>"></button>
-                        <% } %>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
-                        <!-- Current or Sale Price -->
-                        <span class="text-xl sm:text-2xl font-normal text-velvra-charcoal">
-                          ₹<%= product.salePrice || product.price %>
-                        </span>
-                      
-                        <% if (product.sale) { %>
-                          <!-- Original Price -->
-                          <span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">
-                            ₹<%= product.price %>
-                          </span>
-                        <% } %>
-                    </div>
-                    <% if (!isProductInStock(product)) { %>
-                      <div class="mt-2 text-center">
-                        <span class="block text-[#D4AF37] font-light text-lg tracking-wide italic">Out of Stock</span>
-                      </div>
-                    <% } %>
+              </figure>
+              <div class="product-info flex-1 flex flex-col px-4 py-3">
+                <p class="product-brand font-light tracking-wide text-sm text-gray-700 mb-1"><%= product.brand %></p>
+                <h3 class="product-name font-normal text-base text-black mb-2 leading-tight line-clamp-2"><%= product.name %></h3>
+                <div class="flex items-end gap-2 mb-2">
+                  <% if (product.sale) { %>
+                    <span class="text-gray-400 line-through text-sm">₹<%= product.price %></span>
+                    <span class="text-black font-medium text-lg">₹<%= product.salePrice %></span>
+                    <span class="ml-2 px-2 py-0.5 bg-red-50 text-red-500 text-xs font-medium rounded-full border border-red-100"><%= product.salePercentage %>% OFF</span>
+                  <% } else { %>
+                    <span class="text-black font-medium text-lg">₹<%= product.price %></span>
+                  <% } %>
                 </div>
+                <div class="color-options flex gap-1 mt-1 mb-1">
+                  <% for(let productColor of product.colors) { %>
+                    <button class="color-option w-4 h-4 rounded-full border border-gray-200 shadow-sm <%= productColor.selected ? 'ring-2 ring-velvra-gold' : '' %>" style="background-color: <%= productColor.hex %>" data-color="<%= productColor.name %>"></button>
+                  <% } %>
+                </div>
+                <% if (!isProductInStock(product)) { %>
+                  <div class="mt-2 text-center">
+                    <span class="block text-[#D4AF37] font-light text-sm tracking-wide italic">Out of Stock</span>
+                  </div>
+                <% } %>
+              </div>
             </article>
             <% } %>
         </div>
