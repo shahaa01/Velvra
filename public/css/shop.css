@@ -1612,7 +1612,7 @@ body {
         position: fixed;
         top: var(--navbar-height);
         left: 0;
-        width: 90%;
+        width: 75%;
         max-width: 400px;
         z-index: 40;
         background: white;
@@ -2823,4 +2823,27 @@ body {
     .product-card {
         transform: scale(0.9) !important;
     }
+}
+
+@media (min-width: 1410px) {
+    .product-grid {
+      grid-template-columns: repeat(4, 1fr); /* 3 columns */
+      gap: 0.1rem;
+    }
+  }
+
+@media (min-width: 1410px) {
+    .product-section {
+        padding: 0.2rem;
+    }
+    .filter-sidebar {
+        width: 280px;
+    }
+}
+
+.text-xl,
+.text-2xl,
+.font-semibold,
+.price-current {
+  font-weight: 400 !important;
 }

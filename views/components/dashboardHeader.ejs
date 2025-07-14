@@ -18,7 +18,25 @@
                     <i class="fas fa-shopping-cart text-xl"></i>
                 </button>
                 <img src="https://ui-avatars.com/api/?name=Emma+Johnson&amp;background=d4af37&amp;color=1a1a1a" alt="Profile" class="w-8 h-8 rounded-full cursor-pointer">
+                <% if (user && user.isSeller) { %>
+                <button id="toggleModeBtn" class="ml-4 px-4 py-2 rounded-lg border border-gold bg-pearl text-gold font-semibold shadow-sm hover:bg-gold hover:text-pearl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50">
+                    <span id="toggleModeText"><%= user.activeMode === 'buyer' ? 'Switch to Seller Mode' : 'Switch to Buyer Mode' %></span>
+                </button>
+                <% } %>
             </div>
         </div>
     </div>
 </header>
+<script>
+// Toggle mode button logic
+if (document.getElementById('toggleModeBtn')) {
+    document.getElementById('toggleModeBtn').addEventListener('click', function() {
+        // Create a form to submit the toggle request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/toggle-mode';
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+</script>

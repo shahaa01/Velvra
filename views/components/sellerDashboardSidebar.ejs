@@ -74,5 +74,14 @@
                 </div>
             </div>
         </div>
+        <% if (user && user.isSeller) { %>
+        <div class="mt-4 flex justify-center">
+            <form method="POST" action="/toggle-mode">
+                <button type="submit" class="px-4 py-2 rounded-lg border border-gold bg-pearl text-gold font-semibold shadow-sm hover:bg-gold hover:text-pearl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50">
+                    <span><%= user.activeMode === 'buyer' ? 'Switch to Seller Mode' : 'Switch to Buyer Mode' %></span>
+                </button>
+            </form>
+        </div>
+        <% } %>
     </div>
 </aside>

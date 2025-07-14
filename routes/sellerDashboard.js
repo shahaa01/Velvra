@@ -7,6 +7,7 @@ const Message = require('../models/message');
 const Conversation = require('../models/conversation');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
 const mongoose = require('mongoose');
+const User = require('../models/user');
 
 // Main Seller Dashboard
 router.get('/', isLoggedIn, async (req, res) => {
@@ -148,9 +149,11 @@ router.get('/', isLoggedIn, async (req, res) => {
             items: order.items.filter(item => String(item.seller) === String(seller._id))
         }));
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/sellerDashboard', {
             title: 'Seller Dashboard - Velvra',
-            user: req.user,
+            user,
             seller,
             products,
             orders: formattedOrders,
@@ -190,9 +193,11 @@ router.get('/products', isLoggedIn, async (req, res) => {
             outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
         };
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/product', {
             title: 'Products - Velvra',
-            user: req.user,
+            user,
             seller,
             products,
             stats,
@@ -272,9 +277,11 @@ router.get('/orders', isLoggedIn, async (req, res) => {
             returnedOrders: orderStats.find(s => s._id === 'returned')?.count || 0
         };
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/order', {
             title: 'Orders - Velvra',
-            user: req.user,
+            user,
             seller,
             orders: formattedOrders,
             stats,
@@ -304,9 +311,11 @@ router.get('/inventory', isLoggedIn, async (req, res) => {
             outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
         };
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/sellerInventory', {
             title: 'Inventory - Velvra',
-            user: req.user,
+            user,
             seller,
             products,
             stats,
@@ -329,9 +338,11 @@ router.get('/promotions', isLoggedIn, async (req, res) => {
         // Get products for promotion creation
         const products = await Product.find({ seller: seller._id, inStock: true, stock: { $gt: 0 } });
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/promotions', {
             title: 'Promotions - Velvra',
-            user: req.user,
+            user,
             seller,
             products,
             currentPage: 'promotions'
@@ -392,9 +403,11 @@ router.get('/performance', isLoggedIn, async (req, res) => {
             averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0
         };
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/sellerPerformance', {
             title: 'Performance - Velvra',
-            user: req.user,
+            user,
             seller,
             orders,
             stats,
@@ -455,9 +468,11 @@ router.get('/messages', isLoggedIn, async (req, res) => {
             });
         }
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/sellerMessages', {
             title: 'Messages - Velvra',
-            user: req.user,
+            user,
             seller,
             conversations: conversationsWithDetails,
             currentConversationId: null,
@@ -477,9 +492,11 @@ router.get('/settings', isLoggedIn, async (req, res) => {
             return res.redirect('/seller');
         }
 
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
         res.render('page/SellerDashboard/sellerSetting', {
             title: 'Settings - Velvra',
-            user: req.user,
+            user,
             seller,
             currentPage: 'settings'
         });
@@ -488,6 +505,9 @@ router.get('/settings', isLoggedIn, async (req, res) => {
         res.status(500).render('error', { error: 'Failed to load settings' });
     }
 });
+
+// Toggle user mode (buyer/seller)
+// (Removed, now handled globally in app.js)
 
 // API endpoint to get order details
 router.get('/api/orders/:orderId', isLoggedIn, async (req, res) => {

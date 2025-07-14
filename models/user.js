@@ -102,6 +102,21 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'seller', 'admin'],
     default: 'user',
   },
+  // Dual-role fields
+  isSeller: {
+    type: Boolean,
+    default: false
+  },
+  activeMode: {
+    type: String,
+    enum: ['buyer', 'seller'],
+    default: 'buyer'
+  },
+  sellerProfileId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Seller',
+    default: null
+  },
 });
 
 // Apply passport-local-mongoose plugin with email as username field
@@ -113,12 +128,14 @@ userSchema.plugin(passportLocalMongoose, {
   usernameQueryFields: ['email', 'googleId']
 });
 
-// Pre-save middleware to ensure username is always set
+// Pre-save middleware to ensure username is always set and sync isSeller
 userSchema.pre('save', function(next) {
   // If username is not set or is null, set it to email
   if (!this.username || this.username === null) {
     this.username = this.email;
   }
+  // Sync isSeller with role === 'seller'
+  this.isSeller = this.role === 'seller';
   next();
 });
 

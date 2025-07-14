@@ -3,6 +3,18 @@ const router = express.Router();
 const Cart = require('../models/cart');
 const Product = require('../models/product');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
+const User = require('../models/user');
+const autoSwitchToBuyer = async (req, res, next) => {
+    if (req.user && req.user.isSeller && req.user.activeMode !== 'buyer') {
+        const userDoc = await User.findById(req.user._id);
+        userDoc.activeMode = 'buyer';
+        await userDoc.save();
+        req.user.activeMode = 'buyer';
+        req.flash('info', 'Switched to buyer mode for shopping.');
+        return res.redirect(req.originalUrl);
+    }
+    next();
+};
 
 // Get cart count
 router.get('/count', isLoggedIn, async (req, res) => {
@@ -17,7 +29,7 @@ router.get('/count', isLoggedIn, async (req, res) => {
 });
 
 // Get cart
-router.get('/', isLoggedIn, async (req, res) => {
+router.get('/cart', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
     try {
         let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
         
@@ -226,6 +238,22 @@ router.delete('/clear', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Error clearing cart:', error);
         res.status(500).json({ error: 'Failed to clear cart' });
+    }
+});
+
+// Add autoSwitchToBuyer to /checkout route
+router.get('/checkout', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
+    try {
+        let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+        
+        if (!cart) {
+            cart = await Cart.create({ user: req.user._id, items: [] });
+        }
+
+        res.render('page/checkoutPage', { cart });
+    } catch (error) {
+        console.error('Error fetching checkout:', error);
+        res.status(500).json({ error: 'Failed to fetch checkout' });
     }
 });
 

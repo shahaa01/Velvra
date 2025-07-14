@@ -48,6 +48,53 @@
         </div>
     <% } %>
     
+    <!-- Info Flash Message Template for Mode Switches -->
+    <% if (info && info.length > 0) { %>
+        <div class="flash-message-container">
+            <% if (Array.isArray(info)) { %>
+                <% info.forEach(function(msg) { %>
+                    <div class="flash-message info" data-auto-dismiss="5000">
+                        <button class="flash-message-close" onclick="dismissFlashMessage(this)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <div class="flash-message-content">
+                            <div class="flash-message-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="flash-message-text">
+                                <div class="flash-message-title">Mode Switch</div>
+                                <div class="flash-message-description"><%= msg %></div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="flash-message info" data-auto-dismiss="5000">
+                    <button class="flash-message-close" onclick="dismissFlashMessage(this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <div class="flash-message-content">
+                        <div class="flash-message-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="flash-message-text">
+                            <div class="flash-message-title">Mode Switch</div>
+                            <div class="flash-message-description"><%= info %></div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    <% } %>
+    
     <!-- Error Flash Message Template -->
     <% if (error && error.length > 0) { %>
         <div class="flash-message-container">

@@ -14,6 +14,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/user');
+const { isLoggedIn } = require('./middlewares/authMiddleware');
 const { localStore } = require('./middlewares/index');
 const swal = require('sweetalert2');
 const fileUpload = require('express-fileupload');
@@ -76,6 +77,15 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
+
+// Flash locals middleware
+app.use((req, res, next) => {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  res.locals.info = req.flash('info');
+  next();
+});
+
 app.use(passport.initialize()); 
 app.use(passport.session());
 
@@ -119,6 +129,29 @@ passport.deserializeUser(User.deserializeUser());
 
 app.use(localStore);
 app.use(addAdminContext);
+
+app.post('/toggle-mode', isLoggedIn, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user.isSeller) {
+      req.flash('error', 'Not a seller account.');
+      return res.redirect('/dashboard');
+    }
+    user.activeMode = user.activeMode === 'buyer' ? 'seller' : 'buyer';
+    await user.save();
+    req.user.activeMode = user.activeMode; // update session
+    const modeText = user.activeMode === 'buyer' ? 'Buyer' : 'Seller';
+    req.flash('info', `Switched to ${modeText} mode successfully.`);
+    if (user.activeMode === 'seller') {
+      res.redirect('/seller-dashboard');
+    } else {
+      res.redirect('/dashboard');
+    }
+  } catch (err) {
+    req.flash('error', 'Failed to toggle mode.');
+    res.redirect('/dashboard');
+  }
+});
 
 main().then(() => console.log('Database connected successfully🚀')).catch(err => console.log('Database connection error:',err.message));
 

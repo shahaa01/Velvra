@@ -200,6 +200,16 @@ router.post('/create-buyNow-order', isLoggedIn, async (req, res) => {
             await productDoc.save();
         }
 
+        // Auto-switch seller to buyer mode
+        if (req.user.isSeller && req.user.activeMode === 'seller') {
+            const User = require('../models/user');
+            const userDoc = await User.findById(req.user._id);
+            userDoc.activeMode = 'buyer';
+            await userDoc.save();
+            req.user.activeMode = 'buyer';
+            req.flash('info', 'Switched to buyer mode to complete this action.');
+        }
+
         res.json({
             success: true,
             order: order,
@@ -272,6 +282,16 @@ router.post('/create-order', isLoggedIn, async (req, res) => {
         // Clear the cart
         cart.items = [];
         await cart.save();
+
+        // Auto-switch seller to buyer mode
+        if (req.user.isSeller && req.user.activeMode === 'seller') {
+            const User = require('../models/user');
+            const userDoc = await User.findById(req.user._id);
+            userDoc.activeMode = 'buyer';
+            await userDoc.save();
+            req.user.activeMode = 'buyer';
+            req.flash('info', 'Switched to buyer mode to complete this action.');
+        }
 
         res.json({
             success: true,

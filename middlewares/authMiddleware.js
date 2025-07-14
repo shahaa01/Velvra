@@ -37,9 +37,24 @@ const validateLogin = (req, res, next) => {
     next();
 };
 
+// Middleware to redirect based on activeMode
+const checkDashboardMode = (req, res, next) => {
+    if (!req.user) return res.redirect('/auth/login');
+    if (req.user.isSeller) {
+        if (req.user.activeMode === 'seller' && !req.originalUrl.startsWith('/seller-dashboard')) {
+            return res.redirect('/seller-dashboard');
+        }
+        if (req.user.activeMode === 'buyer' && req.originalUrl.startsWith('/seller-dashboard')) {
+            return res.redirect('/dashboard');
+        }
+    }
+    next();
+};
+
 module.exports = {
     isLoggedIn,
     isNotLoggedIn,
     validateSignup,
-    validateLogin
+    validateLogin,
+    checkDashboardMode
 }; 

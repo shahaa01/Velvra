@@ -6,6 +6,10 @@ const Wishlist = require('../models/wishlist');
 const Message = require('../models/message');
 const Conversation = require('../models/conversation');
 const mongoose = require('mongoose');
+const User = require('../models/user');
+
+// Toggle user mode (buyer/seller)
+// (Removed, now handled globally in app.js)
 
 // Main Dashboard
 router.get('/', isLoggedIn, async (req, res) => {
