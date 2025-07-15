@@ -15,7 +15,11 @@ router.route('/paymentSummary')
                 return res.redirect('/cart');
             }
 
-            res.render('page/paymentSummary', { cart });
+            console.log('Rendering paymentSummary with hideFooter:', true);
+            res.render('page/paymentSummary', {
+                cart,
+                hideFooter: true
+            });
         } catch (error) {
             console.error('Error loading payment summary:', error);
             res.status(500).render('error', { error: 'Failed to load payment summary' });
@@ -36,7 +40,7 @@ router.route('/finalizePayment')
             const user = await req.user.populate('addresses');
             const addresses = user.addresses || [];
 
-            res.render('page/finalizePayment', { cart, addresses });
+            res.render('page/finalizePayment', { cart, addresses, hideFooter: true });
         } catch (error) {
             console.error('Error loading payment page:', error);
             res.status(500).render('error', { error: 'Failed to load payment page' });

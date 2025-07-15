@@ -352,6 +352,168 @@ router.get('/wishlist', isLoggedIn, async (req, res) => {
     }
 });
 
+// AJAX: Add product to wishlist
+router.post('/wishlist/add', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.body;
+        
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required' });
+        }
+
+        // Verify product exists
+        const Product = require('../models/product');
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Find or create wishlist
+        let wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, products: [] });
+        }
+
+        // Check if product is already in wishlist
+        if (wishlist.products.includes(productId)) {
+            return res.status(400).json({ success: false, message: 'Product already in wishlist' });
+        }
+
+        // Add product to wishlist
+        wishlist.products.push(productId);
+        await wishlist.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product added to wishlist',
+            wishlistCount: wishlist.products.length
+        });
+    } catch (error) {
+        console.error('Add to wishlist error:', error);
+        res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+    }
+});
+
+// AJAX: Remove product from wishlist
+router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.body;
+        
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required' });
+        }
+
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist) {
+            return res.status(404).json({ success: false, message: 'Wishlist not found' });
+        }
+
+        // Remove product from wishlist
+        wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
+        await wishlist.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product removed from wishlist',
+            wishlistCount: wishlist.products.length
+        });
+    } catch (error) {
+        console.error('Remove from wishlist error:', error);
+        res.status(500).json({ success: false, message: 'Failed to remove product from wishlist' });
+    }
+});
+
+// AJAX: Move product from wishlist to cart
+router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
+    try {
+        const { productId, size, color, quantity = 1 } = req.body;
+        
+        if (!productId || !size || !color) {
+            return res.status(400).json({ success: false, message: 'Product ID, size, and color are required' });
+        }
+
+        // Verify product exists
+        const Product = require('../models/product');
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Check if product is in wishlist
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist || !wishlist.products.includes(productId)) {
+            return res.status(400).json({ success: false, message: 'Product not in wishlist' });
+        }
+
+        // Add to cart (using existing cart logic)
+        const Cart = require('../models/cart');
+        let cart = await Cart.findOne({ user: req.user._id });
+        if (!cart) {
+            cart = await Cart.create({ user: req.user._id, items: [] });
+        }
+
+        // Check if item already exists in cart
+        const existingItem = cart.items.find(item => 
+            item.product.toString() === productId && 
+            item.size === size && 
+            item.color === color
+        );
+
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.items.push({
+                product: productId,
+                size,
+                color,
+                quantity,
+                price: product.price
+            });
+        }
+
+        await cart.save();
+
+        // Remove from wishlist
+        wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
+        await wishlist.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product moved to cart',
+            wishlistCount: wishlist.products.length,
+            cartCount: cart.items.length
+        });
+    } catch (error) {
+        console.error('Move to cart error:', error);
+        res.status(500).json({ success: false, message: 'Failed to move product to cart' });
+    }
+});
+
+// AJAX: Get wishlist count (for navbar updates)
+router.get('/wishlist/count', isLoggedIn, async (req, res) => {
+    try {
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const count = wishlist ? wishlist.products.length : 0;
+        res.json({ success: true, count });
+    } catch (error) {
+        console.error('Get wishlist count error:', error);
+        res.status(500).json({ success: false, count: 0 });
+    }
+});
+
+// AJAX: Check if product is in wishlist (for product pages)
+router.get('/wishlist/check/:productId', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const isInWishlist = wishlist ? wishlist.products.includes(productId) : false;
+        res.json({ success: true, isInWishlist });
+    } catch (error) {
+        console.error('Check wishlist error:', error);
+        res.status(500).json({ success: false, isInWishlist: false });
+    }
+});
+
 // Messages (Inbox)
 router.get('/messages', isLoggedIn, async (req, res) => {
     try {

@@ -157,37 +157,12 @@ if (addAddressBtn) {
 }
 
 function openAddressSidebar() {
-    const sidebar = document.getElementById('addressSidebar');
-    if (!sidebar) {
-        console.error('Address sidebar not found');
-        return;
-    }
-    
-    const sheet = sidebar.querySelector('.bottom-sheet');
-    const overlay = sidebar.querySelector('.bg-opacity-50');
-    
-    sidebar.classList.remove('invisible');
-    setTimeout(() => {
-        if (overlay) overlay.classList.add('opacity-100');
-        if (sheet) sheet.classList.add('active');
-    }, 10);
+    document.getElementById('addressSidebar').classList.remove('invisible');
+    document.body.classList.add('modal-open');
 }
-
 function closeAddressSidebar() {
-    const sidebar = document.getElementById('addressSidebar');
-    if (!sidebar) {
-        console.error('Address sidebar not found');
-        return;
-    }
-    
-    const sheet = sidebar.querySelector('.bottom-sheet');
-    const overlay = sidebar.querySelector('.bg-opacity-50');
-    
-    if (overlay) overlay.classList.remove('opacity-100');
-    if (sheet) sheet.classList.remove('active');
-    setTimeout(() => {
-        sidebar.classList.add('invisible');
-    }, 400);
+    document.getElementById('addressSidebar').classList.add('invisible');
+    document.body.classList.remove('modal-open');
 }
 
 // Form validation
@@ -322,7 +297,7 @@ addressForm.addEventListener('submit', async (e) => {
 function updateAddressList(addresses) {
     if (!addresses || addresses.length === 0) {
         addressList.innerHTML = `
-            <div class="text-center py-4 text-gray-500">
+            <div class="py-4 text-gray-500">
                 No addresses found. Please add a delivery address.
             </div>
         `;

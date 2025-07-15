@@ -40,8 +40,11 @@
 
     <%- body %>
 
+    <p style="color:red">hideFooter: <%= typeof hideFooter !== 'undefined' ? hideFooter : 'undefined' %></p>
     <!-- Footer -->
-    <%- include('../components/footer.ejs') %>
+    <% if (typeof hideFooter === 'undefined' || !hideFooter) { %>
+      <%- include('../components/footer.ejs') %>
+    <% } %>
 
     <!-- JS block -->
 

@@ -51,6 +51,7 @@ function getStockForColorSize(product, colorName, sizeName) {
             </div>
         <% } else { %>
             <% cart.items.forEach((item) => { %>
+                <% if (item.product) { %>
             <div class="cart-item-mobile cart-item-enter" data-cart-id="<%= item._id %>" data-product-id="<%= item.product._id %>">
                 <!-- Main Product Row -->
                 <div class="flex gap-3">
@@ -122,6 +123,7 @@ function getStockForColorSize(product, colorName, sizeName) {
                     </div>
                 </div>
             </div>
+                <% } %>
             <% }) %>
         <% } %>
 
@@ -180,6 +182,7 @@ function getStockForColorSize(product, colorName, sizeName) {
                         </div>
                     <% } else { %>
                         <% cart.items.forEach((item) => { %>
+                            <% if (item.product) { %>
                         <div class="desktop-cart-item" data-cart-id="<%= item._id %>" data-product-id="<%= item.product._id %>">
                             <div class="flex gap-4">
                                 <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-32 h-42 object-cover rounded-xl">
@@ -235,6 +238,7 @@ function getStockForColorSize(product, colorName, sizeName) {
                                 </div>
                             </div>
                         </div>
+                            <% } %>
                         <% }) %>
                     <% } %>
                 </div>

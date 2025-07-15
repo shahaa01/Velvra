@@ -29,12 +29,21 @@ router.get('/count', isLoggedIn, async (req, res) => {
 });
 
 // Get cart
-router.get('/cart', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
+router.get('/', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
     try {
         let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
         
         if (!cart) {
             cart = await Cart.create({ user: req.user._id, items: [] });
+        } else {
+            // Filter out items with null products (deleted products)
+            const validItems = cart.items.filter(item => item.product !== null);
+            
+            // If there are invalid items, update the cart
+            if (validItems.length !== cart.items.length) {
+                cart.items = validItems;
+                await cart.save();
+            }
         }
 
         res.render('page/cartPage', { cart });

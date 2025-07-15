@@ -174,11 +174,6 @@ function initializeEventListeners() {
         e.preventDefault();
         e.stopPropagation();
         
-        wishlistBtn.classList.toggle('active');
-        if (wishlistBtn.classList.contains('active')) {
-            createFloatingHeart(wishlistBtn);
-        }
-        
         // Animate button
         wishlistBtn.style.transform = 'scale(1.2)';
         setTimeout(() => {
