@@ -338,16 +338,29 @@ router.get('/order-history', isLoggedIn, async (req, res) => {
 // Wishlist
 router.get('/wishlist', isLoggedIn, async (req, res) => {
     try {
-        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate('products');
+        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate({
+            path: 'products',
+            populate: {
+                path: 'seller',
+                select: 'businessName'
+            }
+        });
+        
         if (!wishlist) {
             wishlist = await Wishlist.create({ user: req.user._id, products: [] });
         }
+
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
+
         res.render('page/UserDashboard/userWishlist', { 
             title: 'My Wishlist - Velvra',
             user: req.user, 
-            wishlist
+            wishlist,
+            stats
         });
     } catch (error) {
+        console.error('Wishlist route error:', error);
         res.status(500).render('error', { error: 'Failed to load wishlist' });
     }
 });
@@ -423,7 +436,82 @@ router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
     }
 });
 
-// AJAX: Move product from wishlist to cart
+// AJAX: Add product to cart from wishlist
+router.post('/wishlist/add-to-cart', isLoggedIn, async (req, res) => {
+    try {
+        const { productId, size, color, quantity = 1 } = req.body;
+        
+        if (!productId || !size || !color) {
+            return res.status(400).json({ success: false, message: 'Product ID, size, and color are required' });
+        }
+
+        // Verify product exists
+        const Product = require('../models/product');
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Check if product is in wishlist
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist || !wishlist.products.includes(productId)) {
+            return res.status(400).json({ success: false, message: 'Product not in wishlist' });
+        }
+
+        // Validate color and size availability
+        const colorObj = product.colors.find(c => c.name === color);
+        if (!colorObj) {
+            return res.status(400).json({ success: false, message: 'Color not available' });
+        }
+        
+        const sizeObj = colorObj.sizes.find(s => s.size === size);
+        if (!sizeObj) {
+            return res.status(400).json({ success: false, message: 'Size not available for this color' });
+        }
+        
+        if (sizeObj.stock < quantity) {
+            return res.status(400).json({ success: false, message: 'Not enough stock for this variant' });
+        }
+
+        // Add to cart (using existing cart logic)
+        const Cart = require('../models/cart');
+        let cart = await Cart.findOne({ user: req.user._id });
+        if (!cart) {
+            cart = await Cart.create({ user: req.user._id, items: [] });
+        }
+
+        // Check if item already exists in cart
+        const existingItem = cart.items.find(item => 
+            item.product.toString() === productId && 
+            item.size === size && 
+            item.color === color
+        );
+
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.items.push({
+                product: productId,
+                size,
+                color,
+                quantity
+            });
+        }
+
+        await cart.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product added to cart',
+            cartCount: cart.items.reduce((total, item) => total + item.quantity, 0)
+        });
+    } catch (error) {
+        console.error('Add to cart error:', error);
+        res.status(500).json({ success: false, message: 'Failed to add product to cart' });
+    }
+});
+
+// AJAX: Move product from wishlist to cart (removes from wishlist)
 router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
     try {
         const { productId, size, color, quantity = 1 } = req.body;
@@ -466,8 +554,7 @@ router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
                 product: productId,
                 size,
                 color,
-                quantity,
-                price: product.price
+                quantity
             });
         }
 
@@ -481,7 +568,7 @@ router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
             success: true, 
             message: 'Product moved to cart',
             wishlistCount: wishlist.products.length,
-            cartCount: cart.items.length
+            cartCount: cart.items.reduce((total, item) => total + item.quantity, 0)
         });
     } catch (error) {
         console.error('Move to cart error:', error);
@@ -511,6 +598,72 @@ router.get('/wishlist/check/:productId', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Check wishlist error:', error);
         res.status(500).json({ success: false, isInWishlist: false });
+    }
+});
+
+// AJAX: Get wishlist data with filtering and sorting
+router.get('/wishlist/data', isLoggedIn, async (req, res) => {
+    try {
+        const { filter = 'all', sort = 'recent' } = req.query;
+        
+        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate({
+            path: 'products',
+            populate: {
+                path: 'seller',
+                select: 'businessName'
+            }
+        });
+        
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, products: [] });
+        }
+
+        let products = wishlist.products || [];
+
+        // Apply filters
+        if (filter === 'sale') {
+            products = products.filter(product => product.sale);
+        } else if (filter === 'instock') {
+            products = products.filter(product => {
+                // Check if any color has any size with stock > 0
+                return product.colors.some(color => 
+                    color.sizes.some(size => size.stock > 0)
+                );
+            });
+        }
+
+        // Apply sorting
+        switch (sort) {
+            case 'recent':
+                products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+            case 'price-low':
+                products.sort((a, b) => {
+                    const priceA = a.salePrice || a.price;
+                    const priceB = b.salePrice || b.price;
+                    return priceA - priceB;
+                });
+                break;
+            case 'price-high':
+                products.sort((a, b) => {
+                    const priceA = a.salePrice || a.price;
+                    const priceB = b.salePrice || b.price;
+                    return priceB - priceA;
+                });
+                break;
+            case 'name':
+                products.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+        }
+
+        res.json({ 
+            success: true, 
+            products,
+            count: products.length
+        });
+    } catch (error) {
+        console.error('Get wishlist data error:', error);
+        res.status(500).json({ success: false, products: [], count: 0 });
     }
 });
 

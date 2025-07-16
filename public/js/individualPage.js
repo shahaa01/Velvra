@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
         colorSelectors[0].click();
     }
 
+    // Initialize wishlist button state
+    initializeWishlistState();
+
     // Set quantity to 1 for in-stock, 0 for out-of-stock (by color+size)
     const colorName = productState.selectedColor;
     const sizeName = productState.selectedSize;
@@ -170,15 +173,63 @@ function initializeEventListeners() {
     });
 
     // Wishlist Functionality
-    wishlistBtn.addEventListener('click', (e) => {
+    wishlistBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         
-        // Animate button
-        wishlistBtn.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-            wishlistBtn.style.transform = '';
-        }, 200);
+        const productId = wishlistBtn.dataset.productId;
+        if (!productId) return;
+        
+        try {
+            const isInWishlist = wishlistBtn.classList.contains('active');
+            
+            if (isInWishlist) {
+                // Remove from wishlist
+                const response = await fetch('/shop/wishlist/remove', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    wishlistBtn.classList.remove('active');
+                    showWishlistNotification('Product removed from wishlist', 'success');
+                } else {
+                    showWishlistNotification(data.message || 'Failed to remove from wishlist', 'error');
+                }
+            } else {
+                // Add to wishlist
+                const response = await fetch('/shop/wishlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    wishlistBtn.classList.add('active');
+                    createFloatingHeart(wishlistBtn);
+                    showWishlistNotification('Product added to wishlist', 'success');
+                } else {
+                    showWishlistNotification(data.message || 'Failed to add to wishlist', 'error');
+                }
+            }
+            
+            // Animate button
+            wishlistBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                wishlistBtn.style.transform = '';
+            }, 200);
+            
+        } catch (error) {
+            console.error('Wishlist toggle error:', error);
+            showWishlistNotification('An error occurred. Please try again.', 'error');
+        }
     });
 
     // Image Zoom Functionality
@@ -629,3 +680,46 @@ function initRelatedProductsCarousel() {
 }
 
 // ... rest of the existing code (InfiniteHorizontalScroll class, etc.) ...
+
+async function initializeWishlistState() {
+    try {
+        const productId = wishlistBtn.dataset.productId;
+        if (!productId) return;
+
+        // Check if product is in wishlist
+        const response = await fetch(`/shop/wishlist/check/${productId}`);
+        const data = await response.json();
+        
+        if (data.success && data.isInWishlist) {
+            wishlistBtn.classList.add('active');
+        } else {
+            wishlistBtn.classList.remove('active');
+        }
+    } catch (error) {
+        console.error('Error initializing wishlist state:', error);
+    }
+}
+
+function showWishlistNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}

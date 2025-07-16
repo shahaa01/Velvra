@@ -90,7 +90,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                             <span class="inline-block px-4 py-2 bg-velvra-charcoal text-white text-sm font-medium tracking-wider uppercase rounded-full">
                                 <%= product.name %>
                             </span>
-                            <button id="wishlistBtn" class="wishlist-btn w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group<%= wishlistProductIds && wishlistProductIds.includes(product._id.toString()) ? ' in-wishlist' : '' %>" data-product-id="<%= product._id %>">
+                            <button id="wishlistBtn" class="w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group" data-product-id="<%= product._id %>">
                                 <svg class="w-6 h-6 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path class="heart-outline" fill="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
@@ -113,8 +113,8 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Color</h3>
                         <div class="flex space-x-3">
                             <% for(let i = 0; i < product.colors.length; i++) { %>
-                                <% const prodColor = product.colors[i]; %>
-                                <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
+                            <% const prodColor = product.colors[i]; %>
+                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
                                     style="background-color: <%= prodColor.hex %>" 
                                     data-color="<%= prodColor.name %>"
                                     title="<%= prodColor.name %>"></button>
@@ -445,7 +445,6 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>
-<% block('script').append('<script src="/js/wishlist.js"></script>') %>
 
 <% function getStockForColorSize(product, colorName, sizeName) { const color = product.colors.find(c => c.name === colorName); if (!color) return 0; const sizeObj = color.sizes.find(s => s.size === sizeName); return sizeObj ? sizeObj.stock : 0; } %>
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const Wishlist = require('../models/wishlist');
+const { isLoggedIn } = require('../middlewares/authMiddleware');
 
 // Pagination configuration
 const ITEMS_PER_PAGE = 12;
@@ -20,23 +21,22 @@ const renderShop = async (req, res) => {
             .limit(ITEMS_PER_PAGE)
             .sort({ createdAt: -1 }); // Sort by newest first
         
+        // Debug: Log the first product to see its structure
+        if (products.length > 0) {
+            console.log('First product structure:', JSON.stringify(products[0], null, 2));
+        }
+        
         // Calculate pagination info
         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
         const hasMore = page < totalPages;
         const startItem = skip + 1;
         const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
         
-        let wishlistProductIds = [];
-        if (req.user) {
-            const wishlist = await Wishlist.findOne({ user: req.user._id });
-            wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-        }
         res.render('page/shop', {
             title: "Premium Collections | Velvra",
             heroTitle: "Premium",
             heroDescription: "Discover our meticulously curated selection of premium fashion. Each piece reflects timeless elegance, exceptional craftsmanship, and modern sophistication—designed to elevate every wardrobe.",
             products: products,
-            wishlistProductIds,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
@@ -329,17 +329,11 @@ router.route('/men')
             
             // Debug log to check product order
             console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
-            let wishlistProductIds = [];
-            if (req.user) {
-                const wishlist = await Wishlist.findOne({ user: req.user._id });
-                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-            }
             res.render('page/shop', {
                 title: "Men's Collection | Velvra", 
                 heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
                 heroTitle: "Men's", 
                 products: products,
-                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
@@ -392,17 +386,11 @@ router.route('/women')
             const startItem = totalProducts > 0 ? skip + 1 : 0;
             const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
             
-            let wishlistProductIds = [];
-            if (req.user) {
-                const wishlist = await Wishlist.findOne({ user: req.user._id });
-                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-            }
             res.render('page/shop', {
                 title: "Women's Collection | Velvra",
                 heroDescription: "Explore our meticulously curated collection of premium womenswear. Every piece embodies timeless elegance, refined craftsmanship, and modern femininity designed to empower and inspire.", 
                 heroTitle: "Women's",
                 products: products,
-                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
@@ -449,17 +437,11 @@ router.route('/sale')
             
             // Debug log to check product order
             console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
-            let wishlistProductIds = [];
-            if (req.user) {
-                const wishlist = await Wishlist.findOne({ user: req.user._id });
-                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-            }
             res.render('page/shop', {
                 title: "Sale Items | Velvra",
                 heroTitle: "Sale",
                 heroDescription: "Discover our exclusive sale items with the best discounts. Shop now to get amazing deals on premium fashion pieces.",
                 products: products,
-                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
@@ -475,5 +457,102 @@ router.route('/sale')
             res.status(500).render('error', { message: 'Error loading sale products' });
         }
     });
+
+// ===== WISHLIST ROUTES =====
+
+// Check if product is in wishlist
+router.get('/wishlist/check/:productId', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const isInWishlist = wishlist ? wishlist.products.includes(productId) : false;
+        res.json({ success: true, isInWishlist });
+    } catch (error) {
+        console.error('Check wishlist error:', error);
+        res.status(500).json({ success: false, isInWishlist: false });
+    }
+});
+
+// Add product to wishlist
+router.post('/wishlist/add', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.body;
+        
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required' });
+        }
+
+        // Verify product exists
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Find or create wishlist
+        let wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, products: [] });
+        }
+
+        // Check if product is already in wishlist
+        if (wishlist.products.includes(productId)) {
+            return res.status(400).json({ success: false, message: 'Product already in wishlist' });
+        }
+
+        // Add product to wishlist
+        wishlist.products.push(productId);
+        await wishlist.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product added to wishlist',
+            wishlistCount: wishlist.products.length
+        });
+    } catch (error) {
+        console.error('Add to wishlist error:', error);
+        res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+    }
+});
+
+// Remove product from wishlist
+router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
+    try {
+        const { productId } = req.body;
+        
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required' });
+        }
+
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist) {
+            return res.status(404).json({ success: false, message: 'Wishlist not found' });
+        }
+
+        // Remove product from wishlist
+        wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
+        await wishlist.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product removed from wishlist',
+            wishlistCount: wishlist.products.length
+        });
+    } catch (error) {
+        console.error('Remove from wishlist error:', error);
+        res.status(500).json({ success: false, message: 'Failed to remove product from wishlist' });
+    }
+});
+
+// Get wishlist count
+router.get('/wishlist/count', isLoggedIn, async (req, res) => {
+    try {
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        const count = wishlist ? wishlist.products.length : 0;
+        res.json({ success: true, count });
+    } catch (error) {
+        console.error('Get wishlist count error:', error);
+        res.status(500).json({ success: false, count: 0 });
+    }
+});
 
 module.exports = router;
