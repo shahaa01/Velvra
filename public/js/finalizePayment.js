@@ -224,21 +224,21 @@ function toggleAccordion(index) {
     const item = accordionItems[index];
     const arrow = arrows[index];
     
+    if (!item) return;
     if (item.style.maxHeight) {
         item.style.maxHeight = null;
-        arrow.style.transform = 'rotate(0deg)';
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
     } else {
         // Close all other items
         accordionItems.forEach((otherItem, otherIndex) => {
-            if (otherIndex !== index) {
+            if (otherIndex !== index && otherItem) {
                 otherItem.style.maxHeight = null;
-                arrows[otherIndex].style.transform = 'rotate(0deg)';
+                if (arrows[otherIndex]) arrows[otherIndex].style.transform = 'rotate(0deg)';
             }
         });
-        
         // Open the clicked item
         item.style.maxHeight = item.scrollHeight + 'px';
-        arrow.style.transform = 'rotate(180deg)';
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
     }
 }
 

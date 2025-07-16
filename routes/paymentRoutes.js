@@ -15,7 +15,11 @@ router.route('/paymentSummary')
                 return res.redirect('/cart');
             }
 
-            res.render('page/paymentSummary', { cart });
+            console.log('Rendering paymentSummary with hideFooter:', true);
+            res.render('page/paymentSummary', {
+                cart,
+                hideFooter: true
+            });
         } catch (error) {
             console.error('Error loading payment summary:', error);
             res.status(500).render('error', { error: 'Failed to load payment summary' });
@@ -36,7 +40,7 @@ router.route('/finalizePayment')
             const user = await req.user.populate('addresses');
             const addresses = user.addresses || [];
 
-            res.render('page/finalizePayment', { cart, addresses });
+            res.render('page/finalizePayment', { cart, addresses, hideFooter: true });
         } catch (error) {
             console.error('Error loading payment page:', error);
             res.status(500).render('error', { error: 'Failed to load payment page' });
@@ -187,6 +191,29 @@ router.post('/create-buyNow-order', isLoggedIn, async (req, res) => {
 
         await order.save();
 
+        // Decrement product stock for buy now
+        const productDoc = await Product.findById(productId);
+        if (productDoc) {
+            const colorObj = productDoc.colors.find(c => c.name === color);
+            if (colorObj) {
+                const sizeObj = colorObj.sizes.find(s => s.size === size);
+                if (sizeObj) {
+                    sizeObj.stock = Math.max(0, sizeObj.stock - parseInt(quantity));
+                }
+            }
+            await productDoc.save();
+        }
+
+        // Auto-switch seller to buyer mode
+        if (req.user.isSeller && req.user.activeMode === 'seller') {
+            const User = require('../models/user');
+            const userDoc = await User.findById(req.user._id);
+            userDoc.activeMode = 'buyer';
+            await userDoc.save();
+            req.user.activeMode = 'buyer';
+            req.flash('info', 'Switched to buyer mode to complete this action.');
+        }
+
         res.json({
             success: true,
             order: order,
@@ -241,9 +268,34 @@ router.post('/create-order', isLoggedIn, async (req, res) => {
 
         await order.save();
 
+        // Decrement product stock for each item in the order
+        for (const item of orderItems) {
+            const productDoc = await Product.findById(item.product);
+            if (productDoc) {
+                const colorObj = productDoc.colors.find(c => c.name === item.color);
+                if (colorObj) {
+                    const sizeObj = colorObj.sizes.find(s => s.size === item.size);
+                    if (sizeObj) {
+                        sizeObj.stock = Math.max(0, sizeObj.stock - item.quantity);
+                    }
+                }
+                await productDoc.save();
+            }
+        }
+
         // Clear the cart
         cart.items = [];
         await cart.save();
+
+        // Auto-switch seller to buyer mode
+        if (req.user.isSeller && req.user.activeMode === 'seller') {
+            const User = require('../models/user');
+            const userDoc = await User.findById(req.user._id);
+            userDoc.activeMode = 'buyer';
+            await userDoc.save();
+            req.user.activeMode = 'buyer';
+            req.flash('info', 'Switched to buyer mode to complete this action.');
+        }
 
         res.json({
             success: true,

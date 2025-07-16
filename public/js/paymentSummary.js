@@ -7,13 +7,125 @@ let addressSaved = false;
 const urlParams = new URLSearchParams(window.location.search);
 const isBuyNow = urlParams.has('productId') && urlParams.has('size') && urlParams.has('color') && urlParams.has('quantity');
 
+// Helper function to get stock for specific color and size
+function getStockForColorSize(product, colorName, sizeName) {
+    if (!product.colors || !Array.isArray(product.colors)) return 0;
+    const color = product.colors.find(c => c.name === colorName);
+    if (!color) return 0;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock : 0;
+}
+
+// Check if quantity change is allowed based on stock
+function canIncreaseQuantity(product, colorName, currentQuantity) {
+    const currentStock = getStockForColorSize(product, colorName, product.size);
+    return currentQuantity < currentStock;
+}
+
+// Show premium stock error message
+function showStockError(message) {
+    // Remove any existing error messages
+    removeStockError();
+    
+    // Create error message element
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'stock-error-message text-red-500 text-sm mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg animate-fade-in';
+    errorDiv.textContent = message;
+    errorDiv.style.animation = 'fadeIn 0.3s ease-out';
+    
+    // Find the quantity controls container and insert error message
+    const quantityContainer = document.querySelector('.quantity-controls');
+    if (quantityContainer) {
+        quantityContainer.appendChild(errorDiv);
+    }
+    
+    // Auto-remove error message after 3 seconds
+    setTimeout(() => {
+        removeStockError();
+    }, 3000);
+}
+
+// Remove stock error message
+function removeStockError() {
+    const existingError = document.querySelector('.stock-error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+}
+
+// Update stock validation for quantity buttons
+function updateStockValidation() {
+    if (isBuyNow) {
+        // For buy now, get product data from the page
+        const productData = window.buyNowItem?.product;
+        const colorName = window.buyNowItem?.color;
+        
+        if (productData && colorName) {
+            const currentStock = getStockForColorSize(productData, colorName, productData.size);
+            const increaseBtn = document.querySelector('.increase-btn');
+            
+            if (increaseBtn) {
+                if (quantity >= currentStock) {
+                    increaseBtn.disabled = true;
+                    increaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    increaseBtn.style.pointerEvents = 'none';
+                } else {
+                    increaseBtn.disabled = false;
+                    increaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    increaseBtn.style.pointerEvents = 'auto';
+                }
+            }
+        }
+    } else {
+        // For cart items, update each item's stock validation
+        document.querySelectorAll('[data-cart-item-id]').forEach(itemElement => {
+            const cartItemId = itemElement.dataset.cartItemId;
+            const item = window.cart?.items?.find(item => item._id === cartItemId);
+            
+            if (item) {
+                const currentStock = getStockForColorSize(item.product, item.color, item.product.size);
+                const increaseBtn = itemElement.querySelector('.increase-btn');
+                
+                if (increaseBtn) {
+                    if (item.quantity >= currentStock) {
+                        increaseBtn.disabled = true;
+                        increaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        increaseBtn.style.pointerEvents = 'none';
+                    } else {
+                        increaseBtn.disabled = false;
+                        increaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        increaseBtn.style.pointerEvents = 'auto';
+                    }
+                }
+            }
+        });
+    }
+}
+
 function updateQuantity(change) {
     // Only allow quantity updates for cart orders, not buy now
     if (isBuyNow) return;
     
-    quantity = Math.max(1, quantity + change);
+    const newQuantity = Math.max(1, quantity + change);
+    
+    // Check stock limit for increase operations
+    if (change > 0) {
+        const productData = window.buyNowItem?.product;
+        const colorName = window.buyNowItem?.color;
+        
+        if (productData && colorName) {
+            const currentStock = getStockForColorSize(productData, colorName, productData.size);
+            if (quantity >= currentStock) {
+                showStockError(`Sorry, we only have ${currentStock} of this item in stock.`);
+                return;
+            }
+        }
+    }
+    
+    quantity = newQuantity;
     document.getElementById('quantity').textContent = quantity;
     updatePrices();
+    updateStockValidation();
 }
 
 function updatePrices() {
@@ -45,37 +157,12 @@ if (addAddressBtn) {
 }
 
 function openAddressSidebar() {
-    const sidebar = document.getElementById('addressSidebar');
-    if (!sidebar) {
-        console.error('Address sidebar not found');
-        return;
-    }
-    
-    const sheet = sidebar.querySelector('.bottom-sheet');
-    const overlay = sidebar.querySelector('.bg-opacity-50');
-    
-    sidebar.classList.remove('invisible');
-    setTimeout(() => {
-        if (overlay) overlay.classList.add('opacity-100');
-        if (sheet) sheet.classList.add('active');
-    }, 10);
+    document.getElementById('addressSidebar').classList.remove('invisible');
+    document.body.classList.add('modal-open');
 }
-
 function closeAddressSidebar() {
-    const sidebar = document.getElementById('addressSidebar');
-    if (!sidebar) {
-        console.error('Address sidebar not found');
-        return;
-    }
-    
-    const sheet = sidebar.querySelector('.bottom-sheet');
-    const overlay = sidebar.querySelector('.bg-opacity-50');
-    
-    if (overlay) overlay.classList.remove('opacity-100');
-    if (sheet) sheet.classList.remove('active');
-    setTimeout(() => {
-        sidebar.classList.add('invisible');
-    }, 400);
+    document.getElementById('addressSidebar').classList.add('invisible');
+    document.body.classList.remove('modal-open');
 }
 
 // Form validation
@@ -210,7 +297,7 @@ addressForm.addEventListener('submit', async (e) => {
 function updateAddressList(addresses) {
     if (!addresses || addresses.length === 0) {
         addressList.innerHTML = `
-            <div class="text-center py-4 text-gray-500">
+            <div class="py-4 text-gray-500">
                 No addresses found. Please add a delivery address.
             </div>
         `;
@@ -362,6 +449,7 @@ window.closeAddressSidebar = closeAddressSidebar;
 // Load addresses when page loads
 document.addEventListener('DOMContentLoaded', () => {
     loadAddresses();
+    updateStockValidation(); // Initialize stock validation
     
     // Initialize form validation
     if (addressForm) {
@@ -412,18 +500,23 @@ document.getElementById('applyBtn').addEventListener('click', () => {
         message.classList.remove('hidden');
     }
 });
+
 // Add touch feedback
 document.querySelectorAll('.touch-scale').forEach(el => {
     el.addEventListener('touchstart', () => el.classList.add('scale-95'));
     el.addEventListener('touchend', () => el.classList.remove('scale-95'));
 });
 
-// Quantity Controls
+// Quantity Controls with stock validation
 if (!isBuyNow) {
     document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
         button.addEventListener('click', async function() {
             const cartItemId = this.dataset.cartItemId;
             const change = this.classList.contains('increase-btn') ? 1 : -1;
+            
+            // Check if button is disabled (for increase)
+            if (change > 0 && this.disabled) return;
+            
             await updateQuantity(cartItemId, change);
         });
     });
@@ -431,6 +524,22 @@ if (!isBuyNow) {
 
 async function updateQuantity(cartItemId, change) {
     try {
+        // Get the cart item data
+        const item = window.cart?.items?.find(item => item._id === cartItemId);
+        if (!item) return;
+        
+        const currentQuantity = item.quantity;
+        const newQuantity = Math.max(1, currentQuantity + change);
+        
+        // Check stock limit for increase operations
+        if (change > 0) {
+            const currentStock = getStockForColorSize(item.product, item.color, item.product.size);
+            if (currentQuantity >= currentStock) {
+                showStockError(`Sorry, we only have ${currentStock} of this item in stock.`);
+                return;
+            }
+        }
+        
         const response = await fetch('/cart/update', {
             method: 'PUT',
             headers: {
@@ -456,13 +565,16 @@ async function updateQuantity(cartItemId, change) {
 
         // Update the item total
         const itemTotal = itemElement.querySelector('.item-total');
-        const item = data.cart.items.find(item => item._id === cartItemId);
-        const itemPrice = item.product.salePrice || item.product.price;
-        itemTotal.textContent = `₹${(itemPrice * item.quantity).toLocaleString()}`;
+        const updatedItem = data.cart.items.find(item => item._id === cartItemId);
+        const itemPrice = updatedItem.product.salePrice || updatedItem.product.price;
+        itemTotal.textContent = `₹${(itemPrice * updatedItem.quantity).toLocaleString()}`;
 
         // Update the cart totals
         document.getElementById('subtotal').textContent = `₹${data.total.toLocaleString()}`;
         document.getElementById('totalPrice').textContent = `₹${data.total.toLocaleString()}`;
+        
+        // Update stock validation
+        updateStockValidation();
 
     } catch (error) {
         console.error('Error updating quantity:', error);
@@ -494,6 +606,9 @@ function updateCartUI(cart) {
     // Update cart totals
     document.getElementById('subtotal').textContent = `₹${cart.total.toLocaleString()}`;
     document.getElementById('totalPrice').textContent = `₹${cart.total.toLocaleString()}`;
+    
+    // Update stock validation
+    updateStockValidation();
 }
 
 // Function to select address

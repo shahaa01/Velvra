@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <%- block('css') %>
+    <link rel="stylesheet" href="/css/flash.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'charcoal': '#1a1a1a',
+                        'gold': '#d4af37',
+                        'cream': '#f8f6f0',
+                        'pearl': '#fefcf7',
+                        'beige': '#e8dcc6',
+                        'stone': '#a8a196',
+                        'brand': '#f8e9d3',
+                        'velvra-gold-dark': '#B8941F',
+                        'velvra-gold-light': '#E5C547'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pearl">
+    <!-- Flash Messages -->
+    <%- include('../components/flash') %>
+    
+    <%- body %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/flash.js"></script>
+    <%- block('script') %>
+</body>
+</html>

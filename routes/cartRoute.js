@@ -3,6 +3,18 @@ const router = express.Router();
 const Cart = require('../models/cart');
 const Product = require('../models/product');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
+const User = require('../models/user');
+const autoSwitchToBuyer = async (req, res, next) => {
+    if (req.user && req.user.isSeller && req.user.activeMode !== 'buyer') {
+        const userDoc = await User.findById(req.user._id);
+        userDoc.activeMode = 'buyer';
+        await userDoc.save();
+        req.user.activeMode = 'buyer';
+        req.flash('info', 'Switched to buyer mode for shopping.');
+        return res.redirect(req.originalUrl);
+    }
+    next();
+};
 
 // Get cart count
 router.get('/count', isLoggedIn, async (req, res) => {
@@ -17,12 +29,21 @@ router.get('/count', isLoggedIn, async (req, res) => {
 });
 
 // Get cart
-router.get('/', isLoggedIn, async (req, res) => {
+router.get('/', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
     try {
         let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
         
         if (!cart) {
             cart = await Cart.create({ user: req.user._id, items: [] });
+        } else {
+            // Filter out items with null products (deleted products)
+            const validItems = cart.items.filter(item => item.product !== null);
+            
+            // If there are invalid items, update the cart
+            if (validItems.length !== cart.items.length) {
+                cart.items = validItems;
+                await cart.save();
+            }
         }
 
         res.render('page/cartPage', { cart });
@@ -74,6 +95,12 @@ router.post('/toggle', isLoggedIn, async (req, res) => {
             });
         } else {
             // Add new item
+            const colorObj = product.colors.find(c => c.name === color);
+            if (!colorObj) return res.status(400).json({ error: 'Color not available' });
+            const sizeObj = colorObj.sizes.find(s => s.size === size);
+            if (!sizeObj) return res.status(400).json({ error: 'Size not available for this color' });
+            if (sizeObj.stock < quantity) return res.status(400).json({ error: 'Not enough stock for this variant' });
+            
             cart.items.push({ product: productId, size, color, quantity });
             await cart.save();
             
@@ -220,6 +247,22 @@ router.delete('/clear', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Error clearing cart:', error);
         res.status(500).json({ error: 'Failed to clear cart' });
+    }
+});
+
+// Add autoSwitchToBuyer to /checkout route
+router.get('/checkout', isLoggedIn, autoSwitchToBuyer, async (req, res, next) => {
+    try {
+        let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+        
+        if (!cart) {
+            cart = await Cart.create({ user: req.user._id, items: [] });
+        }
+
+        res.render('page/checkoutPage', { cart });
+    } catch (error) {
+        console.error('Error fetching checkout:', error);
+        res.status(500).json({ error: 'Failed to fetch checkout' });
     }
 });
 

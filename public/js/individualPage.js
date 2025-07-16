@@ -1,5 +1,5 @@
-// State Management
-let productState = {
+// State Management - Use state from EJS if available, otherwise default
+let productState = window.productState || {
     selectedColor: 'Charcoal',
     selectedSize: 'M',
     quantity: 1,
@@ -39,9 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
         colorSelectors[0].click();
     }
 
-    // Set quantity to 1 for in-stock, 0 for out-of-stock
-    let firstColorObj = window.productColors && window.productColors.length > 0 ? window.productColors[0] : null;
-    if (firstColorObj && firstColorObj.stock > 0) {
+    // Set quantity to 1 for in-stock, 0 for out-of-stock (by color+size)
+    const colorName = productState.selectedColor;
+    const sizeName = productState.selectedSize;
+    const maxStock = getStockForColorSize(window.product, colorName, sizeName);
+    if (maxStock > 0) {
         productState.quantity = 1;
         quantityInput.value = 1;
     } else {
@@ -49,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         quantityInput.value = 0;
     }
     updateQuantityUI();
+
+    // === Related Products Image Carousel ===
+    initRelatedProductsCarousel();
 });
 
 function initializeEventListeners() {
@@ -84,6 +89,16 @@ function initializeEventListeners() {
             // Update state and UI
             productState.selectedColor = color;
             selectedColorSpan.textContent = color;
+            
+            // Reset quantity to 1 for the new color/size combination
+            const maxStock = getStockForColorSize(window.product, color, productState.selectedSize);
+            if (maxStock > 0) {
+                productState.quantity = 1;
+                quantityInput.value = 1;
+            } else {
+                productState.quantity = 0;
+                quantityInput.value = 0;
+            }
             updateQuantityUI();
         });
     });
@@ -104,6 +119,17 @@ function initializeEventListeners() {
             // Update state and UI
             productState.selectedSize = size;
             selectedSizeSpan.textContent = size;
+            
+            // Reset quantity to 1 for the new size/color combination
+            const maxStock = getStockForColorSize(window.product, productState.selectedColor, size);
+            if (maxStock > 0) {
+                productState.quantity = 1;
+                quantityInput.value = 1;
+            } else {
+                productState.quantity = 0;
+                quantityInput.value = 0;
+            }
+            updateQuantityUI();
         });
     });
 
@@ -117,8 +143,9 @@ function initializeEventListeners() {
     });
 
     increaseBtn.addEventListener('click', () => {
-        const colorObj = getSelectedColorObj();
-        const maxStock = colorObj ? colorObj.stock : 0;
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
         if (productState.quantity < maxStock) {
             productState.quantity++;
             quantityInput.value = productState.quantity;
@@ -130,8 +157,9 @@ function initializeEventListeners() {
 
     quantityInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
-        const colorObj = getSelectedColorObj();
-        const maxStock = colorObj ? colorObj.stock : 0;
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
         if (value >= 1 && value <= maxStock) {
             productState.quantity = value;
         } else {
@@ -145,11 +173,6 @@ function initializeEventListeners() {
     wishlistBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        wishlistBtn.classList.toggle('active');
-        if (wishlistBtn.classList.contains('active')) {
-            createFloatingHeart(wishlistBtn);
-        }
         
         // Animate button
         wishlistBtn.style.transform = 'scale(1.2)';
@@ -224,6 +247,31 @@ function initializeEventListeners() {
                 icon: 'warning',
                 title: 'Select Size',
                 text: 'Please select a size before adding to cart.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Validate stock availability for selected color/size combination
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
+        
+        if (maxStock === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Out of Stock',
+                text: `Sorry, ${colorName} color in size ${sizeName} is currently out of stock.`,
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        if (productState.quantity > maxStock) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Insufficient Stock',
+                text: `Only ${maxStock} item${maxStock > 1 ? 's' : ''} available for ${colorName} in size ${sizeName}.`,
                 confirmButtonText: 'OK'
             });
             return;
@@ -338,6 +386,31 @@ function initializeEventListeners() {
                 icon: 'warning',
                 title: 'Select Size',
                 text: 'Please select a size before proceeding.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Validate stock availability for selected color/size combination
+        const colorName = productState.selectedColor;
+        const sizeName = productState.selectedSize;
+        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
+        
+        if (maxStock === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Out of Stock',
+                text: `Sorry, ${colorName} color in size ${sizeName} is currently out of stock.`,
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        if (productState.quantity > maxStock) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Insufficient Stock',
+                text: `Only ${maxStock} item${maxStock > 1 ? 's' : ''} available for ${colorName} in size ${sizeName}.`,
                 confirmButtonText: 'OK'
             });
             return;
@@ -464,9 +537,17 @@ function getSelectedColorObj() {
     return window.productColors.find(c => c.name === productState.selectedColor);
 }
 
+function getStockForColorSize(product, colorName, sizeName) {
+    const color = product.colors.find(c => c.name === colorName);
+    if (!color) return 0;
+    const sizeObj = color.sizes.find(s => s.size === sizeName);
+    return sizeObj ? sizeObj.stock : 0;
+}
+
 function updateQuantityUI() {
-    const colorObj = getSelectedColorObj();
-    const maxStock = colorObj ? colorObj.stock : 0;
+    const colorName = productState.selectedColor;
+    const sizeName = productState.selectedSize;
+    const maxStock = getStockForColorSize(window.product, colorName, sizeName);
     quantityInput.max = maxStock;
     if (productState.quantity > maxStock) {
         productState.quantity = maxStock;
@@ -474,8 +555,8 @@ function updateQuantityUI() {
     }
     // Show stock left if less than 5
     const stockMsg = document.getElementById('stockMessage');
-    if (colorObj && colorObj.stock < 5 && colorObj.stock > 0) {
-        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${colorObj.stock} item${colorObj.stock > 1 ? 's' : ''} of this color left in stock</span>`;
+    if (maxStock < 5 && maxStock > 0) {
+        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${maxStock} item${maxStock > 1 ? 's' : ''} of this variant left in stock</span>`;
     } else {
         stockMsg.innerHTML = '';
     }
@@ -483,7 +564,7 @@ function updateQuantityUI() {
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     const buyNowContainer = document.getElementById('buyNowContainer');
-    if (colorObj && colorObj.stock === 0) {
+    if (maxStock === 0) {
         addToCartBtn.disabled = true;
         addToCartBtn.style.opacity = 0.5;
         addToCartBtn.style.cursor = 'not-allowed';
@@ -515,6 +596,36 @@ function showQuantityError(msg) {
     const errDiv = document.getElementById('quantityError');
     errDiv.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1rem;">${msg}</span>`;
     setTimeout(() => { errDiv.innerHTML = ''; }, 2500);
+}
+
+// === Related Products Image Carousel ===
+function initRelatedProductsCarousel() {
+    const relatedProducts = document.getElementById('relatedProducts');
+    if (!relatedProducts) return;
+    const cards = relatedProducts.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        const images = card.querySelectorAll('.product-image');
+        const counter = card.querySelector('.image-counter .current-image');
+        if (images.length > 1) {
+            let currentIndex = 0;
+            let interval = null;
+            card.addEventListener('mouseenter', () => {
+                interval = setInterval(() => {
+                    images[currentIndex].classList.remove('active');
+                    currentIndex = (currentIndex + 1) % images.length;
+                    images[currentIndex].classList.add('active');
+                    if (counter) counter.textContent = (currentIndex + 1);
+                }, 2000);
+            });
+            card.addEventListener('mouseleave', () => {
+                clearInterval(interval);
+                images.forEach(img => img.classList.remove('active'));
+                images[0].classList.add('active');
+                currentIndex = 0;
+                if (counter) counter.textContent = '1';
+            });
+        }
+    });
 }
 
 // ... rest of the existing code (InfiniteHorizontalScroll class, etc.) ...

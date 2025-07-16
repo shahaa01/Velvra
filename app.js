@@ -14,9 +14,15 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/user');
+const { isLoggedIn } = require('./middlewares/authMiddleware');
 const { localStore } = require('./middlewares/index');
 const swal = require('sweetalert2');
 const fileUpload = require('express-fileupload');
+const { addAdminContext } = require('./middlewares/adminMiddleware');
+const http = require('http');
+const socketio = require('socket.io');
+const Message = require('./models/message');
+const Conversation = require('./models/conversation');
 
 const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
@@ -28,8 +34,8 @@ const addressRoutes = require('./routes/address');
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.engine('ejs', ejsMate); 
-
 app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(methodOverride('_method'));
@@ -71,6 +77,15 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
+
+// Flash locals middleware
+app.use((req, res, next) => {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  res.locals.info = req.flash('info');
+  next();
+});
+
 app.use(passport.initialize()); 
 app.use(passport.session());
 
@@ -113,6 +128,30 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use(localStore);
+app.use(addAdminContext);
+
+app.post('/toggle-mode', isLoggedIn, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user.isSeller) {
+      req.flash('error', 'Not a seller account.');
+      return res.redirect('/dashboard');
+    }
+    user.activeMode = user.activeMode === 'buyer' ? 'seller' : 'buyer';
+    await user.save();
+    req.user.activeMode = user.activeMode; // update session
+    const modeText = user.activeMode === 'buyer' ? 'Buyer' : 'Seller';
+    req.flash('info', `Switched to ${modeText} mode successfully.`);
+    if (user.activeMode === 'seller') {
+      res.redirect('/seller-dashboard');
+    } else {
+      res.redirect('/dashboard');
+    }
+  } catch (err) {
+    req.flash('error', 'Failed to toggle mode.');
+    res.redirect('/dashboard');
+  }
+});
 
 main().then(() => console.log('Database connected successfully🚀')).catch(err => console.log('Database connection error:',err.message));
 
@@ -127,13 +166,71 @@ app.use('/auth', authRoutes);
 app.use('/shop', require('./routes/shopRoute'));
 app.use('/product', productRoutes);
 app.use('/seller', require('./routes/sellerRoute'));
+app.use('/seller-dashboard', require('./routes/sellerDashboard'));
 app.use('/cart', cartRoutes);
 app.use('/address', addressRoutes);
 app.use('/payment', require('./routes/paymentRoutes'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/search', require('./routes/searchRoute'));
+app.use('/admin', require('./routes/adminRoutes'));
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+const io = socketio(server, { cors: { origin: '*' } });
+
+// Socket.IO real-time messaging logic
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+    
+    socket.on('joinConversation', (conversationId) => {
+        socket.join(conversationId);
+        console.log(`User ${socket.id} joined conversation ${conversationId}`);
+    });
+    
+    socket.on('sendMessage', async (data) => {
+        // data: { conversationId, message }
+        try {
+            console.log('📡 Socket received sendMessage event:', {
+                conversationId: data.conversationId,
+                sender: data.message.sender,
+                senderModel: data.message.senderModel,
+                content: data.message.content?.substring(0, 50) + '...'
+            });
+            
+            // Don't create duplicate message - it's already saved via REST API
+            // Just emit the message to other participants in the room
+            socket.to(data.conversationId).emit('receiveMessage', {
+                ...data.message,
+                sender: data.message.sender.toString(),
+                recipient: data.message.recipient?.toString(),
+                conversationId: data.conversationId
+            });
+            
+            console.log(`📢 Message forwarded to conversation room ${data.conversationId}, excluding sender ${socket.id}`);
+        } catch (err) {
+            console.error('Socket message forward error:', err);
+        }
+    });
+    
+    // Typing indicators
+    socket.on('typing', (data) => {
+        // Emit typing indicator to other users in the conversation
+        socket.to(data.conversationId).emit('typing', data);
+    });
+    
+    socket.on('stopTyping', (data) => {
+        // Emit stop typing indicator to other users in the conversation
+        socket.to(data.conversationId).emit('stopTyping', data);
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+// Make io accessible in routes if needed
+app.set('io', io);
+
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 

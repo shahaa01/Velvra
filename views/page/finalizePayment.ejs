@@ -1,3 +1,4 @@
+<% var hideFooter = true; %>
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/finalizePayment.css"') %>
     <div class="bg-white px-4 py-4 border-b border-gray-100 sticky top-0 z-40 blur-backdrop">
@@ -40,57 +41,6 @@
             <div class="bg-white rounded-2xl p-6 luxury-shadow mb-6 slide-up" style="animation-delay: 0.1s">
                 <h2 class="text-sm font-medium text-gray-500 mb-4">SELECT PAYMENT METHOD</h2>
                 <div class="space-y-3">
-                    <!-- eSewa -->
-                    <label class="payment-card rounded-xl p-4 flex items-center cursor-pointer touch-scale block">
-                        <input type="radio" name="payment" value="esewa" class="sr-only" onchange="selectPayment('esewa')">
-                        <div class="w-12 h-12 esewa-gradient rounded-lg flex items-center justify-center mr-4">
-                            <span class="text-white font-bold text-xs">eSewa</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium">eSewa</p>
-                            <p class="text-sm text-gray-500">Digital Wallet</p>
-                        </div>
-                        <div class="payment-check hidden">
-                            <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
-                    </label>
-
-                    <!-- Khalti -->
-                    <label class="payment-card rounded-xl p-4 flex items-center cursor-pointer touch-scale block">
-                        <input type="radio" name="payment" value="khalti" class="sr-only" onchange="selectPayment('khalti')">
-                        <div class="w-12 h-12 khalti-gradient rounded-lg flex items-center justify-center mr-4">
-                            <span class="text-white font-bold text-xs">Khalti</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium">Khalti</p>
-                            <p class="text-sm text-gray-500">Digital Wallet</p>
-                        </div>
-                        <div class="payment-check hidden">
-                            <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
-                    </label>
-
-                    <!-- IME Pay -->
-                    <label class="payment-card rounded-xl p-4 flex items-center cursor-pointer touch-scale block">
-                        <input type="radio" name="payment" value="ime" class="sr-only" onchange="selectPayment('ime')">
-                        <div class="w-12 h-12 ime-gradient rounded-lg flex items-center justify-center mr-4">
-                            <span class="text-white font-bold text-xs">IME</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium">IME Pay</p>
-                            <p class="text-sm text-gray-500">Digital Wallet</p>
-                        </div>
-                        <div class="payment-check hidden">
-                            <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
-                    </label>
-
                     <!-- Cash on Delivery -->
                     <label class="payment-card rounded-xl p-4 flex items-center cursor-pointer touch-scale block">
                         <input type="radio" name="payment" value="cod" class="sr-only" onchange="selectPayment('cod')">

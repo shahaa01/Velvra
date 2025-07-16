@@ -14,21 +14,38 @@ async function main() {
 
   //lets save all the product in the database
   for (let product of products) {
+    // Remove any existing seller field to avoid conflicts
+    delete product.seller;
     product.seller = new mongoose.Types.ObjectId('68531b04ebbacff2e2905f9a');
     product.price = Math.floor(Math.random() * (10000 - 300 + 1)) + 300;
-  
-    // Update each color with random stock (inStock will be set by pre-save)
+
+    // Define available sizes for this product
+    const availableSizes = product.sizes || ['S', 'M', 'L', 'XL'];
+
+    // For each color, generate a sizes array with random stock
     product.colors = product.colors.map(color => {
-      const stock = Math.floor(Math.random() * 11); // between 0 and 10
       return {
         ...color,
-        stock,
-        inStock: stock > 0  // <- temporarily added to pass validation, overwritten in hook
+        sizes: availableSizes.map(size => ({
+          size,
+          stock: Math.floor(Math.random() * 11) // between 0 and 10
+        }))
       };
     });
-  
+
+    // Optionally remove color-level stock/inStock if present
+    // (not needed in new schema)
+    // product.colors.forEach(c => { delete c.stock; delete c.inStock; });
+
+    // Log for debugging
+    console.log('Saving product:', product.name, 'with seller:', product.seller);
+
     const newProduct = new Product(product);
-    await newProduct.save();
+    try {
+      await newProduct.save();
+    } catch (err) {
+      console.error('Error saving product:', product.name, err);
+    }
   }
   
 }

@@ -1,0 +1,249 @@
+<% layout('layouts/dashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/userMessage.css">') %>
+
+<div class="flex min-h-screen h-screen overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed lg:static lg:translate-x-0 -translate-x-full top-0 left-0 z-50 w-64 h-full bg-cream border-r border-beige transition-transform duration-300">
+        <!-- Mobile Header with Close button -->
+        <div class="lg:hidden flex items-center justify-between p-4 border-b border-beige">
+            <h2 class="text-xl font-bold text-gold brand-font">Menu</h2>
+            <button id="closeSidebar" class="p-2 text-charcoal hover:text-charcoal transition-all duration-300 hover:bg-gold/10 rounded-lg group hover:scale-110" aria-label="Close menu">
+                <i class="fas fa-times text-xl transition-transform duration-300 group-hover:rotate-90"></i>
+            </button>
+        </div>
+        
+        <nav class="p-4">
+            <ul class="space-y-2">
+                <li>
+                    <a href="/dashboard" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard/orders" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                        <i class="fas fa-shopping-bag w-5"></i>
+                        <span>My Orders</span>
+                        <% if (typeof stats !== 'undefined' && stats.totalOrders > 0) { %>
+                        <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full"><%= stats.totalOrders %></span>
+                        <% } %>
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard/messages" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal">
+                        <i class="fas fa-envelope w-5"></i>
+                        <span>Messages</span>
+                        <% if (typeof stats !== 'undefined' && stats.unreadMessages > 0) { %>
+                        <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full"><%= stats.unreadMessages %></span>
+                        <% } %>
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard/report-issue" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                        <i class="fas fa-exclamation-circle w-5"></i>
+                        <span>Report Issues</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard/wishlist" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                        <i class="fas fa-heart w-5"></i>
+                        <span>Wishlist</span>
+                        <% if (typeof stats !== 'undefined' && stats.wishlistCount > 0) { %>
+                        <span class="ml-auto bg-stone text-white text-xs px-2 py-1 rounded-full"><%= stats.wishlistCount %></span>
+                        <% } %>
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard/settings" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-charcoal">
+                        <i class="fas fa-user-circle w-5"></i>
+                        <span>Profile Settings</span>
+                    </a>
+                </li>
+                <li class="pt-4 border-t border-beige">
+                    <button id="logoutBtn" class="nav-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-charcoal hover:text-red-600">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Log Out</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-screen flex flex-col overflow-hidden" style="height: calc(100vh - 64px);">
+        <div class="h-full flex overflow-hidden">
+            <!-- Conversations List -->
+            <div id="conversationsList" class="w-full md:w-96 lg:w-80 xl:w-96 bg-cream border-r border-beige h-full overflow-hidden flex flex-col">
+                <!-- Header -->
+                <div class="bg-cream p-4 border-b border-beige flex-shrink-0">
+                    <h2 class="text-xl font-semibold text-charcoal mb-4">Messages</h2>
+                    <div class="relative">
+                        <input type="text" 
+                               id="searchConversations"
+                               placeholder="Search conversations..." 
+                               class="w-full px-4 py-2 pl-10 bg-pearl rounded-lg border border-beige focus:outline-none focus:border-gold text-sm">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone text-sm"></i>
+                    </div>
+                </div>
+                
+                <!-- Conversations Container -->
+                <div id="conversationsContainer" class="flex-1 overflow-y-auto p-2 min-h-0">
+                    <!-- Loading skeleton will be inserted here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex-1 flex items-center justify-center p-8">
+                    <div class="text-center">
+                        <div class="w-24 h-24 mx-auto mb-4 bg-gold/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-comments text-3xl text-gold"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-charcoal mb-2">No conversations yet</h3>
+                        <p class="text-sm text-stone mb-4">Start browsing products and message sellers</p>
+                        <a href="/shop" class="inline-block px-6 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors text-sm font-medium">
+                            Browse Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div id="chatWindow" class="hidden md:flex flex-1 flex-col bg-pearl h-full overflow-hidden">
+                <!-- Default State (No chat selected) -->
+                <div id="noChatSelected" class="flex-1 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-6 bg-cream rounded-full flex items-center justify-center">
+                            <i class="fas fa-comment-dots text-5xl text-gold"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-charcoal mb-2">Select a conversation</h3>
+                        <p class="text-stone">Choose a message from the list to start chatting</p>
+                    </div>
+                </div>
+
+                <!-- Active Chat -->
+                <div id="activeChat" class="hidden flex-1 flex flex-col h-full relative">
+                    <!-- Chat Header - Fixed at top -->
+                    <div class="absolute top-0 left-0 right-0 bg-cream p-4 border-b border-beige flex items-center justify-between z-10 flex-shrink-0">
+                        <div class="flex items-center space-x-3">
+                            <button id="backToList" class="md:hidden mr-2 text-charcoal">
+                                <i class="fas fa-arrow-left text-xl"></i>
+                            </button>
+                            <img id="chatAvatar" src="" alt="" class="w-10 h-10 rounded-full">
+                            <div>
+                                <h3 id="chatName" class="font-semibold text-charcoal"></h3>
+                                <p id="chatStatus" class="text-xs text-stone"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Container - Scrollable middle section -->
+                    <div class="flex-1 pt-20 pb-20 min-h-0 flex flex-col">
+                        <div id="messagesContainer" class="flex-1 p-4 space-y-4 overflow-y-auto min-h-0">
+                            <!-- Messages will be inserted here -->
+                        </div>
+
+                        <!-- Typing Indicator -->
+                        <div id="typingIndicator" class="hidden px-4 pb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-2 bg-stone rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                                    <div class="w-2 h-2 bg-stone rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                                    <div class="w-2 h-2 bg-stone rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                                </div>
+                                <span class="text-xs text-charcoal">typing...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Input - Fixed at bottom -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-cream p-4 border-t border-beige z-10 flex-shrink-0">
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-charcoal hover:text-charcoal transition-colors">
+                                <i class="fas fa-paperclip text-lg"></i>
+                            </button>
+                            <div class="flex-1 relative">
+                                <input id="messageInput" 
+                                       type="text" 
+                                       placeholder="Type a message..." 
+                                       class="w-full px-4 py-2 pr-10 bg-pearl rounded-full border border-beige focus:outline-none focus:border-gold text-sm">
+                                <button class="absolute right-2 top-1/2 -translate-y-1/2 text-charcoal hover:text-charcoal transition-colors">
+                                    <i class="fas fa-smile text-lg"></i>
+                                </button>
+                            </div>
+                            <button id="sendButton" class="p-2 bg-gold text-charcoal rounded-full hover:bg-velvra-gold-dark transition-colors">
+                                <i class="fas fa-paper-plane text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Chat Window -->
+            <div id="mobileChatWindow" class="fixed inset-0 bg-pearl z-50 hidden md:hidden flex flex-col">
+                <!-- This will be populated dynamically -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige z-40">
+    <div class="grid grid-cols-5 gap-1">
+        <a href="/dashboard" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-charcoal">
+            <i class="fas fa-home text-lg mb-1"></i>
+            <span>Home</span>
+        </a>
+        <a href="/dashboard/orders" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-charcoal">
+            <i class="fas fa-shopping-bag text-lg mb-1"></i>
+            <span>Orders</span>
+        </a>
+        <a href="/dashboard/wishlist" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-charcoal">
+            <i class="fas fa-heart text-lg mb-1"></i>
+            <span>Wishlist</span>
+        </a>
+        <a href="/dashboard/messages" class="mobile-nav-item active flex flex-col items-center py-2 text-xs relative">
+            <i class="fas fa-envelope text-lg mb-1"></i>
+            <span>Messages</span>
+            <% if (typeof stats !== 'undefined' && stats.unreadMessages > 0) { %>
+            <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            <% } %>
+        </a>
+        <a href="/dashboard/settings" class="mobile-nav-item flex flex-col items-center py-2 text-xs text-charcoal">
+            <i class="fas fa-user text-lg mb-1"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</nav>
+
+<!-- Logout Modal -->
+<div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+        <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+        <p class="text-charcoal mb-6">Are you sure you want to log out of your account?</p>
+        <div class="flex space-x-3">
+            <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-charcoal hover:bg-cream transition-colors">
+                Cancel
+            </button>
+            <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                Log Out
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Overlay for mobile -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden lg:hidden"></div>
+
+<!-- Pass backend data to JavaScript -->
+<script>
+    // Pass backend data to JavaScript
+    window.backendData = {
+        conversations: <%- JSON.stringify(conversations || []) %>,
+        currentConversation: <%- JSON.stringify(typeof currentConversation !== 'undefined' ? currentConversation : null) %>,
+        currentConversationId: <%- JSON.stringify(typeof currentConversationId !== 'undefined' ? currentConversationId : null) %>,
+        user: <%- JSON.stringify(user) %>,
+        stats: <%- JSON.stringify(typeof stats !== 'undefined' ? stats : {}) %>
+    };
+</script>
+
+<% block('script').append('<script src="/socket.io/socket.io.js"></script>') %>
+<% block('script').append('<script src="/js/userMessage.js"></script>') %>

@@ -162,8 +162,6 @@ class VelvraState {
             const currentPrice = product.salePrice || product.price;
             const originalPrice = product.sale ? 
                 `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
-            const saleBadgeInline = product.sale ? 
-                `<span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">${product.salePercentage}% OFF</span>` : '';
             
             return `
                 <article class="product-card">
@@ -188,7 +186,6 @@ class VelvraState {
                         <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
                             <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${currentPrice}</span>
                             ${originalPrice}
-                            ${saleBadgeInline}
                         </div>
                     </div>
                 </article>
@@ -1689,7 +1686,6 @@ class LoadMoreManager {
         // Create price display
         const currentPrice = product.salePrice || product.price;
         const originalPrice = product.sale ? `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
-        const saleBadgeInline = product.sale ? `<span class="hidden sm:inline-block px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">${product.salePercentage}% OFF</span>` : '';
         
         // Set the innerHTML first
         article.innerHTML = `
@@ -1704,7 +1700,6 @@ class LoadMoreManager {
                 <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
                     <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${currentPrice}</span>
                     ${originalPrice}
-                    ${saleBadgeInline}
                 </div>
             </div>
         `;

@@ -359,8 +359,8 @@ body {
 /* ===== DESKTOP CART STYLES ===== */
 .desktop-cart-item {
     background: white;
-    border-radius: 24px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 0.5rem;
     margin-bottom: 1rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -546,6 +546,216 @@ html {
     .cart-item {
         font-size: 0.9rem;
         gap: 0.5rem;
+    }
+}
+
+/* ===== STOCK VALIDATION STYLES ===== */
+
+/* Stock Error Message */
+.stock-error-message {
+    background: linear-gradient(135deg, #fef2f2, #fecaca);
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+    animation: fadeIn 0.3s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.stock-error-message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Disabled Button States */
+.quantity-btn-mobile:disabled,
+.quantity-btn-mobile.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #f3f4f6;
+    color: #9ca3af;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.quantity-btn-mobile:disabled:hover,
+.quantity-btn-mobile.disabled:hover {
+    background: #f3f4f6;
+    color: #9ca3af;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.quantity-btn-mobile:disabled:active,
+.quantity-btn-mobile.disabled:active {
+    transform: none !important;
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+/* Desktop quantity controls disabled state */
+.desktop-cart-item .quantity-btn-mobile:disabled,
+.desktop-cart-item .quantity-btn-mobile.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+/* Stock warning indicator */
+.stock-warning {
+    position: relative;
+}
+
+.stock-warning::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    border: 2px solid white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+/* Quantity controls container with error support */
+.quantity-controls-mobile {
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.quantity-controls-mobile .quantity-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 30px;
+    width: fit-content;
+}
+
+/* Mobile specific error positioning */
+@media (max-width: 768px) {
+    .stock-error-message {
+        font-size: 13px;
+        padding: 10px 14px;
+        margin-top: 6px;
+    }
+    
+    .quantity-controls-mobile {
+        gap: 6px;
+    }
+}
+
+/* Desktop specific error positioning */
+@media (min-width: 769px) {
+    .stock-error-message {
+        font-size: 14px;
+        padding: 12px 16px;
+        margin-top: 8px;
+    }
+    
+    .desktop-cart-item .quantity-controls-mobile {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .desktop-cart-item .stock-error-message {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        margin-top: 4px;
+    }
+}
+
+/* Smooth transitions for disabled states */
+.quantity-btn-mobile {
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1), opacity 0.2s ease;
+}
+
+/* Focus states for accessibility */
+.quantity-btn-mobile:focus:not(:disabled) {
+    outline: 2px solid var(--velvra-gold);
+    outline-offset: 2px;
+}
+
+/* Error message animation variants */
+.stock-error-message.error-shake {
+    animation: fadeIn 0.3s ease-out, shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .stock-error-message {
+        border-width: 2px;
+        background: #fee2e2;
+    }
+    
+    .quantity-btn-mobile:disabled {
+        opacity: 0.3;
+        border: 2px solid #d1d5db;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .stock-error-message {
+        animation: none;
+    }
+    
+    .quantity-btn-mobile {
+        transition: opacity 0.2s ease;
+    }
+    
+    .stock-warning::after {
+        animation: none;
     }
 }
 

@@ -147,7 +147,10 @@ class InfiniteHorizontalScroll {
                 
                 // Insert new products before the sentinel
                 this.container.insertBefore(fragment, this.sentinel);
-                
+
+                // Initialize carousel for new cards
+                this.initializeCarouselForNewCards();
+
                 // Update state
                 this.currentPage++;
                 this.hasMoreProducts = data.pagination.hasMore;
@@ -225,6 +228,19 @@ class InfiniteHorizontalScroll {
                     style="background-color: ${color.hex}" 
                     data-color="${color.name}"></button>
         `).join('');
+
+        // Render all images for carousel
+        let imagesHTML = '';
+        if (product.images && product.images.length > 0) {
+            imagesHTML = product.images.map((img, i) =>
+                `<img src="${img}" alt="${product.name}" class="product-image${i === 0 ? ' active' : ''} w-full h-full object-cover transition-transform duration-700" data-index="${i}">`
+            ).join('');
+        }
+        // Add image counter if more than one image
+        let imageCounterHTML = '';
+        if (product.images && product.images.length > 1) {
+            imageCounterHTML = `<div class="image-counter absolute bottom-2 right-2 bg-white/80 text-xs rounded-full px-2 py-0.5 shadow-sm"><span class="current-image">1</span>/${product.images.length}</div>`;
+        }
         
         article.innerHTML = `
             <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
@@ -235,10 +251,11 @@ class InfiniteHorizontalScroll {
             
             ${product.salePercentage ? `<div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale ${product.salePercentage}% Off</div>` : ''}
             
-            <figure class="aspect-[4/5] relative overflow-hidden">
+            <figure class="aspect-[4/5] relative overflow-hidden product-image-container">
                 <a href="/product/${product._id}">
-                    <img src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                    ${imagesHTML}
                 </a>
+                ${imageCounterHTML}
             </figure>
 
             <div class="p-6">
@@ -312,6 +329,36 @@ class InfiniteHorizontalScroll {
                 heart.remove();
             }
         }, 2000);
+    }
+
+    initializeCarouselForNewCards() {
+        const cards = this.container.querySelectorAll('.product-card');
+        cards.forEach(card => {
+            // Prevent duplicate listeners
+            if (card.dataset.carouselInitialized) return;
+            const images = card.querySelectorAll('.product-image');
+            const counter = card.querySelector('.image-counter .current-image');
+            if (images.length > 1) {
+                let currentIndex = 0;
+                let interval = null;
+                card.addEventListener('mouseenter', () => {
+                    interval = setInterval(() => {
+                        images[currentIndex].classList.remove('active');
+                        currentIndex = (currentIndex + 1) % images.length;
+                        images[currentIndex].classList.add('active');
+                        if (counter) counter.textContent = (currentIndex + 1);
+                    }, 2000);
+                });
+                card.addEventListener('mouseleave', () => {
+                    clearInterval(interval);
+                    images.forEach(img => img.classList.remove('active'));
+                    images[0].classList.add('active');
+                    currentIndex = 0;
+                    if (counter) counter.textContent = '1';
+                });
+            }
+            card.dataset.carouselInitialized = 'true';
+        });
     }
 }
 

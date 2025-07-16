@@ -1,0 +1,63 @@
+
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Invoice - Order VEL2506300005</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .invoice-details { margin-bottom: 30px; }
+                    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                    .items-table th, .items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                    .items-table th { background-color: #f8f9fa; }
+                    .total { text-align: right; font-weight: bold; font-size: 18px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>VELVRA</h1>
+                    <h2>INVOICE</h2>
+                </div>
+                
+                <div class="invoice-details">
+                    <p><strong>Order Number:</strong> VEL2506300005</p>
+                    <p><strong>Order Date:</strong> 6/30/2025</p>
+                    <p><strong>Customer:</strong> Raushani Shah</p>
+                    <p><strong>Email:</strong> raushanishah112@gmail.com</p>
+                </div>
+                
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Size</th>
+                            <th>Color</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr>
+                                <td>Maison Lumière Silk Midi Dress</td>
+                                <td>M</td>
+                                <td>Sage</td>
+                                <td>1</td>
+                                <td>₹4,728.5</td>
+                                <td>₹4,728.5</td>
+                            </tr>
+                        
+                    </tbody>
+                </table>
+                
+                <div class="total">
+                    <p>Subtotal: ₹4,728.5</p>
+                    <p>Shipping: ₹0</p>
+                    
+                    <p>Total: ₹4,728.5</p>
+                </div>
+            </body>
+            </html>
+        

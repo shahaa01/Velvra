@@ -1,0 +1,369 @@
+<% layout('layouts/boilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/orderHistory.css">') %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Order History</h1>
+                    <p class="text-gray-600">Track all your orders and their status</p>
+                </div>
+                <a href="/dashboard" class="btn-gold px-6 py-3 rounded-lg font-medium">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="space-y-6">
+            <% if (orders && orders.length > 0) { %>
+                <% orders.forEach(order => { %>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 order-card">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Order #<%= order.orderNumber %></h3>
+                                <p class="text-sm text-gray-600">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                                <p class="text-sm text-gray-600">Total: ₹<%= order.total.toLocaleString() %></p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 <%= getStatusColor(order.orderStatus) %> text-sm font-medium rounded-full">
+                                    <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                </span>
+                                <p class="text-sm text-gray-500 mt-1"><%= order.paymentMethod.toUpperCase() %></p>
+                            </div>
+                        </div>
+
+                        <!-- Order Items -->
+                        <div class="space-y-3 mb-4">
+                            <% order.items.forEach(item => { %>
+                                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                                    <% if (item.product && item.product.images && item.product.images.length > 0) { %>
+                                        <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="w-16 h-16 object-cover rounded-lg">
+                                    <% } else { %>
+                                        <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                    <% } %>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-gray-900"><%= item.product ? item.product.name : 'Product' %></h4>
+                                        <p class="text-sm text-gray-600">Qty: <%= item.quantity %> | Size: <%= item.size %> | Color: <%= item.color %></p>
+                                        <p class="text-sm font-medium">₹<%= item.totalPrice.toLocaleString() %></p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <h5 class="font-medium text-gray-900 mb-2">Shipping Address</h5>
+                            <p class="text-sm text-gray-600"><%= order.shippingAddress.name %></p>
+                            <p class="text-sm text-gray-600"><%= order.shippingAddress.street %></p>
+                            <p class="text-sm text-gray-600"><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> <%= order.shippingAddress.postalCode %></p>
+                            <p class="text-sm text-gray-600">Phone: <%= order.shippingAddress.phone %></p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-4">
+                            <a href="/dashboard/orders/<%= order._id %>" class="text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                View Details
+                            </a>
+                            <button class="trackOrder text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]" data-order-id="<%= order._id %>" data-order-status="<%= order.orderStatus %>">
+                                Track Order
+                            </button>
+                            <button onclick="downloadInvoice('<%= order._id %>')" class="text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                Download Invoice
+                            </button>
+                            <% if (order.orderStatus === 'delivered') { %>
+                                <button class="rateProduct text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                    Rate Product
+                                </button>
+                            <% } %>
+                            <% if (order.items && order.items.length > 0) { %>
+                                <% const firstItem = order.items[0]; %>
+                                <% if (firstItem.product && firstItem.product.inStock === false) { %>
+                                    <span class="block text-[#D4AF37] font-light text-base italic">Out of Stock</span>
+                                <% } else { %>
+                                    <a href="/product/<%= firstItem.product?._id %>" class="text-sm font-medium text-[#D4AF37] hover:text-[#B8941F]">
+                                        Buy Again
+                                    </a>
+                                <% } %>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center py-12">
+                    <svg class="w-24 h-24 mx-auto mb-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">No Orders Yet</h3>
+                    <p class="text-gray-600 mb-6">Start shopping to see your order history here</p>
+                    <a href="/shop" class="btn-gold px-8 py-3 rounded-lg font-medium">
+                        Start Shopping
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%
+// Helper functions
+function getStatusColor(status) {
+    switch(status) {
+        case 'pending': return 'bg-gray-100 text-gray-700';
+        case 'confirmed': return 'bg-blue-100 text-blue-700';
+        case 'processing': return 'bg-amber-100 text-amber-700';
+        case 'shipped': return 'bg-purple-100 text-purple-700';
+        case 'delivered': return 'bg-emerald-100 text-emerald-700';
+        case 'cancelled': return 'bg-red-100 text-red-700';
+        default: return 'bg-gray-100 text-gray-700';
+    }
+}
+%>
+
+<script>
+// Order tracking functionality
+document.querySelectorAll('.trackOrder').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const orderId = btn.dataset.orderId;
+        const orderStatus = btn.dataset.orderStatus;
+        showOrderTracking(orderId, orderStatus);
+    });
+});
+
+// Function to download invoice
+async function downloadInvoice(orderId) {
+    try {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Generating...';
+        button.disabled = true;
+
+        // Make the request to download the PDF
+        const response = await fetch(`/dashboard/orders/${orderId}/invoice`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/pdf',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate invoice');
+        }
+
+        // Get the blob from the response
+        const blob = await response.blob();
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `invoice-${orderId}.pdf`;
+        
+        // Trigger the download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Show success message
+        showNotification('Invoice downloaded successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error downloading invoice:', error);
+        showNotification('Failed to download invoice. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        const button = event.target;
+        button.textContent = 'Download Invoice';
+        button.disabled = false;
+    }
+}
+
+// Function to show notifications
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
+    
+    // Set background color based on type
+    if (type === 'success') {
+        notification.className += ' bg-green-500 text-white';
+    } else if (type === 'error') {
+        notification.className += ' bg-red-500 text-white';
+    } else {
+        notification.className += ' bg-blue-500 text-white';
+    }
+    
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+function showOrderTracking(orderId, orderStatus) {
+    // Helper function to determine if a step is completed, current, or pending
+    function getStepStatus(step, currentStatus) {
+        const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+        const currentIndex = statusOrder.indexOf(currentStatus);
+        const stepIndex = statusOrder.indexOf(step);
+        
+        if (stepIndex < currentIndex) return 'completed';
+        if (stepIndex === currentIndex) return 'current';
+        return 'pending';
+    }
+    
+    // Create modal for order tracking
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    
+    // Check if order is cancelled
+    if (orderStatus === 'cancelled') {
+        modal.innerHTML = `
+            <div class="absolute inset-0 bg-black bg-opacity-50" onclick="this.parentElement.remove()"></div>
+            <div class="relative bg-white rounded-2xl p-6 max-w-md w-full">
+                <h2 class="text-xl font-bold mb-4">Track Order #${orderId}</h2>
+                <div class="space-y-4">
+                    <!-- Order Cancelled -->
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-black shadow-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium">Order Cancelled</p>
+                                <p class="text-sm opacity-90">This order has been cancelled</p>
+                            </div>
+                        </div>
+                        <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="w-full mt-6 bg-[#D4AF37] text-black py-3 rounded-lg font-medium">
+                    Close
+                </button>
+            </div>
+        `;
+    } else {
+        modal.innerHTML = `
+            <div class="absolute inset-0 bg-black bg-opacity-50" onclick="this.parentElement.remove()"></div>
+            <div class="relative bg-white rounded-2xl p-6 max-w-md w-full">
+                <h2 class="text-xl font-bold mb-4">Track Order #${orderId}</h2>
+                <div class="space-y-4">
+                    <!-- Order Placed - Always completed -->
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-black shadow-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium">Order Placed</p>
+                                <p class="text-sm opacity-90">Order confirmed</p>
+                            </div>
+                        </div>
+                        <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Processing -->
+                    <div class="flex items-center justify-between p-4 rounded-xl ${getStepStatus('processing', orderStatus) === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-black shadow-lg' : getStepStatus('processing', orderStatus) === 'current' ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-black shadow-lg' : 'bg-gray-100 text-gray-500'}">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 ${getStepStatus('processing', orderStatus) === 'completed' ? 'bg-white/20' : getStepStatus('processing', orderStatus) === 'current' ? 'bg-white/20' : 'bg-gray-200'} rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 ${getStepStatus('processing', orderStatus) === 'pending' ? 'text-gray-400' : 'text-black'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium">Processing</p>
+                                <p class="text-sm ${getStepStatus('processing', orderStatus) === 'pending' ? 'text-gray-400' : 'opacity-90'}">Preparing your order</p>
+                            </div>
+                        </div>
+                        ${getStepStatus('processing', orderStatus) === 'completed' 
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                            : getStepStatus('processing', orderStatus) === 'current'
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            : '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                        }
+                    </div>
+                    
+                    <!-- Shipped -->
+                    <div class="flex items-center justify-between p-4 rounded-xl ${getStepStatus('shipped', orderStatus) === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-black shadow-lg' : getStepStatus('shipped', orderStatus) === 'current' ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-black shadow-lg' : 'bg-gray-100 text-gray-500'}">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 ${getStepStatus('shipped', orderStatus) === 'completed' ? 'bg-white/20' : getStepStatus('shipped', orderStatus) === 'current' ? 'bg-white/20' : 'bg-gray-200'} rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 ${getStepStatus('shipped', orderStatus) === 'pending' ? 'text-gray-400' : 'text-black'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium">Shipped</p>
+                                <p class="text-sm ${getStepStatus('shipped', orderStatus) === 'pending' ? 'text-gray-400' : 'opacity-90'}">On its way to you</p>
+                            </div>
+                        </div>
+                        ${getStepStatus('shipped', orderStatus) === 'completed' 
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                            : getStepStatus('shipped', orderStatus) === 'current'
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            : '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                        }
+                    </div>
+                    
+                    <!-- Delivered -->
+                    <div class="flex items-center justify-between p-4 rounded-xl ${getStepStatus('delivered', orderStatus) === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-black shadow-lg' : getStepStatus('delivered', orderStatus) === 'current' ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8941F] text-black shadow-lg' : 'bg-gray-100 text-gray-500'}">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 ${getStepStatus('delivered', orderStatus) === 'completed' ? 'bg-white/20' : getStepStatus('delivered', orderStatus) === 'current' ? 'bg-white/20' : 'bg-gray-200'} rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 ${getStepStatus('delivered', orderStatus) === 'pending' ? 'text-gray-400' : 'text-black'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium">Delivered</p>
+                                <p class="text-sm ${getStepStatus('delivered', orderStatus) === 'pending' ? 'text-gray-400' : 'opacity-90'}">${orderStatus === 'delivered' ? 'Order delivered' : 'Expected soon'}</p>
+                            </div>
+                        </div>
+                        ${getStepStatus('delivered', orderStatus) === 'completed' 
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                            : getStepStatus('delivered', orderStatus) === 'current'
+                            ? '<svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            : '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                        }
+                    </div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="w-full mt-6 bg-[#D4AF37] text-black py-3 rounded-lg font-medium">
+                    Close
+                </button>
+            </div>
+        `;
+    }
+    
+    document.body.appendChild(modal);
+}
+</script> 

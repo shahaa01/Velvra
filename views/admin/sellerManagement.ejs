@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velvra Admin - Seller Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .seller-card {
+            transition: all 0.3s ease;
+        }
+        
+        .seller-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .kyc-document {
+            transition: all 0.2s ease;
+        }
+        
+        .kyc-document:hover {
+            transform: scale(1.05);
+        }
+        
+        .performance-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <%- include('adminSidebar.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-6 py-4">
+                <button id="sidebarToggle" class="lg:hidden">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" placeholder="Search sellers..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff" alt="Admin" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">Admin User</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Seller Management Content -->
+        <main class="p-6">
+            <!-- Page Title and Actions -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Seller Management</h2>
+                    <p class="text-gray-600 mt-1">Approve, monitor, and manage seller accounts</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-3">
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Seller
+                    </button>
+                    <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+                        <i class="fas fa-download mr-2"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Sellers</p>
+                            <p class="text-2xl font-bold text-gray-800">342</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-store text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Approved</p>
+                            <p class="text-2xl font-bold text-gray-800">285</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-check text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Pending</p>
+                            <p class="text-2xl font-bold text-gray-800">23</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Suspended</p>
+                            <p class="text-2xl font-bold text-gray-800">8</p>
+                        </div>
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-pause text-orange-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Top Rated</p>
+                            <p class="text-2xl font-bold text-gray-800">142</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-star text-purple-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div class="flex flex-wrap border-b border-gray-200">
+                    <button class="px-6 py-3 text-sm font-medium text-purple-600 border-b-2 border-purple-600" data-tab="all">
+                        All Sellers
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="pending">
+                        Pending Approval
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="approved">
+                        Approved
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="suspended">
+                        Suspended
+                    </button>
+                    <button class="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800" data-tab="top">
+                        Top Performers
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sellers Grid/Table -->
+            <div id="sellersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Seller cards will be inserted here by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Seller Detail Modal -->
+    <div id="sellerModal" class="modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Seller Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="modalContent">
+                    <!-- Modal content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock seller data
+        const mockSellers = [
+            {
+                id: 1,
+                name: 'Fashion Hub',
+                owner: 'Alexandra Chen',
+                email: 'contact@fashionhub.com',
+                phone: '+1 555-0201',
+                status: 'approved',
+                rating: 4.8,
+                joined: '2023-08-15',
+                products: 156,
+                sales: 1245,
+                revenue: 89450.00,
+                commission: 8945.00,
+                category: 'Women\'s Fashion',
+                performance: 92,
+                documents: {
+                    businessLicense: 'verified',
+                    taxId: 'verified',
+                    bankAccount: 'verified'
+                }
+            },
+            {
+                id: 2,
+                name: 'Style Central',
+                owner: 'Marcus Johnson',
+                email: 'info@stylecentral.com',
+                phone: '+1 555-0202',
+                status: 'pending',
+                rating: 0,
+                joined: '2024-03-20',
+                products: 0,
+                sales: 0,
+                revenue: 0,
+                commission: 0,
+                category: 'Men\'s Fashion',
+                performance: 0,
+                documents: {
+                    businessLicense: 'pending',
+                    taxId: 'pending',
+                    bankAccount: 'pending'
+                }
+            },
+            {
+                id: 3,
+                name: 'Trendy Boutique',
+                owner: 'Emma Williams',
+                email: 'emma@trendyboutique.com',
+                phone: '+1 555-0203',
+                status: 'approved',
+                rating: 4.6,
+                joined: '2023-11-10',
+                products: 89,
+                sales: 567,
+                revenue: 45230.00,
+                commission: 4523.00,
+                category: 'Accessories',
+                performance: 78,
+                documents: {
+                    businessLicense: 'verified',
+                    taxId: 'verified',
+                    bankAccount: 'verified'
+                }
+            },
+            {
+                id: 4,
+                name: 'Premium Styles',
+                owner: 'David Lee',
+                email: 'david@premiumstyles.com',
+                phone: '+1 555-0204',
+                status: 'suspended',
+                rating: 3.2,
+                joined: '2023-06-22',
+                products: 45,
+                sales: 234,
+                revenue: 23450.00,
+                commission: 2345.00,
+                category: 'Luxury Fashion',
+                performance: 45,
+                documents: {
+                    businessLicense: 'verified',
+                    taxId: 'expired',
+                    bankAccount: 'verified'
+                }
+            },
+            {
+                id: 5,
+                name: 'Kids Paradise',
+                owner: 'Sarah Martinez',
+                email: 'sarah@kidsparadise.com',
+                phone: '+1 555-0205',
+                status: 'approved',
+                rating: 4.9,
+                joined: '2023-09-18',
+                products: 234,
+                sales: 2345,
+                revenue: 125670.00,
+                commission: 12567.00,
+                category: 'Kids Fashion',
+                performance: 98,
+                documents: {
+                    businessLicense: 'verified',
+                    taxId: 'verified',
+                    bankAccount: 'verified'
+                }
+            }
+        ];
+
+        let currentTab = 'all';
+        let filteredSellers = [...mockSellers];
+
+        // Initialize
+        function renderSellers() {
+            const container = document.getElementById('sellersContainer');
+            container.innerHTML = '';
+
+            filteredSellers.forEach(seller => {
+                const card = document.createElement('div');
+                card.className = 'seller-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer';
+                card.onclick = () => viewSeller(seller.id);
+                
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">${seller.name}</h3>
+                            <p class="text-sm text-gray-600">${seller.owner}</p>
+                        </div>
+                        ${getStatusBadge(seller.status)}
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Rating</span>
+                            <div class="flex items-center">
+                                ${seller.rating > 0 ? `
+                                    <span class="font-medium mr-1">${seller.rating}</span>
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                ` : '<span class="text-gray-400">No ratings yet</span>'}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Products</span>
+                            <span class="font-medium">${seller.products}</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Total Sales</span>
+                            <span class="font-medium">${seller.sales}</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Revenue</span>
+                            <span class="font-medium">$${seller.revenue.toFixed(2)}</span>
+                        </div>
+                        
+                        ${seller.status === 'approved' ? `
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Performance</span>
+                                    <span class="font-medium">${seller.performance}%</span>
+                                </div>
+                                <div class="bg-gray-200 rounded-full h-2">
+                                    <div class="performance-bar bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style="width: ${seller.performance}%"></div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">Joined ${new Date(seller.joined).toLocaleDateString()}</span>
+                            ${seller.status === 'pending' ? `
+                                <div class="flex space-x-2">
+                                    <button onclick="event.stopPropagation(); approveSeller(${seller.id})" class="text-green-600 hover:text-green-700">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); rejectSeller(${seller.id})" class="text-red-600 hover:text-red-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                approved: '<span class="status-badge bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Approved</span>',
+                pending: '<span class="status-badge bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>Pending</span>',
+                suspended: '<span class="status-badge bg-red-100 text-red-800"><i class="fas fa-pause-circle mr-1"></i>Suspended</span>'
+            };
+            return badges[status] || '';
+        }
+
+        // Tab switching
+        document.querySelectorAll('[data-tab]').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab styling
+                document.querySelectorAll('[data-tab]').forEach(t => {
+                    t.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                    t.classList.add('text-gray-600');
+                });
+                this.classList.remove('text-gray-600');
+                this.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+                
+                // Filter sellers
+                const tabName = this.dataset.tab;
+                if (tabName === 'all') {
+                    filteredSellers = [...mockSellers];
+                } else if (tabName === 'top') {
+                    filteredSellers = mockSellers.filter(s => s.performance >= 90);
+                } else {
+                    filteredSellers = mockSellers.filter(s => s.status === tabName);
+                }
+                renderSellers();
+            });
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            filteredSellers = mockSellers.filter(seller => 
+                seller.name.toLowerCase().includes(search) ||
+                seller.owner.toLowerCase().includes(search) ||
+                seller.email.toLowerCase().includes(search)
+            );
+            renderSellers();
+        });
+
+        // View seller details
+        function viewSeller(id) {
+            const seller = mockSellers.find(s => s.id === id);
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Seller Info -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800">${seller.name}</h4>
+                                    <p class="text-gray-600">${seller.category}</p>
+                                </div>
+                                ${getStatusBadge(seller.status)}
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Owner</p>
+                                    <p class="font-medium">${seller.owner}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Email</p>
+                                    <p class="font-medium">${seller.email}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Phone</p>
+                                    <p class="font-medium">${seller.phone}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Joined</p>
+                                    <p class="font-medium">${new Date(seller.joined).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- KYC Documents -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4">KYC Documents</h5>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                                        <span class="font-medium">Business License</span>
+                                    </div>
+                                    ${getDocumentStatus(seller.documents.businessLicense)}
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-id-card text-gray-400 mr-3"></i>
+                                        <span class="font-medium">Tax ID</span>
+                                    </div>
+                                    ${getDocumentStatus(seller.documents.taxId)}
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-university text-gray-400 mr-3"></i>
+                                        <span class="font-medium">Bank Account</span>
+                                    </div>
+                                    ${getDocumentStatus(seller.documents.bankAccount)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Stats -->
+                    <div>
+                        <div class="bg-purple-50 rounded-lg p-6 mb-6">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4">Performance Metrics</h5>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-sm text-gray-600">Overall Rating</span>
+                                        <div class="flex items-center">
+                                            <span class="font-bold text-lg mr-1">${seller.rating}</span>
+                                            <i class="fas fa-star text-yellow-400"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Total Products</p>
+                                    <p class="text-2xl font-bold text-purple-600">${seller.products}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Total Sales</p>
+                                    <p class="text-2xl font-bold text-purple-600">${seller.sales}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Revenue Generated</p>
+                                    <p class="text-2xl font-bold text-purple-600">$${seller.revenue.toFixed(2)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Commission Earned</p>
+                                    <p class="text-xl font-bold text-gray-800">$${seller.commission.toFixed(2)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="space-y-3">
+                            ${seller.status === 'pending' ? `
+                                <button onclick="approveSeller(${seller.id})" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-check mr-2"></i>Approve Seller
+                                </button>
+                                <button onclick="rejectSeller(${seller.id})" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-times mr-2"></i>Reject Application
+                                </button>
+                            ` : seller.status === 'approved' ? `
+                                <button onclick="viewProducts(${seller.id})" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                                    <i class="fas fa-box mr-2"></i>View Products
+                                </button>
+                                <button onclick="suspendSeller(${seller.id})" class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
+                                    <i class="fas fa-pause mr-2"></i>Suspend Seller
+                                </button>
+                            ` : `
+                                <button onclick="reactivateSeller(${seller.id})" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-play mr-2"></i>Reactivate Seller
+                                </button>
+                            `}
+                            <button onclick="sendMessage(${seller.id})" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-envelope mr-2"></i>Send Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showModal();
+        }
+
+        function getDocumentStatus(status) {
+            const statuses = {
+                verified: '<span class="flex items-center text-green-600"><i class="fas fa-check-circle mr-1"></i>Verified</span>',
+                pending: '<span class="flex items-center text-yellow-600"><i class="fas fa-clock mr-1"></i>Pending</span>',
+                expired: '<span class="flex items-center text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>Expired</span>'
+            };
+            return statuses[status] || '';
+        }
+
+        // Seller actions
+        function approveSeller(id) {
+            if (confirm('Are you sure you want to approve this seller?')) {
+                const seller = mockSellers.find(s => s.id === id);
+                seller.status = 'approved';
+                seller.rating = 4.5;
+                seller.performance = 75;
+                renderSellers();
+                closeModal();
+                showNotification('Seller approved successfully!', 'success');
+            }
+        }
+
+        function rejectSeller(id) {
+            if (confirm('Are you sure you want to reject this seller application?')) {
+                const index = mockSellers.findIndex(s => s.id === id);
+                mockSellers.splice(index, 1);
+                filteredSellers = filteredSellers.filter(s => s.id !== id);
+                renderSellers();
+                closeModal();
+                showNotification('Seller application rejected', 'error');
+            }
+        }
+
+        function suspendSeller(id) {
+            if (confirm('Are you sure you want to suspend this seller?')) {
+                const seller = mockSellers.find(s => s.id === id);
+                seller.status = 'suspended';
+                renderSellers();
+                closeModal();
+                showNotification('Seller suspended', 'warning');
+            }
+        }
+
+        function reactivateSeller(id) {
+            const seller = mockSellers.find(s => s.id === id);
+            seller.status = 'approved';
+            renderSellers();
+            closeModal();
+            showNotification('Seller reactivated successfully!', 'success');
+        }
+
+        function viewProducts(id) {
+            alert('Redirecting to products for seller #' + id);
+        }
+
+        function sendMessage(id) {
+            alert('Opening message composer for seller #' + id);
+        }
+
+        // Modal functions
+        function showModal() {
+            document.getElementById('sellerModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('sellerModal').classList.remove('show');
+        }
+
+        // Notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-yellow-500'
+            } text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}-circle mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+
+        // Initialize
+        renderSellers();
+
+        // Add performance animation on load
+        setTimeout(() => {
+            document.querySelectorAll('.performance-bar').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }, 100);
+    </script>
+</body>
+</html>

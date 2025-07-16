@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
+const Wishlist = require('../models/wishlist');
 
 // Pagination configuration
 const ITEMS_PER_PAGE = 12;
@@ -25,11 +26,17 @@ const renderShop = async (req, res) => {
         const startItem = skip + 1;
         const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
         
+        let wishlistProductIds = [];
+        if (req.user) {
+            const wishlist = await Wishlist.findOne({ user: req.user._id });
+            wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
+        }
         res.render('page/shop', {
             title: "Premium Collections | Velvra",
             heroTitle: "Premium",
             heroDescription: "Discover our meticulously curated selection of premium fashion. Each piece reflects timeless elegance, exceptional craftsmanship, and modern sophistication—designed to elevate every wardrobe.",
             products: products,
+            wishlistProductIds,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
@@ -322,11 +329,17 @@ router.route('/men')
             
             // Debug log to check product order
             console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
+            let wishlistProductIds = [];
+            if (req.user) {
+                const wishlist = await Wishlist.findOne({ user: req.user._id });
+                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
+            }
             res.render('page/shop', {
                 title: "Men's Collection | Velvra", 
                 heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
                 heroTitle: "Men's", 
                 products: products,
+                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
@@ -379,11 +392,17 @@ router.route('/women')
             const startItem = totalProducts > 0 ? skip + 1 : 0;
             const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
             
+            let wishlistProductIds = [];
+            if (req.user) {
+                const wishlist = await Wishlist.findOne({ user: req.user._id });
+                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
+            }
             res.render('page/shop', {
                 title: "Women's Collection | Velvra",
                 heroDescription: "Explore our meticulously curated collection of premium womenswear. Every piece embodies timeless elegance, refined craftsmanship, and modern femininity designed to empower and inspire.", 
                 heroTitle: "Women's",
                 products: products,
+                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
@@ -430,11 +449,17 @@ router.route('/sale')
             
             // Debug log to check product order
             console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
+            let wishlistProductIds = [];
+            if (req.user) {
+                const wishlist = await Wishlist.findOne({ user: req.user._id });
+                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
+            }
             res.render('page/shop', {
                 title: "Sale Items | Velvra",
                 heroTitle: "Sale",
                 heroDescription: "Discover our exclusive sale items with the best discounts. Shop now to get amazing deals on premium fashion pieces.",
                 products: products,
+                wishlistProductIds,
                 pagination: {
                     currentPage: page,
                     totalPages: totalPages,
