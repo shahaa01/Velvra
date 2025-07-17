@@ -78,7 +78,8 @@ router.route('/:id')
                 title: "Premium " + reqProduct.name + " | Velvra",
                 product: reqProduct,
                 similarProducts: similarProducts,
-                isInCart: isInCart
+                isInCart: isInCart,
+                currentUser: req.user
             });
         } catch (error) {
             console.error(error);

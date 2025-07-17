@@ -692,19 +692,46 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                 return res.status(404).render('error', { error: 'Seller not found. Please contact support.' });
             }
             
-            // Find existing conversation
+            // Validate order exists and belongs to user
+            const order = await Order.findById(orderId);
+            if (!order) {
+                console.log('Order not found:', orderId);
+                return res.status(404).render('error', { error: 'Order not found. Please contact support.' });
+            }
+            
+            if (order.user.toString() !== req.user._id.toString()) {
+                console.log('Order access denied for user:', req.user._id);
+                return res.status(403).render('error', { error: 'Access denied. This order does not belong to you.' });
+            }
+            
+            // Prevent conversation creation for cancelled or returned orders
+            if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+                console.log('Cannot create conversation for order with status:', order.orderStatus);
+                return res.status(400).render('error', { 
+                    error: `Cannot contact seller for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+                });
+            }
+            
+            // First, check if a conversation already exists between this user and seller (regardless of order)
             let conversation = await Conversation.findOne({
                 'participants': {
                     $all: [
                         { $elemMatch: { id: req.user._id, model: 'User' } },
                         { $elemMatch: { id: sellerId, model: 'Seller' } }
                     ]
-                },
-                order: orderId
+                }
             });
             
-            if (!conversation) {
-                console.log('Creating new conversation');
+            if (conversation) {
+                console.log('Found existing conversation between user and seller:', conversation._id);
+                // If conversation exists but doesn't have this order, update it to include the order
+                if (!conversation.order || conversation.order.toString() !== orderId) {
+                    conversation.order = orderId;
+                    await conversation.save();
+                    console.log('Updated existing conversation with order:', orderId);
+                }
+            } else {
+                console.log('Creating new conversation between user and seller');
                 conversation = await Conversation.create({
                     participants: [
                         { id: req.user._id, model: 'User' },
@@ -712,8 +739,6 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                     ],
                     order: orderId
                 });
-            } else {
-                console.log('Found existing conversation:', conversation._id);
             }
             
             return res.redirect(`/dashboard/messages/${conversation._id}`);
@@ -1111,7 +1136,7 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
             return res.status(400).json({ error: 'Message and seller ID are required' });
         }
 
-        // Verify order belongs to user
+        // Verify order belongs to user and is not cancelled/returned
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
@@ -1119,6 +1144,13 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
         
         if (order.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        // Prevent messaging for cancelled or returned orders
+        if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+            return res.status(400).json({ 
+                error: `Cannot send messages for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+            });
         }
 
         // Find or create conversation
@@ -1128,11 +1160,18 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
                     { $elemMatch: { id: req.user._id, model: 'User' } },
                     { $elemMatch: { id: sellerId, model: 'Seller' } }
                 ]
-            },
-            order: orderId
+            }
         });
 
-        if (!conversation) {
+        if (conversation) {
+            // If conversation exists but doesn't have this order, update it to include the order
+            if (!conversation.order || conversation.order.toString() !== orderId) {
+                conversation.order = orderId;
+            }
+            conversation.lastMessage = message;
+            conversation.updatedAt = new Date();
+            await conversation.save();
+        } else {
             conversation = await Conversation.create({
                 participants: [
                     { id: req.user._id, model: 'User' },
@@ -1141,10 +1180,6 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
                 order: orderId,
                 lastMessage: message
             });
-        } else {
-            conversation.lastMessage = message;
-            conversation.updatedAt = new Date();
-            await conversation.save();
         }
 
         // Create message

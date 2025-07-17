@@ -304,8 +304,23 @@ class VelvraState {
             const isLoggedIn = wishlistButton?.dataset.loggedIn === 'true';
             
             if (!isLoggedIn) {
-                // Redirect to login page
-                window.location.href = '/auth/login';
+                // Show login prompt instead of direct redirect
+                if (typeof Swal !== 'undefined') {
+                    const result = await Swal.fire({
+                        icon: 'info',
+                        title: 'Login Required',
+                        text: 'Please login to add items to your wishlist.',
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    });
+                    
+                    if (result.isConfirmed) {
+                        window.location.href = '/auth/login';
+                    }
+                } else {
+                    window.location.href = '/auth/login';
+                }
                 return;
             }
 
@@ -320,6 +335,14 @@ class VelvraState {
                     },
                     body: JSON.stringify({ productId })
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 if (data.success) {
@@ -337,6 +360,14 @@ class VelvraState {
                     },
                     body: JSON.stringify({ productId })
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 if (data.success) {

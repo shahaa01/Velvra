@@ -180,6 +180,24 @@ function initializeEventListeners() {
         const productId = wishlistBtn.dataset.productId;
         if (!productId) return;
         
+        // Check if user is logged in
+        const isLoggedIn = wishlistBtn.dataset.loggedIn === 'true';
+        if (!isLoggedIn) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Login Required',
+                text: 'Please login to add items to your wishlist.',
+                confirmButtonText: 'Login',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/auth/login';
+                }
+            });
+            return;
+        }
+        
         try {
             const isInWishlist = wishlistBtn.classList.contains('active');
             
@@ -192,6 +210,14 @@ function initializeEventListeners() {
                     },
                     body: JSON.stringify({ productId })
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 if (data.success) {
@@ -209,6 +235,14 @@ function initializeEventListeners() {
                     },
                     body: JSON.stringify({ productId })
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 if (data.success) {

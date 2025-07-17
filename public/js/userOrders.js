@@ -292,6 +292,10 @@ async function showSellerSelectionModal(orderId) {
 }
 
 // Contact specific seller
+// This will redirect to the messages page where the backend will:
+// 1. Check if a conversation already exists between user and seller
+// 2. If exists, redirect to that conversation (may update order reference)
+// 3. If not exists, create a new conversation
 function contactSeller(orderId, sellerId) {
     window.location.href = `/dashboard/messages?order=${orderId}&seller=${sellerId}`;
 }

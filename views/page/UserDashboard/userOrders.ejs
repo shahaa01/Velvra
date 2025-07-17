@@ -194,12 +194,15 @@
                                                     <i class="fas fa-map-marker-alt mr-2"></i>Track Order
                                                 </button>
                                             <% } %>
-                                            <% if (order.orderStatus !== 'returned') { %>
+                                            <!-- DEBUG: Order <%= order._id %> has status: <%= order.orderStatus %> -->
+                                            <% if (order.orderStatus !== 'returned' && order.orderStatus !== 'cancelled') { %>
                                                 <button onclick="showSellerSelectionModal('<%= order._id %>')" 
                                                         data-order-id="<%= order._id %>"
                                                         class="px-4 py-2 bg-pearl border border-beige text-charcoal text-sm font-medium rounded-lg hover:bg-cream transition-colors">
                                                     <i class="fas fa-comment mr-2"></i>Contact Support
                                                 </button>
+                                            <% } else { %>
+                                                <!-- Order status is: <%= order.orderStatus %> - Button hidden for order <%= order._id %> -->
                                             <% } %>
                                             <% if (order.orderStatus === 'pending' || order.orderStatus === 'processing') { %>
                                                 <button onclick="cancelOrder('<%= order._id %>')" 
@@ -216,6 +219,11 @@
                                             <% if (order.orderStatus === 'returned') { %>
                                                 <span class="px-4 py-2 text-sm text-stone">
                                                     <i class="fas fa-check-circle text-green-600 mr-2"></i>Refund Processed
+                                                </span>
+                                            <% } %>
+                                            <% if (order.orderStatus === 'cancelled') { %>
+                                                <span class="px-4 py-2 text-sm text-stone">
+                                                    <i class="fas fa-times-circle text-red-600 mr-2"></i>Order Cancelled
                                                 </span>
                                             <% } %>
                                         </div>
