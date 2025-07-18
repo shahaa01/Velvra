@@ -1550,4 +1550,31 @@ router.get('/test-order/:orderId', isLoggedIn, async (req, res) => {
     }
 });
 
+// Mobile Notifications Page
+router.get('/notifications', isLoggedIn, async (req, res) => {
+    try {
+        const stats = await getDashboardStats(req.user._id);
+        const notifications = await Notification.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(50);
+        const unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+        res.render('page/UserDashboard/userNotifications', {
+            title: 'Notifications - Velvra',
+            user: req.user,
+            stats,
+            notifications,
+            unreadNotificationCount
+        });
+    } catch (err) {
+        console.error('Notifications page error:', err);
+        res.render('page/UserDashboard/userNotifications', {
+            title: 'Notifications - Velvra',
+            user: req.user,
+            stats: {},
+            notifications: [],
+            unreadNotificationCount: 0
+        });
+    }
+});
+
 module.exports = router;
