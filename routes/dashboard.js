@@ -415,20 +415,16 @@ router.post('/wishlist/add', isLoggedIn, async (req, res) => {
 router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
     try {
         const { productId } = req.body;
-        
         if (!productId) {
             return res.status(400).json({ success: false, message: 'Product ID is required' });
         }
-
         const wishlist = await Wishlist.findOne({ user: req.user._id });
         if (!wishlist) {
             return res.status(404).json({ success: false, message: 'Wishlist not found' });
         }
-
         // Remove product from wishlist
         wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
         await wishlist.save();
-
         res.json({ 
             success: true, 
             message: 'Product removed from wishlist',

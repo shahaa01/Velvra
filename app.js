@@ -132,6 +132,9 @@ app.post('/toggle-mode', isLoggedIn, async (req, res) => {
   }
 });
 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 main().then(() => console.log('Database connected successfully🚀')).catch(err => console.log('Database connection error:',err.message));
 
 async function main() {
@@ -150,10 +153,10 @@ app.use('/cart', cartRoutes);
 app.use('/address', addressRoutes);
 app.use('/payment', require('./routes/paymentRoutes'));
 app.use('/dashboard', isLoggedIn, notificationHeaderData, require('./routes/dashboard'));
+app.use('/dashboard', require('./routes/reportIssueRoute')); // Mount at /dashboard instead of /
 app.use('/search', require('./routes/searchRoute'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoute'));
-app.use('/dashboard', require('./routes/reportIssueRoute')); // Mount at /dashboard instead of /
 
 const server = http.createServer(app);
 const io = socketio(server, { cors: { origin: '*' } });
