@@ -11,7 +11,7 @@
             </div>
             <div class="flex items-center space-x-4">
                 <div class="relative">
-                    <button id="notificationBell" class="relative p-2 text-stone hover:text-charcoal transition-colors" aria-label="Notifications">
+                    <button id="notificationBell" class="relative p-2 text-stone hover:text-charcoal transition-colors hidden lg:inline-block" aria-label="Notifications">
                         <i class="fas fa-bell text-xl"></i>
                         <span id="notificationCount" class="absolute -top-1 -right-1 min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center <%= unreadNotificationCount > 0 ? '' : 'hidden' %>"><%= unreadNotificationCount %></span>
                     </button>
