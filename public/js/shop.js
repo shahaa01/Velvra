@@ -17,7 +17,8 @@ class VelvraState {
         this.filterTimeout = null;
         this.pageCategory = window.location.pathname.includes('/men') ? 'men' : 
                            window.location.pathname.includes('/women') ? 'women' : null;
-        
+        // Add sale page detection
+        this.isSalePage = window.location.pathname === '/shop/sale';
         // Store search query if on search page
         this.isSearchPage = window.location.pathname.includes('/search/products');
         const urlParams = new URLSearchParams(window.location.search);
@@ -72,10 +73,14 @@ class VelvraState {
             if (this.filters.discounts.length > 0) params.append('discounts', this.filters.discounts.join(','));
             if (this.filters.sizes.length > 0) params.append('sizes', this.filters.sizes.join(','));
             if (this.pageCategory) params.append('category', this.pageCategory);
+            // --- ADD SORT PARAM ---
+            if (this.sortBy) params.append('sort', this.sortBy);
 
             // Determine which endpoint to use
             let endpoint = '/shop/api/products';
-            if (this.isSearchPage && this.searchQuery) {
+            if (this.isSalePage) {
+                endpoint = '/shop/api/products/sale';
+            } else if (this.isSearchPage && this.searchQuery) {
                 endpoint = '/search/api/products';
                 params.append('q', this.searchQuery);
             }
@@ -165,7 +170,7 @@ class VelvraState {
             
             return `
                 <article class="product-card">
-                    <button class="wishlist-btn">
+                    <button class="wishlist-btn" data-product-id="${product._id}" data-logged-in="${window.currentUser || false}">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                         </svg>
@@ -297,26 +302,126 @@ class VelvraState {
         }
     }
 
-    toggleWishlist(productId) {
-        const index = this.wishlist.indexOf(productId);
-        if (index > -1) {
-            this.wishlist.splice(index, 1);
-        } else {
-            this.wishlist.push(productId);
+    async toggleWishlist(productId) {
+        try {
+            // Update all wishlist buttons for this product
+            const wishlistButtons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+            const isLoggedIn = wishlistButtons[0]?.dataset.loggedIn === 'true';
+            if (!isLoggedIn) {
+                if (typeof Swal !== 'undefined') {
+                    const result = await Swal.fire({
+                        icon: 'info',
+                        title: 'Login Required',
+                        text: 'Please login to add items to your wishlist.',
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    });
+                    if (result.isConfirmed) {
+                        window.location.href = '/auth/login';
+                    }
+                } else {
+                    window.location.href = '/auth/login';
+                }
+                return;
+            }
+            const isInWishlist = wishlistButtons[0].classList.contains('active');
+            if (isInWishlist) {
+                // Remove from wishlist
+                const response = await fetch('/shop/wishlist/remove', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId })
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    wishlistButtons.forEach(btn => btn.classList.remove('active'));
+                    this.showWishlistNotification('Product removed from wishlist', 'success');
+                } else {
+                    this.showWishlistNotification(data.message || 'Failed to remove from wishlist', 'error');
+                }
+            } else {
+                // Add to wishlist
+                const response = await fetch('/shop/wishlist/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId })
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    wishlistButtons.forEach(btn => btn.classList.add('active'));
+                    this.showWishlistNotification('Product added to wishlist', 'success');
+                } else {
+                    this.showWishlistNotification(data.message || 'Failed to add to wishlist', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Wishlist toggle error:', error);
+            this.showWishlistNotification('An error occurred. Please try again.', 'error');
         }
-        localStorage.setItem('velvra-wishlist', JSON.stringify(this.wishlist));
-        this.updateWishlistUI();
     }
 
-    updateWishlistUI() {
-        document.querySelectorAll('.wishlist-btn').forEach((btn, index) => {
-            const productId = `product-${index + 1}`;
-            if (this.wishlist.includes(productId)) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
+    async updateWishlistUI() {
+        try {
+            const wishlistButtons = document.querySelectorAll('.wishlist-btn');
+            // Group by productId for efficiency
+            const productIds = Array.from(new Set(Array.from(wishlistButtons).map(btn => btn.dataset.productId)));
+            for (const productId of productIds) {
+                const buttons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+                const isLoggedIn = buttons[0]?.dataset.loggedIn === 'true';
+                if (!isLoggedIn) {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    continue;
+                }
+                const response = await fetch(`/shop/wishlist/check/${productId}`);
+                const data = await response.json();
+                if (data.success && data.isInWishlist) {
+                    buttons.forEach(btn => btn.classList.add('active'));
+                } else {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                }
             }
-        });
+        } catch (error) {
+            console.error('Error updating wishlist UI:', error);
+        }
+    }
+
+    showWishlistNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
     }
 }
 
@@ -327,6 +432,21 @@ const state = new VelvraState();
 document.addEventListener('DOMContentLoaded', () => {
     state.updateWishlistUI();
 });
+
+    // Add event listeners for wishlist buttons (moved outside DOMContentLoaded)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.wishlist-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const button = e.target.closest('.wishlist-btn');
+            const productId = button.dataset.productId;
+            
+            if (productId) {
+                state.toggleWishlist(productId);
+            }
+        }
+    });
 
 // ===== SORT FUNCTIONALITY =====
 const sortTrigger = document.getElementById('sortTrigger');
@@ -364,17 +484,13 @@ document.querySelectorAll('.sort-item').forEach(item => {
         const sortValue = item.dataset.sort;
         const sortText = item.querySelector('span').textContent;
         currentSortText.textContent = sortText;
+        // Update state and re-fetch products
         state.sortBy = sortValue;
-        
-        // Close dropdown
         sortDropdown.classList.remove('active');
         sortTrigger.setAttribute('aria-expanded', 'false');
-        
-        // Apply sort with loading animation
-        document.getElementById('productGrid').classList.add('loading');
-        setTimeout(() => {
-            document.getElementById('productGrid').classList.remove('loading');
-        }, 300);
+        // Actually apply the sort (fetch new products)
+        state.currentPage = 1;
+        state.applyFilters();
     });
 });
 
@@ -798,23 +914,7 @@ document.querySelectorAll('.brand-checkbox').forEach(checkbox => {
 
 // ===== PRODUCT INTERACTIONS =====
 
-// Wishlist functionality - Event delegation for better performance
-document.addEventListener('click', (e) => {
-    if (e.target.closest('.wishlist-btn')) {
-        e.preventDefault();
-        e.stopPropagation();
-        const btn = e.target.closest('.wishlist-btn');
-        const index = Array.from(document.querySelectorAll('.wishlist-btn')).indexOf(btn);
-        const productId = `product-${index + 1}`;
-        state.toggleWishlist(productId);
-        
-        // Add visual feedback
-        btn.classList.add('wishlist-animate');
-        setTimeout(() => {
-            btn.classList.remove('wishlist-animate');
-        }, 300);
-    }
-});
+// Wishlist functionality is handled by the global event listener at line 410
 
 // Product card color options - Event delegation
 document.addEventListener('click', (e) => {
@@ -1473,7 +1573,9 @@ class LoadMoreManager {
 
             // Determine which endpoint to use
             let endpoint = '/shop/api/products';
-            if (this.state.isSearchPage && this.state.searchQuery) {
+            if (this.state.isSalePage) {
+                endpoint = '/shop/api/products/sale';
+            } else if (this.state.isSearchPage && this.state.searchQuery) {
                 endpoint = '/search/api/products';
                 params.append('q', this.state.searchQuery);
             }
@@ -1548,8 +1650,11 @@ class LoadMoreManager {
             wishlistBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Add wishlist functionality here if needed
-                wishlistBtn.classList.toggle('active');
+                
+                const productId = wishlistBtn.dataset.productId;
+                if (productId) {
+                    state.toggleWishlist(productId);
+                }
             });
         }
         
@@ -1634,6 +1739,8 @@ class LoadMoreManager {
         // Create wishlist button
         const wishlistBtn = document.createElement('button');
         wishlistBtn.className = 'wishlist-btn';
+        wishlistBtn.dataset.productId = product._id;
+        wishlistBtn.dataset.loggedIn = window.currentUser || false; // Use actual user status
         wishlistBtn.innerHTML = `
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -1815,3 +1922,127 @@ if (!isSearchPage) {
     state.applyFilters();
 }
 });
+
+// Global wishlist array
+window.userWishlist = [];
+
+// Fetch wishlist IDs on page load
+async function fetchUserWishlist() {
+    try {
+        const res = await fetch('/shop/api/user/wishlist-ids');
+        if (!res.ok) throw new Error('Failed to fetch wishlist');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.productIds)) {
+            window.userWishlist = data.productIds;
+        } else {
+            window.userWishlist = [];
+        }
+    } catch (e) {
+        window.userWishlist = [];
+    }
+}
+
+// Mark wishlisted products in the grid
+function markWishlistedProducts() {
+    document.querySelectorAll('.wishlist-btn[data-product-id]').forEach(btn => {
+        const pid = btn.dataset.productId;
+        if (window.userWishlist.includes(pid)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// On page load, fetch wishlist and mark
+fetchUserWishlist().then(markWishlistedProducts);
+
+// After rendering new products (initial or via Load More), call markWishlistedProducts()
+// Patch renderProducts and addProductsToGrid to call markWishlistedProducts at the end
+const origRenderProducts = VelvraState.prototype.renderProducts;
+VelvraState.prototype.renderProducts = function(products) {
+    origRenderProducts.call(this, products);
+    markWishlistedProducts();
+};
+const origAddProductsToGrid = LoadMoreManager.prototype.addProductsToGrid;
+LoadMoreManager.prototype.addProductsToGrid = function(products) {
+    origAddProductsToGrid.call(this, products);
+    markWishlistedProducts();
+};
+
+// When toggling wishlist, update userWishlist array accordingly
+VelvraState.prototype.toggleWishlist = async function(productId) {
+    try {
+        const wishlistButtons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+        const isLoggedIn = wishlistButtons[0]?.dataset.loggedIn === 'true';
+        if (!isLoggedIn) {
+            if (typeof Swal !== 'undefined') {
+                const result = await Swal.fire({
+                    icon: 'info',
+                    title: 'Login Required',
+                    text: 'Please login to add items to your wishlist.',
+                    confirmButtonText: 'Login',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                });
+                if (result.isConfirmed) {
+                    window.location.href = '/auth/login';
+                }
+            } else {
+                window.location.href = '/auth/login';
+            }
+            return;
+        }
+        const isInWishlist = wishlistButtons[0].classList.contains('active');
+        if (isInWishlist) {
+            const response = await fetch('/shop/wishlist/remove', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success) {
+                wishlistButtons.forEach(btn => btn.classList.remove('active'));
+                // Remove from userWishlist
+                window.userWishlist = window.userWishlist.filter(id => id !== productId);
+                this.showWishlistNotification('Product removed from wishlist', 'success');
+            } else {
+                this.showWishlistNotification(data.message || 'Failed to remove from wishlist', 'error');
+            }
+        } else {
+            const response = await fetch('/shop/wishlist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success) {
+                wishlistButtons.forEach(btn => btn.classList.add('active'));
+                // Add to userWishlist
+                if (!window.userWishlist.includes(productId)) {
+                    window.userWishlist.push(productId);
+                }
+                this.showWishlistNotification('Product added to wishlist', 'success');
+            } else {
+                this.showWishlistNotification(data.message || 'Failed to add to wishlist', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Wishlist toggle error:', error);
+        this.showWishlistNotification('An error occurred. Please try again.', 'error');
+    }
+};

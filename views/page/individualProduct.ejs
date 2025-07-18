@@ -1,5 +1,6 @@
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
+<% block('css').append('<link rel="stylesheet" href="/css/reviews.css">') %>
 
 <%
 // Check if the default color and size combination is in stock
@@ -90,7 +91,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                             <span class="inline-block px-4 py-2 bg-velvra-charcoal text-white text-sm font-medium tracking-wider uppercase rounded-full">
                                 <%= product.name %>
                             </span>
-                            <button id="wishlistBtn" class="wishlist-btn w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group<%= wishlistProductIds && wishlistProductIds.includes(product._id.toString()) ? ' in-wishlist' : '' %>" data-product-id="<%= product._id %>">
+                            <button id="wishlistBtn" class="w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group" data-product-id="<%= product._id %>" data-logged-in="<%= currentUser ? 'true' : 'false' %>">
                                 <svg class="w-6 h-6 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path class="heart-outline" fill="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
@@ -113,8 +114,8 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                         <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Color</h3>
                         <div class="flex space-x-3">
                             <% for(let i = 0; i < product.colors.length; i++) { %>
-                                <% const prodColor = product.colors[i]; %>
-                                <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
+                            <% const prodColor = product.colors[i]; %>
+                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
                                     style="background-color: <%= prodColor.hex %>" 
                                     data-color="<%= prodColor.name %>"
                                     title="<%= prodColor.name %>"></button>
@@ -371,9 +372,10 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
             </div>
         </div>
 
+        <%- include('../components/reviews.ejs') %>
+
 <!-- Enhanced You May Also Like Section -->
-<!-- Enhanced You May Also Like Section -->
-<!-- Replace the entire "You May Also Like" section starting from the comment to the closing </div> -->
+
 <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-20">
     <div class="mb-12 text-center">
         <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
@@ -391,12 +393,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
             <% for(let i = 0; i < Math.min(4, similarProducts.length); i++) { %>
                 <% const simProduct = similarProducts[i]; %>
                 <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-                    <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                    </button>
-                    
+                    <!-- Wishlist button removed -->
                     <% if(simProduct.salePercentage) { %>
                         <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= simProduct.salePercentage %>% Off</div>
                     <% } %>
@@ -410,11 +407,9 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                             <div class="image-counter absolute bottom-2 right-2 bg-white/80 text-xs rounded-full px-2 py-0.5 shadow-sm"><span class="current-image">1</span>/<%= simProduct.images.length %></div>
                         <% } %>
                     </figure>
-
                     <div class="p-6">
                         <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= simProduct.brand || 'VELVRA' %></p>
                         <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= simProduct.name %></h3>
-                        
                         <div class="flex items-baseline space-x-2">
                             <span class="text-xl font-semibold text-velvra-charcoal">₹<%= simProduct.salePrice || simProduct.price %></span>
                             <% if(simProduct.sale) { %>
@@ -445,7 +440,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>
-<% block('script').append('<script src="/js/wishlist.js"></script>') %>
+<% block('script').append('<script src="/js/reviews.js"></script>') %>
 
 <% function getStockForColorSize(product, colorName, sizeName) { const color = product.colors.find(c => c.name === colorName); if (!color) return 0; const sizeObj = color.sizes.find(s => s.size === sizeName); return sizeObj ? sizeObj.stock : 0; } %>
 

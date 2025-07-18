@@ -16,33 +16,7 @@ const logoutModal = document.getElementById('logoutModal');
 const trackingModal = document.getElementById('trackingModal');
 const sellerSelectionModal = document.getElementById('sellerSelectionModal');
 
-// Mobile menu functionality
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-const closeSidebar = document.getElementById('closeSidebar');
-
-// Initialize mobile menu
-function initMobileMenu() {
-    if (menuToggle && sidebar && sidebarOverlay) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            sidebarOverlay.classList.toggle('hidden');
-        });
-
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-        });
-
-        if (closeSidebar) {
-            closeSidebar.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-                sidebarOverlay.classList.add('hidden');
-            });
-        }
-    }
-}
+// (Removed per-page mobile menu logic)
 
 // Initialize filter functionality
 function initFilters() {
@@ -292,6 +266,10 @@ async function showSellerSelectionModal(orderId) {
 }
 
 // Contact specific seller
+// This will redirect to the messages page where the backend will:
+// 1. Check if a conversation already exists between user and seller
+// 2. If exists, redirect to that conversation (may update order reference)
+// 3. If not exists, create a new conversation
 function contactSeller(orderId, sellerId) {
     window.location.href = `/dashboard/messages?order=${orderId}&seller=${sellerId}`;
 }
@@ -554,7 +532,6 @@ function updateOrderStatusInDOM(orderId, newStatus) {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    initMobileMenu();
     initFilters();
     initModals();
     initOrderActions();

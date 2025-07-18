@@ -369,7 +369,7 @@ function showMobileChat() {
             </div>
             
             <!-- Message Input - Fixed at bottom -->
-            <div class="absolute bottom-0 left-0 right-0 bg-cream p-4 border-t border-beige z-10">
+            <div class="absolute bottom-0 left-0 right-0 bg-cream p-4 border-t border-beige msgInoutButtom">
                 <div class="flex items-center space-x-2">
                     <button class="p-2 text-charcoal hover:text-charcoal transition-colors">
                         <i class="fas fa-paperclip text-lg"></i>
@@ -393,7 +393,9 @@ function showMobileChat() {
     
     mobileChatWindow.classList.remove('hidden');
     mobileChatWindow.classList.add('slide-in-right');
-    
+    // Hide mobile bottom nav when chat is open
+    const mobileBottomNav = document.getElementById('mobileBottomNav');
+    if (mobileBottomNav) mobileBottomNav.style.display = 'none';
     // Add event listeners for mobile
     document.getElementById('mobileBackBtn').addEventListener('click', hideMobileChat);
     document.getElementById('mobileMessageInput').addEventListener('keypress', (e) => {
@@ -413,6 +415,9 @@ function hideMobileChat() {
         mobileChatWindow.classList.remove('slide-in-right', 'slide-out-right');
         currentConversation = null;
         renderConversations();
+        // Show mobile bottom nav when chat is closed
+        const mobileBottomNav = document.getElementById('mobileBottomNav');
+        if (mobileBottomNav) mobileBottomNav.style.display = '';
     }, 300);
 }
 

@@ -7,6 +7,8 @@ const Message = require('../models/message');
 const Conversation = require('../models/conversation');
 const mongoose = require('mongoose');
 const User = require('../models/user');
+const Notification = require('../models/notification');
+const IssueReport = require('../models/issueReport');
 
 // Toggle user mode (buyer/seller)
 // (Removed, now handled globally in app.js)
@@ -92,16 +94,18 @@ router.get('/', isLoggedIn, async (req, res) => {
             console.log('Using fallback order activity data:', finalOrderActivity);
         }
 
+        // Remove notification fetching here; now handled by middleware
         res.render('page/UserDashboard/userDashboard', {
             title: 'Dashboard - Velvra',
             user: req.user,
             orders,
             stats,
             orderActivity: finalOrderActivity
+            // notifications and unreadNotificationCount are now in res.locals
         });
-    } catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).render('error', { error: 'Failed to load dashboard' });
+    } catch (err) {
+        console.error('Dashboard error:', err);
+        res.status(500).render('error', { message: 'Dashboard error', error: err });
     }
 });
 
@@ -338,16 +342,29 @@ router.get('/order-history', isLoggedIn, async (req, res) => {
 // Wishlist
 router.get('/wishlist', isLoggedIn, async (req, res) => {
     try {
-        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate('products');
+        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate({
+            path: 'products',
+            populate: {
+                path: 'seller',
+                select: 'businessName'
+            }
+        });
+        
         if (!wishlist) {
             wishlist = await Wishlist.create({ user: req.user._id, products: [] });
         }
+
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
+
         res.render('page/UserDashboard/userWishlist', { 
             title: 'My Wishlist - Velvra',
             user: req.user, 
-            wishlist
+            wishlist,
+            stats
         });
     } catch (error) {
+        console.error('Wishlist route error:', error);
         res.status(500).render('error', { error: 'Failed to load wishlist' });
     }
 });
@@ -398,20 +415,16 @@ router.post('/wishlist/add', isLoggedIn, async (req, res) => {
 router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
     try {
         const { productId } = req.body;
-        
         if (!productId) {
             return res.status(400).json({ success: false, message: 'Product ID is required' });
         }
-
         const wishlist = await Wishlist.findOne({ user: req.user._id });
         if (!wishlist) {
             return res.status(404).json({ success: false, message: 'Wishlist not found' });
         }
-
         // Remove product from wishlist
         wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
         await wishlist.save();
-
         res.json({ 
             success: true, 
             message: 'Product removed from wishlist',
@@ -423,7 +436,82 @@ router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
     }
 });
 
-// AJAX: Move product from wishlist to cart
+// AJAX: Add product to cart from wishlist
+router.post('/wishlist/add-to-cart', isLoggedIn, async (req, res) => {
+    try {
+        const { productId, size, color, quantity = 1 } = req.body;
+        
+        if (!productId || !size || !color) {
+            return res.status(400).json({ success: false, message: 'Product ID, size, and color are required' });
+        }
+
+        // Verify product exists
+        const Product = require('../models/product');
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Check if product is in wishlist
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+        if (!wishlist || !wishlist.products.includes(productId)) {
+            return res.status(400).json({ success: false, message: 'Product not in wishlist' });
+        }
+
+        // Validate color and size availability
+        const colorObj = product.colors.find(c => c.name === color);
+        if (!colorObj) {
+            return res.status(400).json({ success: false, message: 'Color not available' });
+        }
+        
+        const sizeObj = colorObj.sizes.find(s => s.size === size);
+        if (!sizeObj) {
+            return res.status(400).json({ success: false, message: 'Size not available for this color' });
+        }
+        
+        if (sizeObj.stock < quantity) {
+            return res.status(400).json({ success: false, message: 'Not enough stock for this variant' });
+        }
+
+        // Add to cart (using existing cart logic)
+        const Cart = require('../models/cart');
+        let cart = await Cart.findOne({ user: req.user._id });
+        if (!cart) {
+            cart = await Cart.create({ user: req.user._id, items: [] });
+        }
+
+        // Check if item already exists in cart
+        const existingItem = cart.items.find(item => 
+            item.product.toString() === productId && 
+            item.size === size && 
+            item.color === color
+        );
+
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.items.push({
+                product: productId,
+                size,
+                color,
+                quantity
+            });
+        }
+
+        await cart.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Product added to cart',
+            cartCount: cart.items.reduce((total, item) => total + item.quantity, 0)
+        });
+    } catch (error) {
+        console.error('Add to cart error:', error);
+        res.status(500).json({ success: false, message: 'Failed to add product to cart' });
+    }
+});
+
+// AJAX: Move product from wishlist to cart (removes from wishlist)
 router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
     try {
         const { productId, size, color, quantity = 1 } = req.body;
@@ -466,8 +554,7 @@ router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
                 product: productId,
                 size,
                 color,
-                quantity,
-                price: product.price
+                quantity
             });
         }
 
@@ -481,7 +568,7 @@ router.post('/wishlist/move-to-cart', isLoggedIn, async (req, res) => {
             success: true, 
             message: 'Product moved to cart',
             wishlistCount: wishlist.products.length,
-            cartCount: cart.items.length
+            cartCount: cart.items.reduce((total, item) => total + item.quantity, 0)
         });
     } catch (error) {
         console.error('Move to cart error:', error);
@@ -514,6 +601,72 @@ router.get('/wishlist/check/:productId', isLoggedIn, async (req, res) => {
     }
 });
 
+// AJAX: Get wishlist data with filtering and sorting
+router.get('/wishlist/data', isLoggedIn, async (req, res) => {
+    try {
+        const { filter = 'all', sort = 'recent' } = req.query;
+        
+        let wishlist = await Wishlist.findOne({ user: req.user._id }).populate({
+            path: 'products',
+            populate: {
+                path: 'seller',
+                select: 'businessName'
+            }
+        });
+        
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, products: [] });
+        }
+
+        let products = wishlist.products || [];
+
+        // Apply filters
+        if (filter === 'sale') {
+            products = products.filter(product => product.sale);
+        } else if (filter === 'instock') {
+            products = products.filter(product => {
+                // Check if any color has any size with stock > 0
+                return product.colors.some(color => 
+                    color.sizes.some(size => size.stock > 0)
+                );
+            });
+        }
+
+        // Apply sorting
+        switch (sort) {
+            case 'recent':
+                products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+            case 'price-low':
+                products.sort((a, b) => {
+                    const priceA = a.salePrice || a.price;
+                    const priceB = b.salePrice || b.price;
+                    return priceA - priceB;
+                });
+                break;
+            case 'price-high':
+                products.sort((a, b) => {
+                    const priceA = a.salePrice || a.price;
+                    const priceB = b.salePrice || b.price;
+                    return priceB - priceA;
+                });
+                break;
+            case 'name':
+                products.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+        }
+
+        res.json({ 
+            success: true, 
+            products,
+            count: products.length
+        });
+    } catch (error) {
+        console.error('Get wishlist data error:', error);
+        res.status(500).json({ success: false, products: [], count: 0 });
+    }
+});
+
 // Messages (Inbox)
 router.get('/messages', isLoggedIn, async (req, res) => {
     try {
@@ -539,19 +692,46 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                 return res.status(404).render('error', { error: 'Seller not found. Please contact support.' });
             }
             
-            // Find existing conversation
+            // Validate order exists and belongs to user
+            const order = await Order.findById(orderId);
+            if (!order) {
+                console.log('Order not found:', orderId);
+                return res.status(404).render('error', { error: 'Order not found. Please contact support.' });
+            }
+            
+            if (order.user.toString() !== req.user._id.toString()) {
+                console.log('Order access denied for user:', req.user._id);
+                return res.status(403).render('error', { error: 'Access denied. This order does not belong to you.' });
+            }
+            
+            // Prevent conversation creation for cancelled or returned orders
+            if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+                console.log('Cannot create conversation for order with status:', order.orderStatus);
+                return res.status(400).render('error', { 
+                    error: `Cannot contact seller for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+                });
+            }
+            
+            // First, check if a conversation already exists between this user and seller (regardless of order)
             let conversation = await Conversation.findOne({
                 'participants': {
                     $all: [
                         { $elemMatch: { id: req.user._id, model: 'User' } },
                         { $elemMatch: { id: sellerId, model: 'Seller' } }
                     ]
-                },
-                order: orderId
+                }
             });
             
-            if (!conversation) {
-                console.log('Creating new conversation');
+            if (conversation) {
+                console.log('Found existing conversation between user and seller:', conversation._id);
+                // If conversation exists but doesn't have this order, update it to include the order
+                if (!conversation.order || conversation.order.toString() !== orderId) {
+                    conversation.order = orderId;
+                    await conversation.save();
+                    console.log('Updated existing conversation with order:', orderId);
+                }
+            } else {
+                console.log('Creating new conversation between user and seller');
                 conversation = await Conversation.create({
                     participants: [
                         { id: req.user._id, model: 'User' },
@@ -559,8 +739,6 @@ router.get('/messages', isLoggedIn, async (req, res) => {
                     ],
                     order: orderId
                 });
-            } else {
-                console.log('Found existing conversation:', conversation._id);
             }
             
             return res.redirect(`/dashboard/messages/${conversation._id}`);
@@ -898,21 +1076,100 @@ router.get('/messages/:conversationId/messages', isLoggedIn, async (req, res) =>
     }
 });
 
-// Report Issue (placeholder)
-router.get('/report-issue', isLoggedIn, (req, res) => {
-    res.render('page/UserDashboard/userReportIssue', { 
-        title: 'Report Issues - Velvra',
-        user: req.user
-    });
+// Report Issue (dynamic)
+router.get('/report-issue', isLoggedIn, async (req, res) => {
+    try {
+        const userOrders = await Order.find({ user: req.user._id })
+            .populate('items.product')
+            .populate('items.seller')
+            .sort({ createdAt: -1 });
+        
+        // Fetch user's reports for the "My Reports" tab
+        const reports = await IssueReport.find({ userId: req.user._id })
+            .populate('orderId')
+            .sort({ createdAt: -1 });
+        
+        const stats = await getDashboardStats(req.user._id);
+        res.render('page/UserDashboard/userReportIssue', {
+            title: 'Report Issues - Velvra',
+            user: req.user,
+            stats,
+            userOrders,
+            reports, // Add reports to template context
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            },
+            currentPage: 'report-issue'
+        });
+    } catch (error) {
+        console.error('Report Issue page error:', error);
+        res.render('page/UserDashboard/userReportIssue', {
+            title: 'Report Issues - Velvra',
+            user: req.user,
+            stats: {},
+            userOrders: [],
+            reports: [], // Add empty reports array for error case
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            },
+            currentPage: 'report-issue'
+        });
+    }
 });
 
-// Settings (placeholder)
-router.get('/settings', isLoggedIn, (req, res) => {
-    res.render('page/UserDashboard/userSettings', { 
-        title: 'Profile Settings - Velvra',
-        user: req.user
-    });
+// Settings (dynamic)
+router.get('/settings', isLoggedIn, async (req, res) => {
+    try {
+        const stats = await getDashboardStats(req.user._id);
+        
+        // Get user with addresses populated
+        const user = await User.findById(req.user._id);
+        
+        // Find default address
+        const defaultAddress = user.addresses.find(addr => addr.defaultShipping) || {};
+        
+        // Parse date of birth if exists
+        let birthMonth = 1, birthDay = 1, birthYear = 1990;
+        if (user.dateOfBirth) {
+            const dob = new Date(user.dateOfBirth);
+            birthMonth = dob.getMonth() + 1;
+            birthDay = dob.getDate();
+            birthYear = dob.getFullYear();
+        }
+        
+        res.render('page/UserDashboard/userSettings', { 
+            title: 'Profile Settings - Velvra',
+            user: req.user,
+            stats,
+            defaultAddress,
+            birthMonth,
+            birthDay,
+            birthYear
+        });
+    } catch (error) {
+        console.error('Settings page error:', error);
+        res.render('page/UserDashboard/userSettings', { 
+            title: 'Profile Settings - Velvra',
+            user: req.user,
+            stats: {},
+            defaultAddress: {},
+            birthMonth: 1,
+            birthDay: 1,
+            birthYear: 1990
+        });
+    }
 });
+
+// Update Personal Information
+router.post('/settings/personal-info', isLoggedIn, require('../controllers/userSettingsController').updatePersonalInfo);
+
+// Update Address
+router.post('/settings/address', isLoggedIn, require('../controllers/userSettingsController').updateAddress);
+
+// Update Password
+router.post('/settings/password', isLoggedIn, require('../controllers/userSettingsController').updatePassword);
 
 // Get Order Tracking Data
 router.get('/orders/:orderId/tracking', isLoggedIn, async (req, res) => {
@@ -958,7 +1215,7 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
             return res.status(400).json({ error: 'Message and seller ID are required' });
         }
 
-        // Verify order belongs to user
+        // Verify order belongs to user and is not cancelled/returned
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
@@ -966,6 +1223,13 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
         
         if (order.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        // Prevent messaging for cancelled or returned orders
+        if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+            return res.status(400).json({ 
+                error: `Cannot send messages for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+            });
         }
 
         // Find or create conversation
@@ -975,11 +1239,18 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
                     { $elemMatch: { id: req.user._id, model: 'User' } },
                     { $elemMatch: { id: sellerId, model: 'Seller' } }
                 ]
-            },
-            order: orderId
+            }
         });
 
-        if (!conversation) {
+        if (conversation) {
+            // If conversation exists but doesn't have this order, update it to include the order
+            if (!conversation.order || conversation.order.toString() !== orderId) {
+                conversation.order = orderId;
+            }
+            conversation.lastMessage = message;
+            conversation.updatedAt = new Date();
+            await conversation.save();
+        } else {
             conversation = await Conversation.create({
                 participants: [
                     { id: req.user._id, model: 'User' },
@@ -988,10 +1259,6 @@ router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
                 order: orderId,
                 lastMessage: message
             });
-        } else {
-            conversation.lastMessage = message;
-            conversation.updatedAt = new Date();
-            await conversation.save();
         }
 
         // Create message
@@ -1276,6 +1543,33 @@ router.get('/test-order/:orderId', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Test order error:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Mobile Notifications Page
+router.get('/notifications', isLoggedIn, async (req, res) => {
+    try {
+        const stats = await getDashboardStats(req.user._id);
+        const notifications = await Notification.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(50);
+        const unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+        res.render('page/UserDashboard/userNotifications', {
+            title: 'Notifications - Velvra',
+            user: req.user,
+            stats,
+            notifications,
+            unreadNotificationCount
+        });
+    } catch (err) {
+        console.error('Notifications page error:', err);
+        res.render('page/UserDashboard/userNotifications', {
+            title: 'Notifications - Velvra',
+            user: req.user,
+            stats: {},
+            notifications: [],
+            unreadNotificationCount: 0
+        });
     }
 });
 

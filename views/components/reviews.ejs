@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divaa - Reviews & Ratings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .star-rating {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .star {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .star.filled {
+            color: #1f2937;
+        }
+        
+        .star.empty {
+            color: #e5e7eb;
+        }
+        
+        .star:hover {
+            transform: scale(1.1);
+        }
+        
+        .rating-bar {
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .rating-fill {
+            height: 100%;
+            background: #1f2937;
+            transition: width 0.6s ease;
+        }
+        
+        .review-card {
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.3s ease;
+        }
+        
+        .review-card:hover {
+            background: #fafafa;
+        }
+        
+        .image-preview {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+        
+        .remove-image:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-down {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { max-height: 0; opacity: 0; }
+            to { max-height: 200px; opacity: 1; }
+        }
+        
+        /* Custom scrollbar for better aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Reviews & Ratings Section -->
+        <section class="reviews-section">
+            <!-- Section Header -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-light text-gray-900 mb-2">Customer Reviews</h2>
+                <p class="text-sm text-gray-500">Honest feedback from verified customers</p>
+            </div>
+            
+            <!-- Reviews Summary -->
+            <div class="summary-section mb-10 p-6 bg-gray-50 rounded-lg">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Overall Rating -->
+                    <div class="overall-rating">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="text-4xl font-light text-gray-900">4.6</div>
+                            <div>
+                                <div class="star-rating mb-1">
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                </div>
+                                <p class="text-sm text-gray-600">Based on 247 reviews</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating Distribution -->
+                    <div class="rating-distribution">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600 w-8">5★</span>
+                                <div class="flex-1 rating-bar">
+                                    <div class="rating-fill" style="width: 72%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8">178</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600 w-8">4★</span>
+                                <div class="flex-1 rating-bar">
+                                    <div class="rating-fill" style="width: 18%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8">45</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600 w-8">3★</span>
+                                <div class="flex-1 rating-bar">
+                                    <div class="rating-fill" style="width: 6%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8">15</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600 w-8">2★</span>
+                                <div class="flex-1 rating-bar">
+                                    <div class="rating-fill" style="width: 3%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8">7</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600 w-8">1★</span>
+                                <div class="flex-1 rating-bar">
+                                    <div class="rating-fill" style="width: 1%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8">2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter & Sort Controls -->
+            <div class="filter-controls mb-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600">Sort by:</label>
+                        <select id="sortSelect" class="border border-gray-300 rounded px-3 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="highest">Highest Rated</option>
+                            <option value="lowest">Lowest Rated</option>
+                            <option value="helpful">Most Helpful</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600">Filter:</label>
+                        <select id="filterSelect" class="border border-gray-300 rounded px-3 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <option value="all">All Reviews</option>
+                            <option value="5">5 Stars Only</option>
+                            <option value="4">4 Stars Only</option>
+                            <option value="3">3 Stars Only</option>
+                            <option value="2">2 Stars Only</option>
+                            <option value="1">1 Star Only</option>
+                            <option value="verified">Verified Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews List -->
+            <div class="reviews-list mb-10">
+                <div id="reviewsContainer" class="space-y-0">
+                    <!-- Sample Reviews -->
+                    <div class="review-card p-6 fade-in" data-rating="5" data-verified="true" data-date="2024-07-15">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Sarah M.</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="star-rating">
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-500">July 15, 2024</span>
+                        </div>
+                        <p class="text-gray-700 mb-3 leading-relaxed">Absolutely gorgeous piece! The fabric quality is exceptional and the fit is perfect. I've received so many compliments wearing this. The attention to detail is remarkable - you can really tell this is a premium piece.</p>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (12)</button>
+                            <button class="hover:text-gray-700 transition-colors">Report</button>
+                        </div>
+                    </div>
+                    
+                    <div class="review-card p-6 fade-in" data-rating="4" data-verified="true" data-date="2024-07-12">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Emma L.</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="star-rating">
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star empty">★</span>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-500">July 12, 2024</span>
+                        </div>
+                        <p class="text-gray-700 mb-3 leading-relaxed">Beautiful design and great quality fabric. Fits true to size. The only reason I'm not giving 5 stars is because the delivery took longer than expected, but the product itself is fantastic.</p>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (8)</button>
+                            <button class="hover:text-gray-700 transition-colors">Report</button>
+                        </div>
+                    </div>
+                    
+                    <div class="review-card p-6 fade-in" data-rating="5" data-verified="false" data-date="2024-07-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Jessica R.</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="star-rating">
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-500">July 10, 2024</span>
+                        </div>
+                        <p class="text-gray-700 mb-3 leading-relaxed">Love this piece! The cut is so flattering and the material feels luxurious. Perfect for both casual and formal occasions. Will definitely be ordering more from Divaa.</p>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (15)</button>
+                            <button class="hover:text-gray-700 transition-colors">Report</button>
+                        </div>
+                    </div>
+                    
+                    <div class="review-card p-6 fade-in" data-rating="3" data-verified="true" data-date="2024-07-08">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Maria K.</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="star-rating">
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star filled">★</span>
+                                        <span class="star empty">★</span>
+                                        <span class="star empty">★</span>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-500">July 8, 2024</span>
+                        </div>
+                        <p class="text-gray-700 mb-3 leading-relaxed">The quality is decent but the fit wasn't quite what I expected. It runs a bit large. The fabric is nice but not as luxurious as I hoped for the price point.</p>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (3)</button>
+                            <button class="hover:text-gray-700 transition-colors">Report</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="text-center mt-8">
+                    <button id="loadMoreBtn" class="px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg">
+                        Load More Reviews
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Write Review Form -->
+            <div class="write-review-section">
+                <div class="border-t pt-8">
+                    <h3 class="text-xl font-light text-gray-900 mb-6">Share Your Experience</h3>
+                    
+                    <form id="reviewForm" class="space-y-6">
+                        <!-- Rating Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
+                            <div class="star-rating-input flex gap-1" data-rating="0">
+                                <span class="star-input star empty text-2xl" data-value="1">★</span>
+                                <span class="star-input star empty text-2xl" data-value="2">★</span>
+                                <span class="star-input star empty text-2xl" data-value="3">★</span>
+                                <span class="star-input star empty text-2xl" data-value="4">★</span>
+                                <span class="star-input star empty text-2xl" data-value="5">★</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Name Input -->
+                        <div>
+                            <label for="reviewerName" class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                            <input type="text" id="reviewerName" name="reviewerName" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors" 
+                                   placeholder="Enter your name">
+                        </div>
+                        
+                        <!-- Review Text -->
+                        <div>
+                            <label for="reviewText" class="block text-sm font-medium text-gray-700 mb-2">Your Review</label>
+                            <textarea id="reviewText" name="reviewText" rows="4" required 
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors custom-scrollbar" 
+                                      placeholder="Share your thoughts about this product..."></textarea>
+                        </div>
+                        
+                        <!-- Image Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Add Photos (Optional)</label>
+                            <div class="flex items-center gap-4">
+                                <input type="file" id="imageUpload" accept="image/*" multiple class="hidden">
+                                <button type="button" onclick="document.getElementById('imageUpload').click()" 
+                                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    📷 Upload Images
+                                </button>
+                                <span class="text-sm text-gray-500">Up to 5 images</span>
+                            </div>
+                            <div id="imagePreview" class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 hidden"></div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="pt-4">
+                            <button type="submit" id="submitReview" 
+                                    class="w-full md:w-auto px-8 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Submit Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Star Rating Input Functionality
+        const starRatingInput = document.querySelector('.star-rating-input');
+        const starInputs = starRatingInput.querySelectorAll('.star-input');
+        let currentRating = 0;
+        
+        starInputs.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                currentRating = index + 1;
+                starRatingInput.dataset.rating = currentRating;
+                updateStarDisplay();
+            });
+            
+            star.addEventListener('mouseenter', () => {
+                highlightStars(index + 1);
+            });
+        });
+        
+        starRatingInput.addEventListener('mouseleave', () => {
+            updateStarDisplay();
+        });
+        
+        function highlightStars(rating) {
+            starInputs.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('filled');
+                    star.classList.remove('empty');
+                } else {
+                    star.classList.add('empty');
+                    star.classList.remove('filled');
+                }
+            });
+        }
+        
+        function updateStarDisplay() {
+            highlightStars(currentRating);
+        }
+        
+        // Image Upload Preview
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        let uploadedImages = [];
+        
+        imageUpload.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            
+            if (uploadedImages.length + files.length > 5) {
+                alert('You can only upload up to 5 images.');
+                return;
+            }
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const imageData = {
+                            src: e.target.result,
+                            file: file
+                        };
+                        uploadedImages.push(imageData);
+                        renderImagePreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+        
+        function renderImagePreview() {
+            if (uploadedImages.length === 0) {
+                imagePreview.classList.add('hidden');
+                return;
+            }
+            
+            imagePreview.classList.remove('hidden');
+            imagePreview.innerHTML = uploadedImages.map((image, index) => `
+                <div class="image-preview aspect-square bg-gray-100">
+                    <img src="${image.src}" alt="Preview ${index + 1}">
+                    <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreview();
+        }
+        
+        // Form Submission
+        const reviewForm = document.getElementById('reviewForm');
+        const submitBtn = document.getElementById('submitReview');
+        
+        reviewForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('reviewerName').value.trim();
+            const review = document.getElementById('reviewText').value.trim();
+            
+            if (!name || !review || currentRating === 0) {
+                alert('Please fill in all required fields and provide a rating.');
+                return;
+            }
+            
+            // Simulate form submission
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            setTimeout(() => {
+                alert('Thank you for your review! It will be published after moderation.');
+                reviewForm.reset();
+                currentRating = 0;
+                updateStarDisplay();
+                uploadedImages = [];
+                renderImagePreview();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
+            }, 2000);
+        });
+        
+        // Filter and Sort Functionality
+        const sortSelect = document.getElementById('sortSelect');
+        const filterSelect = document.getElementById('filterSelect');
+        const reviewsContainer = document.getElementById('reviewsContainer');
+        
+        sortSelect.addEventListener('change', filterAndSortReviews);
+        filterSelect.addEventListener('change', filterAndSortReviews);
+        
+        function filterAndSortReviews() {
+            const reviews = Array.from(reviewsContainer.querySelectorAll('.review-card'));
+            const sortBy = sortSelect.value;
+            const filterBy = filterSelect.value;
+            
+            // Filter reviews
+            const filteredReviews = reviews.filter(review => {
+                if (filterBy === 'all') return true;
+                if (filterBy === 'verified') return review.querySelector('.text-green-700');
+                return review.dataset.rating === filterBy;
+            });
+            
+            // Sort reviews
+            filteredReviews.sort((a, b) => {
+                switch (sortBy) {
+                    case 'newest':
+                        return new Date(b.dataset.date) - new Date(a.dataset.date);
+                    case 'oldest':
+                        return new Date(a.dataset.date) - new Date(b.dataset.date);
+                    case 'highest':
+                        return b.dataset.rating - a.dataset.rating;
+                    case 'lowest':
+                        return a.dataset.rating - b.dataset.rating;
+                    case 'helpful':
+                        const aHelpful = parseInt(a.querySelector('button').textContent.match(/\((\d+)\)/)?.[1] || '0');
+                        const bHelpful = parseInt(b.querySelector('button').textContent.match(/\((\d+)\)/)?.[1] || '0');
+                        return bHelpful - aHelpful;
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Hide all reviews first
+            reviews.forEach(review => review.style.display = 'none');
+            
+            // Show filtered and sorted reviews
+            filteredReviews.forEach(review => {
+                review.style.display = 'block';
+                reviewsContainer.appendChild(review);
+            });
+        }
+        
+        // Load More Reviews
+        document.getElementById('loadMoreBtn').addEventListener('click', () => {
+            // Simulate loading more reviews
+            const btn = document.getElementById('loadMoreBtn');
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.textContent = 'Load More Reviews';
+                btn.disabled = false;
+                // In a real application, you would load more reviews from the server
+            }, 1000);
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStarDisplay();
+            
+            // Add subtle animation to rating bars
+            const ratingBars = document.querySelectorAll('.rating-fill');
+            ratingBars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.width = bar.style.width;
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

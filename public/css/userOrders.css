@@ -79,11 +79,6 @@
     background-color: rgba(212, 175, 55, 0.1);
 }
 
-.mobile-nav-item.active {
-    background-color: rgba(212, 175, 55, 0.2);
-    color: #D4AF37;
-}
-
 /* Navigation link styles */
 .nav-link {
     transition: all 0.3s ease;

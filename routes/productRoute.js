@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const Cart = require('../models/cart');
-const Wishlist = require('../models/wishlist');
 
 // API endpoint for loading more similar products
 router.get('/api/similar-products/:id', async (req, res) => {
@@ -72,12 +71,6 @@ router.route('/:id')
                 }
             }
 
-            let wishlistProductIds = [];
-            if (req.user) {
-                const wishlist = await Wishlist.findOne({ user: req.user._id });
-                wishlistProductIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-            }
-
             // Compute top-level inStock property for EJS
             reqProduct.inStock = reqProduct.colors && reqProduct.colors.some(c => c.sizes && c.sizes.some(s => s.stock > 0));
 
@@ -86,7 +79,7 @@ router.route('/:id')
                 product: reqProduct,
                 similarProducts: similarProducts,
                 isInCart: isInCart,
-                wishlistProductIds
+                currentUser: req.user
             });
         } catch (error) {
             console.error(error);

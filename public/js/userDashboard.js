@@ -12,38 +12,6 @@ let VelvraState = {
 };
 
 // ==========================================
-// MOBILE MENU FUNCTIONALITY
-// ==========================================
-
-function initMobileMenu() {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const closeSidebar = document.getElementById('closeSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        });
-    }
-
-    if (closeSidebar) {
-        closeSidebar.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        });
-    }
-
-    if (overlay) {
-        overlay.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        });
-    }
-}
-
-// ==========================================
 // ORDER CHART INITIALIZATION
 // ==========================================
 
@@ -251,10 +219,6 @@ function setOrderActivityData(data) {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    initMobileMenu();
-    initOrderChart();
-    initLogout();
-    
     // Set user data from EJS
     const userName = document.querySelector('h2')?.textContent?.replace('Welcome back, ', '').replace('!', '') || '';
     setUserData(userName, '');

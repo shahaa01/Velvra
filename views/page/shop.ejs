@@ -484,9 +484,9 @@
             <!-- Product Card  -->
             <% for(let product of products) { %>
             <article class="product-card group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative flex flex-col">
-              <button class="wishlist-btn<%= wishlistProductIds && wishlistProductIds.includes(product._id.toString()) ? ' in-wishlist' : '' %>" data-product-id="<%= product._id %>">
+              <button class="wishlist-btn" data-product-id="<%= product._id %>" data-logged-in="<%= typeof currentUser !== 'undefined' && currentUser ? 'true' : 'false' %>">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
               </button>
               <figure class="product-image-container aspect-[3/4] w-full overflow-hidden bg-gray-50 flex items-center justify-center">
@@ -599,8 +599,13 @@
 
 <!-- Filter Overlay -->
 <div class="filter-overlay" id="filterOverlay"></div>
+
+<script>
+    // Pass user status to JavaScript
+    window.currentUser = <%- typeof currentUser !== 'undefined' && currentUser ? 'true' : 'false' %>;
+</script>
+
 <% block('script').append('<script src="/js/shop.js"></script>') %>
-<% block('script').append('<script src="/js/wishlist.js"></script>') %>
 
 <% function isProductInStock(product) { return product.colors && product.colors.some(c => c.sizes && c.sizes.some(s => s.stock > 0)); } %>
 
