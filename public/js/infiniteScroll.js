@@ -28,7 +28,6 @@ class InfiniteHorizontalScroll {
         this.setupIntersectionObserver();
         this.setupScrollIndicators();
         this.setupTouchEvents();
-        this.initializeWishlistButtons();
     }
     
     setupIntersectionObserver() {
@@ -155,9 +154,6 @@ class InfiniteHorizontalScroll {
                 this.currentPage++;
                 this.hasMoreProducts = data.pagination.hasMore;
                 
-                // Reinitialize wishlist buttons
-                this.initializeWishlistButtons();
-                
                 // Update scroll indicators
                 this.container.dispatchEvent(new Event('scroll'));
                 
@@ -243,12 +239,6 @@ class InfiniteHorizontalScroll {
         }
         
         article.innerHTML = `
-            <button class="wishlist-btn absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-10 hover:bg-velvra-gold hover:text-white transition-all duration-300">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" fill="white" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-            </button>
-            
             ${product.salePercentage ? `<div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale ${product.salePercentage}% Off</div>` : ''}
             
             <figure class="aspect-[4/5] relative overflow-hidden product-image-container">
@@ -280,30 +270,6 @@ class InfiniteHorizontalScroll {
         });
         
         return article;
-    }
-    
-    initializeWishlistButtons() {
-        const newButtons = this.container.querySelectorAll('.wishlist-btn:not([data-initialized])');
-        newButtons.forEach(btn => {
-            btn.setAttribute('data-initialized', 'true');
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (btn.classList.contains('active')) {
-                    btn.classList.remove('active');
-                } else {
-                    btn.classList.add('active');
-                    this.createFloatingHeart(btn);
-                }
-                
-                // Animate button
-                btn.style.transform = 'scale(1.2)';
-                setTimeout(() => {
-                    btn.style.transform = '';
-                }, 200);
-            });
-        });
     }
     
     createFloatingHeart(button) {

@@ -17,7 +17,8 @@ class VelvraState {
         this.filterTimeout = null;
         this.pageCategory = window.location.pathname.includes('/men') ? 'men' : 
                            window.location.pathname.includes('/women') ? 'women' : null;
-        
+        // Add sale page detection
+        this.isSalePage = window.location.pathname === '/shop/sale';
         // Store search query if on search page
         this.isSearchPage = window.location.pathname.includes('/search/products');
         const urlParams = new URLSearchParams(window.location.search);
@@ -77,7 +78,9 @@ class VelvraState {
 
             // Determine which endpoint to use
             let endpoint = '/shop/api/products';
-            if (this.isSearchPage && this.searchQuery) {
+            if (this.isSalePage) {
+                endpoint = '/shop/api/products/sale';
+            } else if (this.isSearchPage && this.searchQuery) {
                 endpoint = '/search/api/products';
                 params.append('q', this.searchQuery);
             }
@@ -301,12 +304,10 @@ class VelvraState {
 
     async toggleWishlist(productId) {
         try {
-            // Check if user is logged in
-            const wishlistButton = document.querySelector(`.wishlist-btn[data-product-id="${productId}"]`);
-            const isLoggedIn = wishlistButton?.dataset.loggedIn === 'true';
-            
+            // Update all wishlist buttons for this product
+            const wishlistButtons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+            const isLoggedIn = wishlistButtons[0]?.dataset.loggedIn === 'true';
             if (!isLoggedIn) {
-                // Show login prompt instead of direct redirect
                 if (typeof Swal !== 'undefined') {
                     const result = await Swal.fire({
                         icon: 'info',
@@ -316,7 +317,6 @@ class VelvraState {
                         showCancelButton: true,
                         cancelButtonText: 'Cancel'
                     });
-                    
                     if (result.isConfirmed) {
                         window.location.href = '/auth/login';
                     }
@@ -325,19 +325,14 @@ class VelvraState {
                 }
                 return;
             }
-
-            const isInWishlist = wishlistButton.classList.contains('active');
-
+            const isInWishlist = wishlistButtons[0].classList.contains('active');
             if (isInWishlist) {
                 // Remove from wishlist
                 const response = await fetch('/shop/wishlist/remove', {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ productId })
                 });
-
                 if (!response.ok) {
                     if (response.status === 401) {
                         window.location.href = '/auth/login';
@@ -345,10 +340,9 @@ class VelvraState {
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
                 const data = await response.json();
                 if (data.success) {
-                    wishlistButton.classList.remove('active');
+                    wishlistButtons.forEach(btn => btn.classList.remove('active'));
                     this.showWishlistNotification('Product removed from wishlist', 'success');
                 } else {
                     this.showWishlistNotification(data.message || 'Failed to remove from wishlist', 'error');
@@ -357,12 +351,9 @@ class VelvraState {
                 // Add to wishlist
                 const response = await fetch('/shop/wishlist/add', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ productId })
                 });
-
                 if (!response.ok) {
                     if (response.status === 401) {
                         window.location.href = '/auth/login';
@@ -370,10 +361,9 @@ class VelvraState {
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
                 const data = await response.json();
                 if (data.success) {
-                    wishlistButton.classList.add('active');
+                    wishlistButtons.forEach(btn => btn.classList.add('active'));
                     this.showWishlistNotification('Product added to wishlist', 'success');
                 } else {
                     this.showWishlistNotification(data.message || 'Failed to add to wishlist', 'error');
@@ -388,27 +378,21 @@ class VelvraState {
     async updateWishlistUI() {
         try {
             const wishlistButtons = document.querySelectorAll('.wishlist-btn');
-            
-            for (const button of wishlistButtons) {
-                const productId = button.dataset.productId;
-                const isLoggedIn = button.dataset.loggedIn === 'true';
-                
-                if (!productId) continue;
-                
-                // Only check wishlist status if user is logged in
+            // Group by productId for efficiency
+            const productIds = Array.from(new Set(Array.from(wishlistButtons).map(btn => btn.dataset.productId)));
+            for (const productId of productIds) {
+                const buttons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+                const isLoggedIn = buttons[0]?.dataset.loggedIn === 'true';
                 if (!isLoggedIn) {
-                    button.classList.remove('active');
+                    buttons.forEach(btn => btn.classList.remove('active'));
                     continue;
                 }
-
-                // Check if product is in wishlist
                 const response = await fetch(`/shop/wishlist/check/${productId}`);
                 const data = await response.json();
-                
                 if (data.success && data.isInWishlist) {
-                    button.classList.add('active');
+                    buttons.forEach(btn => btn.classList.add('active'));
                 } else {
-                    button.classList.remove('active');
+                    buttons.forEach(btn => btn.classList.remove('active'));
                 }
             }
         } catch (error) {
@@ -1589,7 +1573,9 @@ class LoadMoreManager {
 
             // Determine which endpoint to use
             let endpoint = '/shop/api/products';
-            if (this.state.isSearchPage && this.state.searchQuery) {
+            if (this.state.isSalePage) {
+                endpoint = '/shop/api/products/sale';
+            } else if (this.state.isSearchPage && this.state.searchQuery) {
                 endpoint = '/search/api/products';
                 params.append('q', this.state.searchQuery);
             }
@@ -1936,3 +1922,127 @@ if (!isSearchPage) {
     state.applyFilters();
 }
 });
+
+// Global wishlist array
+window.userWishlist = [];
+
+// Fetch wishlist IDs on page load
+async function fetchUserWishlist() {
+    try {
+        const res = await fetch('/shop/api/user/wishlist-ids');
+        if (!res.ok) throw new Error('Failed to fetch wishlist');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.productIds)) {
+            window.userWishlist = data.productIds;
+        } else {
+            window.userWishlist = [];
+        }
+    } catch (e) {
+        window.userWishlist = [];
+    }
+}
+
+// Mark wishlisted products in the grid
+function markWishlistedProducts() {
+    document.querySelectorAll('.wishlist-btn[data-product-id]').forEach(btn => {
+        const pid = btn.dataset.productId;
+        if (window.userWishlist.includes(pid)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// On page load, fetch wishlist and mark
+fetchUserWishlist().then(markWishlistedProducts);
+
+// After rendering new products (initial or via Load More), call markWishlistedProducts()
+// Patch renderProducts and addProductsToGrid to call markWishlistedProducts at the end
+const origRenderProducts = VelvraState.prototype.renderProducts;
+VelvraState.prototype.renderProducts = function(products) {
+    origRenderProducts.call(this, products);
+    markWishlistedProducts();
+};
+const origAddProductsToGrid = LoadMoreManager.prototype.addProductsToGrid;
+LoadMoreManager.prototype.addProductsToGrid = function(products) {
+    origAddProductsToGrid.call(this, products);
+    markWishlistedProducts();
+};
+
+// When toggling wishlist, update userWishlist array accordingly
+VelvraState.prototype.toggleWishlist = async function(productId) {
+    try {
+        const wishlistButtons = document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`);
+        const isLoggedIn = wishlistButtons[0]?.dataset.loggedIn === 'true';
+        if (!isLoggedIn) {
+            if (typeof Swal !== 'undefined') {
+                const result = await Swal.fire({
+                    icon: 'info',
+                    title: 'Login Required',
+                    text: 'Please login to add items to your wishlist.',
+                    confirmButtonText: 'Login',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                });
+                if (result.isConfirmed) {
+                    window.location.href = '/auth/login';
+                }
+            } else {
+                window.location.href = '/auth/login';
+            }
+            return;
+        }
+        const isInWishlist = wishlistButtons[0].classList.contains('active');
+        if (isInWishlist) {
+            const response = await fetch('/shop/wishlist/remove', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success) {
+                wishlistButtons.forEach(btn => btn.classList.remove('active'));
+                // Remove from userWishlist
+                window.userWishlist = window.userWishlist.filter(id => id !== productId);
+                this.showWishlistNotification('Product removed from wishlist', 'success');
+            } else {
+                this.showWishlistNotification(data.message || 'Failed to remove from wishlist', 'error');
+            }
+        } else {
+            const response = await fetch('/shop/wishlist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success) {
+                wishlistButtons.forEach(btn => btn.classList.add('active'));
+                // Add to userWishlist
+                if (!window.userWishlist.includes(productId)) {
+                    window.userWishlist.push(productId);
+                }
+                this.showWishlistNotification('Product added to wishlist', 'success');
+            } else {
+                this.showWishlistNotification(data.message || 'Failed to add to wishlist', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Wishlist toggle error:', error);
+        this.showWishlistNotification('An error occurred. Please try again.', 'error');
+    }
+};

@@ -19,10 +19,10 @@ document.querySelectorAll('.toggle-switch').forEach(toggle => {
 // Form handling for user settings
 document.addEventListener('DOMContentLoaded', function() {
     // Personal Information Form
-    const personalForm = document.getElementById('personalForm');
-    if (personalForm) {
+const personalForm = document.getElementById('personalForm');
+if (personalForm) {
         personalForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+        e.preventDefault();
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
@@ -67,10 +67,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Address Form
-    const addressForm = document.getElementById('addressForm');
-    if (addressForm) {
+const addressForm = document.getElementById('addressForm');
+if (addressForm) {
         addressForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+        e.preventDefault();
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
@@ -113,11 +113,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Password Form
-    const passwordForm = document.getElementById('passwordForm');
-    if (passwordForm) {
+const passwordForm = document.getElementById('passwordForm');
+if (passwordForm) {
         passwordForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
+        e.preventDefault();
+        
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
@@ -125,22 +125,22 @@ document.addEventListener('DOMContentLoaded', function() {
             // Client-side validation
             const newPassword = formData.get('newPassword');
             const confirmPassword = formData.get('confirmPassword');
-            
+        
             if (newPassword !== confirmPassword) {
                 showNotification('Passwords do not match', 'error');
-                return;
-            }
-            
-            if (newPassword.length < 8) {
+            return;
+        }
+        
+        if (newPassword.length < 8) {
                 showNotification('Password must be at least 8 characters long', 'error');
-                return;
-            }
-            
+            return;
+        }
+        
             if (!/(?=.*[A-Za-z])(?=.*\d)/.test(newPassword)) {
                 showNotification('Password must contain at least one letter and one number', 'error');
-                return;
-            }
-            
+            return;
+        }
+        
             try {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Updating...';
