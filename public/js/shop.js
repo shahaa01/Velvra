@@ -72,6 +72,8 @@ class VelvraState {
             if (this.filters.discounts.length > 0) params.append('discounts', this.filters.discounts.join(','));
             if (this.filters.sizes.length > 0) params.append('sizes', this.filters.sizes.join(','));
             if (this.pageCategory) params.append('category', this.pageCategory);
+            // --- ADD SORT PARAM ---
+            if (this.sortBy) params.append('sort', this.sortBy);
 
             // Determine which endpoint to use
             let endpoint = '/shop/api/products';
@@ -498,17 +500,13 @@ document.querySelectorAll('.sort-item').forEach(item => {
         const sortValue = item.dataset.sort;
         const sortText = item.querySelector('span').textContent;
         currentSortText.textContent = sortText;
+        // Update state and re-fetch products
         state.sortBy = sortValue;
-        
-        // Close dropdown
         sortDropdown.classList.remove('active');
         sortTrigger.setAttribute('aria-expanded', 'false');
-        
-        // Apply sort with loading animation
-        document.getElementById('productGrid').classList.add('loading');
-        setTimeout(() => {
-            document.getElementById('productGrid').classList.remove('loading');
-        }, 300);
+        // Actually apply the sort (fetch new products)
+        state.currentPage = 1;
+        state.applyFilters();
     });
 });
 

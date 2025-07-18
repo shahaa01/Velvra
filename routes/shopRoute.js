@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const Wishlist = require('../models/wishlist');
+const Order = require('../models/order'); // <-- Add this import at the top
 const { isLoggedIn } = require('../middlewares/authMiddleware');
 
 // Pagination configuration
@@ -248,25 +249,100 @@ router.get('/api/products', async (req, res) => {
             sizes: req.query.sizes ? req.query.sizes.split(',') : [],
             category: req.query.category // for men/women specific pages
         };
-        
         // Build query based on filters
         const query = buildFilterQuery(filters);
-        
+        // --- Best Selling Sort ---
+        if (req.query.sort === 'best-selling') {
+            // 1. Aggregate order data to get total sold per product
+            const salesAgg = await Order.aggregate([
+                { $unwind: '$items' },
+                { $group: {
+                    _id: '$items.product',
+                    totalSold: { $sum: '$items.quantity' }
+                }},
+                { $sort: { totalSold: -1 } }
+            ]);
+            const bestSellingIds = salesAgg.map(r => r._id.toString());
+            // 2. Fetch all products matching filters
+            let filteredProducts = await Product.find(query);
+            // 3. Sort filtered products by best-selling order
+            filteredProducts.sort((a, b) => {
+                const aIdx = bestSellingIds.indexOf(a._id.toString());
+                const bIdx = bestSellingIds.indexOf(b._id.toString());
+                if (aIdx === -1 && bIdx === -1) return 0;
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+            });
+            // 4. Paginate
+            const totalProducts = filteredProducts.length;
+            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+            const hasMore = page < totalPages;
+            const startItem = totalProducts > 0 ? skip + 1 : 0;
+            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+            const products = filteredProducts.slice(skip, skip + ITEMS_PER_PAGE);
+            return res.json({
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalProducts,
+                    hasMore,
+                    startItem,
+                    endItem,
+                    itemsPerPage: ITEMS_PER_PAGE
+                }
+            });
+        }
+        // --- Price Sorting (Aggregation) ---
+        if (req.query.sort === 'price-low' || req.query.sort === 'price-high') {
+            // Use aggregation to sort by effective price
+            const sortOrder = req.query.sort === 'price-low' ? 1 : -1;
+            const pipeline = [
+                { $match: query },
+                { $addFields: {
+                    effectivePrice: { $ifNull: ['$salePrice', '$price'] }
+                }},
+                { $sort: { effectivePrice: sortOrder, createdAt: -1 } },
+                { $skip: skip },
+                { $limit: ITEMS_PER_PAGE }
+            ];
+            const products = await Product.aggregate(pipeline);
+            const totalProducts = await Product.countDocuments(query);
+            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+            const hasMore = page < totalPages;
+            const startItem = totalProducts > 0 ? skip + 1 : 0;
+            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+            return res.json({
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalProducts,
+                    hasMore,
+                    startItem,
+                    endItem,
+                    itemsPerPage: ITEMS_PER_PAGE
+                }
+            });
+        }
+        // --- Other Sorts ---
         // Get total count of filtered products
         const totalProducts = await Product.countDocuments(query);
-        
+        // Determine sort object
+        let sortObj = { createdAt: -1 }; // Default: featured/newest
+        if (req.query.sort === 'featured') sortObj = { createdAt: -1 }; // You can customize this if you have a featured field
+        if (req.query.sort === 'newest') sortObj = { createdAt: -1 };
         // Get filtered products for current page
         const products = await Product.find(query)
             .skip(skip)
             .limit(ITEMS_PER_PAGE)
-            .sort({ createdAt: -1 });
-        
+            .sort(sortObj);
         // Calculate pagination info
         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
         const hasMore = page < totalPages;
         const startItem = totalProducts > 0 ? skip + 1 : 0;
         const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
-        
         res.json({
             products: products,
             pagination: {
