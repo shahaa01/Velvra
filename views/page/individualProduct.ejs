@@ -1,5 +1,6 @@
 <% layout('layouts/boilerplate.ejs') %>
 <% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
+<% block('css').append('<link rel="stylesheet" href="/css/reviews.css">') %>
 
 <%
 // Check if the default color and size combination is in stock
@@ -371,9 +372,10 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
             </div>
         </div>
 
+        <%- include('../components/reviews.ejs') %>
+
 <!-- Enhanced You May Also Like Section -->
-<!-- Enhanced You May Also Like Section -->
-<!-- Replace the entire "You May Also Like" section starting from the comment to the closing </div> -->
+
 <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-20">
     <div class="mb-12 text-center">
         <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
@@ -445,6 +447,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>
+<% block('script').append('<script src="/js/reviews.js"></script>') %>
 
 <% function getStockForColorSize(product, colorName, sizeName) { const color = product.colors.find(c => c.name === colorName); if (!color) return 0; const sizeObj = color.sizes.find(s => s.size === sizeName); return sizeObj ? sizeObj.stock : 0; } %>
 

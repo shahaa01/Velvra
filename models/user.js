@@ -75,6 +75,14 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+\@.+\..+/, 'Please enter a valid email']
   },
+  phone: {
+    type: String,
+    trim: true,
+    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
+  },
+  dateOfBirth: {
+    type: Date
+  },
   // Google OAuth fields
   googleId: {
     type: String,

@@ -62,9 +62,9 @@ class WishlistManager {
                 this.closeSidebar.addEventListener('click', () => {
                     this.sidebar.classList.add('-translate-x-full');
                     this.sidebarOverlay.classList.add('hidden');
-                });
-            }
-        }
+        });
+    }
+}
 
         // Logout modal
         const logoutBtn = document.getElementById('logoutBtn');
@@ -100,16 +100,16 @@ class WishlistManager {
     }
 
     updateFilterButtons() {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
             if (btn.dataset.filter === this.currentFilter) {
-                btn.classList.add('bg-gold', 'text-charcoal');
-                btn.classList.remove('text-stone', 'bg-cream', 'border', 'border-beige');
-            } else {
-                btn.classList.remove('bg-gold', 'text-charcoal');
-                btn.classList.add('text-stone', 'bg-cream', 'border', 'border-beige');
-            }
-        });
-    }
+            btn.classList.add('bg-gold', 'text-charcoal');
+            btn.classList.remove('text-stone', 'bg-cream', 'border', 'border-beige');
+        } else {
+            btn.classList.remove('bg-gold', 'text-charcoal');
+            btn.classList.add('text-stone', 'bg-cream', 'border', 'border-beige');
+        }
+    });
+}
 
     async loadWishlistData() {
         if (this.isLoading) return;
@@ -165,8 +165,8 @@ class WishlistManager {
 
         if (this.wishlistItems.length === 0) {
             this.showEmptyState();
-            return;
-        }
+        return;
+    }
 
         this.emptyState?.classList.add('hidden');
         
@@ -185,25 +185,25 @@ class WishlistManager {
 
         return `
             <div class="wishlist-card bg-cream rounded-xl border border-beige overflow-hidden fade-in" data-product-id="${product._id}">
-                <div class="relative">
-                    <div class="overflow-hidden h-64">
+            <div class="relative">
+                <div class="overflow-hidden h-64">
                         <img src="${product.images[0]}" alt="${product.name}" class="product-image w-full h-full object-cover">
-                    </div>
-                    <button class="remove-wishlist-btn absolute top-2 right-2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-red-50 transition-colors" data-product-id="${product._id}">
-                        <i class="heart-icon fas fa-heart text-red-500"></i>
-                    </button>
-                    ${product.sale ? `
-                        <span class="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs rounded">
-                            ${discountPercentage}% OFF
-                        </span>
-                    ` : ''}
-                    ${!isInStock ? `
-                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                            <span class="text-white font-semibold">Out of Stock</span>
-                        </div>
-                    ` : ''}
                 </div>
-                <div class="p-4">
+                    <button class="remove-wishlist-btn absolute top-2 right-2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-red-50 transition-colors" data-product-id="${product._id}">
+                    <i class="heart-icon fas fa-heart text-red-500"></i>
+                </button>
+                    ${product.sale ? `
+                    <span class="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs rounded">
+                            ${discountPercentage}% OFF
+                    </span>
+                ` : ''}
+                    ${!isInStock ? `
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                            <span class="text-white font-semibold">Out of Stock</span>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="p-4">
                     <div class="mb-2">
                         <h3 class="font-semibold text-charcoal text-lg mb-1">${product.name}</h3>
                         <p class="text-stone text-sm">${product.brand}</p>
@@ -214,7 +214,7 @@ class WishlistManager {
                             <span class="text-lg font-bold text-charcoal">$${currentPrice.toFixed(2)}</span>
                             ${originalPrice ? `
                                 <span class="text-stone line-through">$${originalPrice.toFixed(2)}</span>
-                            ` : ''}
+                    ` : ''}
                         </div>
                         <span class="text-xs text-stone capitalize">${product.category}</span>
                     </div>
@@ -445,7 +445,7 @@ class WishlistManager {
         this.notification.classList.remove('translate-y-full');
         
         // Hide after 3 seconds
-        setTimeout(() => {
+    setTimeout(() => {
             this.notification.classList.add('translate-y-full');
         }, 3000);
     }

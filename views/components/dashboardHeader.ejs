@@ -10,12 +10,17 @@
                 </a>
             </div>
             <div class="flex items-center space-x-4">
-                <button class="relative p-2 text-stone hover:text-charcoal transition-colors">
-                    <i class="fas fa-bell text-xl"></i>
-                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+                <div class="relative">
+                    <button id="notificationBell" class="relative p-2 text-stone hover:text-charcoal transition-colors" aria-label="Notifications">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationCount" class="absolute -top-1 -right-1 min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center <%= unreadNotificationCount > 0 ? '' : 'hidden' %>"><%= unreadNotificationCount %></span>
+                    </button>
+                    <%- include('./notificationDropdown', { notifications: notifications || [], unreadNotificationCount: unreadNotificationCount || 0 }) %>
+                </div>
                 <button class="p-2 text-stone hover:text-charcoal transition-colors">
-                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <a href="/cart">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </a>
                 </button>
                 <img src="https://ui-avatars.com/api/?name=Emma+Johnson&amp;background=d4af37&amp;color=1a1a1a" alt="Profile" class="w-8 h-8 rounded-full cursor-pointer">
                 <% if (user && user.isSeller) { %>
@@ -37,6 +42,77 @@ if (document.getElementById('toggleModeBtn')) {
         form.action = '/toggle-mode';
         document.body.appendChild(form);
         form.submit();
+    });
+}
+
+// Notification dropdown logic
+const bell = document.getElementById('notificationBell');
+const dropdown = document.getElementById('notificationDropdown');
+document.addEventListener('click', (e) => {
+    if (bell && bell.contains(e.target)) {
+        dropdown.classList.toggle('hidden');
+    } else if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+// Poll notifications every 30s
+async function fetchNotifications() {
+    try {
+        const res = await fetch('/api/notifications?limit=10');
+        const data = await res.json();
+        if (data.success) {
+            // Update count
+            const countEl = document.getElementById('notificationCount');
+            if (countEl) {
+                countEl.textContent = data.unreadCount > 0 ? data.unreadCount : '';
+                countEl.classList.toggle('hidden', data.unreadCount === 0);
+            }
+            // Update dropdown (simple, replace innerHTML)
+            const list = document.getElementById('notificationList');
+            if (list) {
+                list.innerHTML = data.notifications.length > 0 ? data.notifications.map(n => `
+                  <div class="flex items-start gap-3 px-4 py-3 border-b border-beige ${n.isRead ? '' : 'bg-gold/10'} notification-item" data-id="${n._id}">
+                    <div class="mt-1">
+                      ${n.type === 'order' ? '<i class=\'fas fa-box text-blue-600\'></i>' :
+                        n.type === 'promo' ? '<i class=\'fas fa-bolt text-red-500\'></i>' :
+                        n.type === 'style-tip' ? '<i class=\'fas fa-tshirt text-green-600\'></i>' :
+                        n.type === 'stock' ? '<i class=\'fas fa-undo text-yellow-600\'></i>' :
+                        n.type === 'campaign' ? '<i class=\'fas fa-star text-purple-600\'></i>' :
+                        '<i class=\'fas fa-bell text-stone\'></i>'}
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-medium text-charcoal">${n.title}</div>
+                      <div class="text-sm text-stone">${n.message}</div>
+                      <div class="text-xs text-stone mt-1">${new Date(n.createdAt).toLocaleString()}</div>
+                    </div>
+                    ${n.link ? `<a href="${n.link}" class="ml-2 text-gold hover:underline text-xs">View</a>` : ''}
+                    ${!n.isRead ? `<button class="ml-2 mark-read-btn text-xs text-blue-600 hover:underline">Mark as read</button>` : ''}
+                  </div>
+                `).join('') : '<div class="p-4 text-center text-stone">No notifications yet.</div>';
+            }
+        }
+    } catch (err) { /* ignore */ }
+}
+setInterval(fetchNotifications, 30000);
+
+// Mark as read logic
+if (dropdown) {
+    dropdown.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('mark-read-btn')) {
+            const item = e.target.closest('.notification-item');
+            if (item) {
+                const id = item.getAttribute('data-id');
+                await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+                item.classList.remove('bg-gold/10');
+                e.target.remove();
+                fetchNotifications();
+            }
+        }
+        if (e.target.id === 'markAllReadBtn') {
+            await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+            fetchNotifications();
+        }
     });
 }
 </script>

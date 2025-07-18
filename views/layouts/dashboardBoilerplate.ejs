@@ -38,10 +38,14 @@
     
     <!-- Header -->
     <%- include('../components/dashboardHeader') %>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden lg:hidden"></div>
     
     <%- body %>
     
     <script src="/js/flash.js"></script>
+    <script src="/js/dashboardMobileMenu.js"></script>
     <%- block('script') %>
 </body>
 </html>

@@ -29,34 +29,7 @@ const authRoutes = require('./routes/authRoute');
 const productRoutes = require('./routes/productRoute');
 const cartRoutes = require('./routes/cartRoute');
 const addressRoutes = require('./routes/address');
-
-// Serve static file from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('view engine', 'ejs');
-app.engine('ejs', ejsMate); 
-app.set('views', path.join(__dirname, 'views'));
-
-app.use(express.urlencoded({extended: true}));
-app.use(express.json());
-app.use(methodOverride('_method'));
-app.use(fileUpload());
-
-// Add EJS helper functions for safe name display
-app.locals.getDisplayName = function(user) {
-    if (!user) return '';
-    if (user.lastName && user.lastName.trim()) {
-        return `${user.firstName} ${user.lastName}`;
-    }
-    return user.firstName || 'User';
-};
-
-app.locals.getFirstName = function(user) {
-    return user?.firstName || 'User';
-};
-
-app.locals.getLastName = function(user) {
-    return user?.lastName || '';
-};
+const { notificationHeaderData } = require('./middlewares/notificationMiddleware');
 
 // Session configuration
 const sessionConfig = {
@@ -75,19 +48,25 @@ const sessionConfig = {
     }
 };
 
+// Serve static file from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.engine('ejs', ejsMate); 
+app.set('views', path.join(__dirname, 'views'));
+
+// Session and Passport setup (must come before routes that use isLoggedIn)
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(passport.initialize()); 
+app.use(passport.session());
 
-// Flash locals middleware
+// Flash locals middleware (must come after session/flash and before routes)
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.info = req.flash('info');
   next();
 });
-
-app.use(passport.initialize()); 
-app.use(passport.session());
 
 // Local Strategy
 passport.use(new LocalStrategy(User.authenticate()));
@@ -170,9 +149,11 @@ app.use('/seller-dashboard', require('./routes/sellerDashboard'));
 app.use('/cart', cartRoutes);
 app.use('/address', addressRoutes);
 app.use('/payment', require('./routes/paymentRoutes'));
-app.use('/dashboard', require('./routes/dashboard'));
+app.use('/dashboard', isLoggedIn, notificationHeaderData, require('./routes/dashboard'));
 app.use('/search', require('./routes/searchRoute'));
 app.use('/admin', require('./routes/adminRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoute'));
+app.use('/dashboard', require('./routes/reportIssueRoute')); // Mount at /dashboard instead of /
 
 const server = http.createServer(app);
 const io = socketio(server, { cors: { origin: '*' } });
@@ -183,54 +164,10 @@ io.on('connection', (socket) => {
     
     socket.on('joinConversation', (conversationId) => {
         socket.join(conversationId);
-        console.log(`User ${socket.id} joined conversation ${conversationId}`);
-    });
-    
-    socket.on('sendMessage', async (data) => {
-        // data: { conversationId, message }
-        try {
-            console.log('📡 Socket received sendMessage event:', {
-                conversationId: data.conversationId,
-                sender: data.message.sender,
-                senderModel: data.message.senderModel,
-                content: data.message.content?.substring(0, 50) + '...'
-            });
-            
-            // Don't create duplicate message - it's already saved via REST API
-            // Just emit the message to other participants in the room
-            socket.to(data.conversationId).emit('receiveMessage', {
-                ...data.message,
-                sender: data.message.sender.toString(),
-                recipient: data.message.recipient?.toString(),
-                conversationId: data.conversationId
-            });
-            
-            console.log(`📢 Message forwarded to conversation room ${data.conversationId}, excluding sender ${socket.id}`);
-        } catch (err) {
-            console.error('Socket message forward error:', err);
-        }
-    });
-    
-    // Typing indicators
-    socket.on('typing', (data) => {
-        // Emit typing indicator to other users in the conversation
-        socket.to(data.conversationId).emit('typing', data);
-    });
-    
-    socket.on('stopTyping', (data) => {
-        // Emit stop typing indicator to other users in the conversation
-        socket.to(data.conversationId).emit('stopTyping', data);
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
     });
 });
 
-// Make io accessible in routes if needed
-app.set('io', io);
-
+// Start the server
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
-

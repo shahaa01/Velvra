@@ -49,7 +49,7 @@
     <% } %>
     
     <!-- Info Flash Message Template for Mode Switches -->
-    <% if (info && info.length > 0) { %>
+    <% if (typeof info !== 'undefined' && info.length > 0) { %>
         <div class="flash-message-container">
             <% if (Array.isArray(info)) { %>
                 <% info.forEach(function(msg) { %>

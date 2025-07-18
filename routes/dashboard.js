@@ -7,6 +7,8 @@ const Message = require('../models/message');
 const Conversation = require('../models/conversation');
 const mongoose = require('mongoose');
 const User = require('../models/user');
+const Notification = require('../models/notification');
+const IssueReport = require('../models/issueReport');
 
 // Toggle user mode (buyer/seller)
 // (Removed, now handled globally in app.js)
@@ -92,16 +94,18 @@ router.get('/', isLoggedIn, async (req, res) => {
             console.log('Using fallback order activity data:', finalOrderActivity);
         }
 
+        // Remove notification fetching here; now handled by middleware
         res.render('page/UserDashboard/userDashboard', {
             title: 'Dashboard - Velvra',
             user: req.user,
             orders,
             stats,
             orderActivity: finalOrderActivity
+            // notifications and unreadNotificationCount are now in res.locals
         });
-    } catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).render('error', { error: 'Failed to load dashboard' });
+    } catch (err) {
+        console.error('Dashboard error:', err);
+        res.status(500).render('error', { message: 'Dashboard error', error: err });
     }
 });
 
@@ -1076,21 +1080,100 @@ router.get('/messages/:conversationId/messages', isLoggedIn, async (req, res) =>
     }
 });
 
-// Report Issue (placeholder)
-router.get('/report-issue', isLoggedIn, (req, res) => {
-    res.render('page/UserDashboard/userReportIssue', { 
-        title: 'Report Issues - Velvra',
-        user: req.user
-    });
+// Report Issue (dynamic)
+router.get('/report-issue', isLoggedIn, async (req, res) => {
+    try {
+        const userOrders = await Order.find({ user: req.user._id })
+            .populate('items.product')
+            .populate('items.seller')
+            .sort({ createdAt: -1 });
+        
+        // Fetch user's reports for the "My Reports" tab
+        const reports = await IssueReport.find({ userId: req.user._id })
+            .populate('orderId')
+            .sort({ createdAt: -1 });
+        
+        const stats = await getDashboardStats(req.user._id);
+        res.render('page/UserDashboard/userReportIssue', {
+            title: 'Report Issues - Velvra',
+            user: req.user,
+            stats,
+            userOrders,
+            reports, // Add reports to template context
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            },
+            currentPage: 'report-issue'
+        });
+    } catch (error) {
+        console.error('Report Issue page error:', error);
+        res.render('page/UserDashboard/userReportIssue', {
+            title: 'Report Issues - Velvra',
+            user: req.user,
+            stats: {},
+            userOrders: [],
+            reports: [], // Add empty reports array for error case
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            },
+            currentPage: 'report-issue'
+        });
+    }
 });
 
-// Settings (placeholder)
-router.get('/settings', isLoggedIn, (req, res) => {
-    res.render('page/UserDashboard/userSettings', { 
-        title: 'Profile Settings - Velvra',
-        user: req.user
-    });
+// Settings (dynamic)
+router.get('/settings', isLoggedIn, async (req, res) => {
+    try {
+        const stats = await getDashboardStats(req.user._id);
+        
+        // Get user with addresses populated
+        const user = await User.findById(req.user._id);
+        
+        // Find default address
+        const defaultAddress = user.addresses.find(addr => addr.defaultShipping) || {};
+        
+        // Parse date of birth if exists
+        let birthMonth = 1, birthDay = 1, birthYear = 1990;
+        if (user.dateOfBirth) {
+            const dob = new Date(user.dateOfBirth);
+            birthMonth = dob.getMonth() + 1;
+            birthDay = dob.getDate();
+            birthYear = dob.getFullYear();
+        }
+        
+        res.render('page/UserDashboard/userSettings', { 
+            title: 'Profile Settings - Velvra',
+            user: req.user,
+            stats,
+            defaultAddress,
+            birthMonth,
+            birthDay,
+            birthYear
+        });
+    } catch (error) {
+        console.error('Settings page error:', error);
+        res.render('page/UserDashboard/userSettings', { 
+            title: 'Profile Settings - Velvra',
+            user: req.user,
+            stats: {},
+            defaultAddress: {},
+            birthMonth: 1,
+            birthDay: 1,
+            birthYear: 1990
+        });
+    }
 });
+
+// Update Personal Information
+router.post('/settings/personal-info', isLoggedIn, require('../controllers/userSettingsController').updatePersonalInfo);
+
+// Update Address
+router.post('/settings/address', isLoggedIn, require('../controllers/userSettingsController').updateAddress);
+
+// Update Password
+router.post('/settings/password', isLoggedIn, require('../controllers/userSettingsController').updatePassword);
 
 // Get Order Tracking Data
 router.get('/orders/:orderId/tracking', isLoggedIn, async (req, res) => {

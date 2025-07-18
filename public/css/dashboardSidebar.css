@@ -1,0 +1,83 @@
+/* Dashboard Sidebar Shared Styles */
+
+#sidebar {
+  background: #f8f6f1;
+  border-right: 1px solid #e8dcc6;
+  min-width: 16rem;
+  max-width: 16rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  color: #1a1a1a;
+  background: none;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: #e8dcc6;
+  color: #d4af37;
+}
+
+.nav-link .ml-auto {
+  margin-left: auto;
+}
+
+.nav-link .bg-gold {
+  background: #d4af37;
+  color: #1a1a1a;
+}
+
+.nav-link .bg-stone {
+  background: #78716c;
+  color: #fff;
+}
+
+.nav-link .bg-red-600 {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* Sidebar mobile overlay */
+#sidebarOverlay {
+  background: rgba(0,0,0,0.4);
+  z-index: 40;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  #sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    z-index: 50;
+  }
+  #sidebar.open {
+    transform: translateX(0);
+  }
+} 
+
+.mobile-nav-item.active {
+  background-color: #f7c873; /* gold or your highlight color */
+  color: #22223b !important; /* charcoal */
+  border-radius: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+}
+.mobile-nav-item.active i,
+.mobile-nav-item.active span {
+  color: #22223b !important;
+} 
