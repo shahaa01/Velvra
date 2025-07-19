@@ -23,6 +23,8 @@ const http = require('http');
 const socketio = require('socket.io');
 const Message = require('./models/message');
 const Conversation = require('./models/conversation');
+const { handleNotFound, handleError, handleDevError } = require('./middlewares/errorMiddleware');
+const { enhancedFlashMiddleware } = require('./utils/flashMessages');
 const dbUrl = process.env.MONGO_ATLAS_URL;
 
 const Product = require('./models/product');
@@ -62,13 +64,8 @@ app.use(flash());
 app.use(passport.initialize()); 
 app.use(passport.session());
 
-// Flash locals middleware (must come after session/flash and before routes)
-app.use((req, res, next) => {
-  res.locals.success = req.flash('success');
-  res.locals.error = req.flash('error');
-  res.locals.info = req.flash('info');
-  next();
-});
+// Enhanced flash middleware (must come after session/flash and before routes)
+app.use(enhancedFlashMiddleware);
 
 // Local Strategy
 passport.use(new LocalStrategy(User.authenticate()));
@@ -159,6 +156,21 @@ app.use('/dashboard', require('./routes/reportIssueRoute')); // Mount at /dashbo
 app.use('/search', require('./routes/searchRoute'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoute'));
+
+// Test error routes (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  app.use('/test-error', require('./routes/testErrorRoute'));
+}
+
+// Error handling middleware (must be last)
+app.use(handleNotFound);
+
+// Use appropriate error handler based on environment
+if (process.env.NODE_ENV === 'development') {
+    app.use(handleDevError);
+} else {
+    app.use(handleError);
+}
 
 const server = http.createServer(app);
 const io = socketio(server, { cors: { origin: '*' } });

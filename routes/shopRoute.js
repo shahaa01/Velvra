@@ -4,54 +4,51 @@ const Product = require('../models/product');
 const Wishlist = require('../models/wishlist');
 const Order = require('../models/order'); // <-- Add this import at the top
 const { isLoggedIn } = require('../middlewares/authMiddleware');
+const AppError = require('../utils/AppError');
+const asyncWrap = require('../utils/asyncWrap');
 
 // Pagination configuration
 const ITEMS_PER_PAGE = 12;
 
 const renderShop = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const skip = (page - 1) * ITEMS_PER_PAGE;
-        
-        // Get total count of products
-        const totalProducts = await Product.countDocuments({});
-        
-        // Get products for current page
-        const products = await Product.find({})
-            .skip(skip)
-            .limit(ITEMS_PER_PAGE)
-            .sort({ createdAt: -1 }); // Sort by newest first
-        
-        // Debug: Log the first product to see its structure
-        if (products.length > 0) {
-            console.log('First product structure:', JSON.stringify(products[0], null, 2));
-        }
-        
-        // Calculate pagination info
-        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-        const hasMore = page < totalPages;
-        const startItem = skip + 1;
-        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
-        
-        res.render('page/shop', {
-            title: "Premium Collections | Velvra",
-            heroTitle: "Premium",
-            heroDescription: "Discover our meticulously curated selection of premium fashion. Each piece reflects timeless elegance, exceptional craftsmanship, and modern sophistication—designed to elevate every wardrobe.",
-            products: products,
-            pagination: {
-                currentPage: page,
-                totalPages: totalPages,
-                totalProducts: totalProducts,
-                hasMore: hasMore,
-                startItem: startItem,
-                endItem: endItem,
-                itemsPerPage: ITEMS_PER_PAGE
-            }
-        });
-    } catch (error) {
-        console.error('Error loading shop page:', error);
-        res.status(500).render('error', { message: 'Error loading products' });
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
+    
+    // Get total count of products
+    const totalProducts = await Product.countDocuments({});
+    
+    // Get products for current page
+    const products = await Product.find({})
+        .skip(skip)
+        .limit(ITEMS_PER_PAGE)
+        .sort({ createdAt: -1 }); // Sort by newest first
+    
+    // Debug: Log the first product to see its structure
+    if (products.length > 0) {
+        console.log('First product structure:', JSON.stringify(products[0], null, 2));
     }
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+    const hasMore = page < totalPages;
+    const startItem = skip + 1;
+    const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+    
+    res.render('page/shop', {
+        title: "Premium Collections | Velvra",
+        heroTitle: "Premium",
+        heroDescription: "Discover our meticulously curated selection of premium fashion. Each piece reflects timeless elegance, exceptional craftsmanship, and modern sophistication—designed to elevate every wardrobe.",
+        products: products,
+        pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            totalProducts: totalProducts,
+            hasMore: hasMore,
+            startItem: startItem,
+            endItem: endItem,
+            itemsPerPage: ITEMS_PER_PAGE
+        }
+    });
 };
 
 // Helper function to build filter query
@@ -233,8 +230,7 @@ const buildFilterQuery = (filters, searchQuery) => {
 };
 
 // Update the /api/products route to handle all filter parameters
-router.get('/api/products', async (req, res) => {
-    try {
+router.get('/api/products', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * ITEMS_PER_PAGE;
         
@@ -355,15 +351,10 @@ router.get('/api/products', async (req, res) => {
                 itemsPerPage: ITEMS_PER_PAGE
             }
         });
-    } catch (error) {
-        console.error('Error loading products:', error);
-        res.status(500).json({ error: 'Error loading products' });
-    }
-});
+}));
 
 // Add new API endpoint for sale products (AJAX)
-router.get('/api/products/sale', async (req, res) => {
-    try {
+router.get('/api/products/sale', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * ITEMS_PER_PAGE;
         // Build query for sale products
@@ -412,11 +403,7 @@ router.get('/api/products/sale', async (req, res) => {
                 itemsPerPage: ITEMS_PER_PAGE
             }
         });
-    } catch (error) {
-        console.error('Error loading sale products (API):', error);
-        res.status(500).json({ error: 'Error loading sale products' });
-    }
-});
+}));
 
 router.route('/')
     .get(renderShop);
@@ -425,274 +412,234 @@ router.route('/unicategory')
     .get(renderShop);
 
 router.route('/men')
-    .get(async (req, res) => {
-        try {
-            const page = parseInt(req.query.page) || 1;
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-            
-            // Parse all filters from query parameters, including category
-            const filters = {
-                minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
-                maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
-                categories: req.query.categories ? req.query.categories.split(',') : [],
-                colors: req.query.colors ? req.query.colors.split(',') : [],
-                brands: req.query.brands ? req.query.brands.split(',') : [],
-                discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
-                sizes: req.query.sizes ? req.query.sizes.split(',') : [],
-                category: 'men' // Hardcode category for this route
-            };
+    .get(asyncWrap(async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        
+        // Parse all filters from query parameters, including category
+        const filters = {
+            minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
+            maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
+            categories: req.query.categories ? req.query.categories.split(',') : [],
+            colors: req.query.colors ? req.query.colors.split(',') : [],
+            brands: req.query.brands ? req.query.brands.split(',') : [],
+            discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
+            sizes: req.query.sizes ? req.query.sizes.split(',') : [],
+            category: 'men' // Hardcode category for this route
+        };
 
-            // Build query based on ALL filters
-            const query = buildFilterQuery(filters);
+        // Build query based on ALL filters
+        const query = buildFilterQuery(filters);
 
-            // Get total count of filtered products
-            const totalProducts = await Product.countDocuments(query);
-            
-            // Get filtered products for current page
-            const products = await Product.find(query)
-                .skip(skip)
-                .limit(ITEMS_PER_PAGE)
-                .sort({ createdAt: -1 });
-            
-            // Calculate pagination info
-            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-            const hasMore = page < totalPages;
-            const startItem = totalProducts > 0 ? skip + 1 : 0;
-            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
-            
-            // Debug log to check product order
-            console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
-            res.render('page/shop', {
-                title: "Men's Collection | Velvra", 
-                heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
-                heroTitle: "Men's", 
-                products: products,
-                pagination: {
-                    currentPage: page,
-                    totalPages: totalPages,
-                    totalProducts: totalProducts,
-                    hasMore: hasMore,
-                    startItem: startItem,
-                    endItem: endItem,
-                    itemsPerPage: ITEMS_PER_PAGE
-                }
-            });
-        } catch (error) {
-            console.error('Error loading men\'s shop page:', error);
-            res.status(500).render('error', { message: 'Error loading products' });
-        }
-    });
+        // Get total count of filtered products
+        const totalProducts = await Product.countDocuments(query);
+        
+        // Get filtered products for current page
+        const products = await Product.find(query)
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ createdAt: -1 });
+        
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+        const hasMore = page < totalPages;
+        const startItem = totalProducts > 0 ? skip + 1 : 0;
+        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+        
+        // Debug log to check product order
+        console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
+        res.render('page/shop', {
+            title: "Men's Collection | Velvra", 
+            heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
+            heroTitle: "Men's", 
+            products: products,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                hasMore: hasMore,
+                startItem: startItem,
+                endItem: endItem,
+                itemsPerPage: ITEMS_PER_PAGE
+            }
+        });
+    }));
 
 router.route('/women')
-    .get(async (req, res) => {
-        try {
-            const page = parseInt(req.query.page) || 1;
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-            
-            // Parse all filters from query parameters, including category
-            const filters = {
-                minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
-                maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
-                categories: req.query.categories ? req.query.categories.split(',') : [],
-                colors: req.query.colors ? req.query.colors.split(',') : [],
-                brands: req.query.brands ? req.query.brands.split(',') : [],
-                discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
-                sizes: req.query.sizes ? req.query.sizes.split(',') : [],
-                category: 'women' // Hardcode category for this route
-            };
+    .get(asyncWrap(async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        
+        // Parse all filters from query parameters, including category
+        const filters = {
+            minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
+            maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
+            categories: req.query.categories ? req.query.categories.split(',') : [],
+            colors: req.query.colors ? req.query.colors.split(',') : [],
+            brands: req.query.brands ? req.query.brands.split(',') : [],
+            discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
+            sizes: req.query.sizes ? req.query.sizes.split(',') : [],
+            category: 'women' // Hardcode category for this route
+        };
 
-            // Build query based on ALL filters
-            const query = buildFilterQuery(filters);
+        // Build query based on ALL filters
+        const query = buildFilterQuery(filters);
 
-            // Get total count of filtered products
-            const totalProducts = await Product.countDocuments(query);
-            
-            // Get filtered products for current page
-            const products = await Product.find(query)
-                .skip(skip)
-                .limit(ITEMS_PER_PAGE)
-                .sort({ createdAt: -1 });
-            
-            // Calculate pagination info
-            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-            const hasMore = page < totalPages;
-            const startItem = totalProducts > 0 ? skip + 1 : 0;
-            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
-            
-            res.render('page/shop', {
-                title: "Women's Collection | Velvra",
-                heroDescription: "Explore our meticulously curated collection of premium womenswear. Every piece embodies timeless elegance, refined craftsmanship, and modern femininity designed to empower and inspire.", 
-                heroTitle: "Women's",
-                products: products,
-                pagination: {
-                    currentPage: page,
-                    totalPages: totalPages,
-                    totalProducts: totalProducts,
-                    hasMore: hasMore,
-                    startItem: startItem,
-                    endItem: endItem,
-                    itemsPerPage: ITEMS_PER_PAGE
-                }
-            });
-        } catch (error) {
-            console.error('Error loading women\'s shop page:', error);
-            res.status(500).render('error', { message: 'Error loading products' });
-        }
-    });
+        // Get total count of filtered products
+        const totalProducts = await Product.countDocuments(query);
+        
+        // Get filtered products for current page
+        const products = await Product.find(query)
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ createdAt: -1 });
+        
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+        const hasMore = page < totalPages;
+        const startItem = totalProducts > 0 ? skip + 1 : 0;
+        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+        
+        res.render('page/shop', {
+            title: "Women's Collection | Velvra",
+            heroDescription: "Explore our meticulously curated collection of premium womenswear. Every piece embodies timeless elegance, refined craftsmanship, and modern femininity designed to empower and inspire.", 
+            heroTitle: "Women's",
+            products: products,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                hasMore: hasMore,
+                startItem: startItem,
+                endItem: endItem,
+                itemsPerPage: ITEMS_PER_PAGE
+            }
+        });
+    }));
 
 // Add new route for sale products
 router.route('/sale')
-    .get(async (req, res) => {
-        try {
-            const page = parseInt(req.query.page) || 1;
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-            
-            // Build query for sale products
-            const query = { 
-                sale: true,
-                salePercentage: { $exists: true, $ne: null } // Ensure salePercentage exists and is not null
-            };
-            
-            // Get total count of sale products
-            const totalProducts = await Product.countDocuments(query);
-            
-            // Get sale products for current page, sorted by salePercentage
-            const products = await Product.find(query)
-                .sort({ salePercentage: -1 }) // Sort by salePercentage in descending order
-                .skip(skip)
-                .limit(ITEMS_PER_PAGE);
-            
-            // Calculate pagination info
-            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-            const hasMore = page < totalPages;
-            const startItem = totalProducts > 0 ? skip + 1 : 0;
-            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
-            
-            // Debug log to check product order
-            console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
-            res.render('page/shop', {
-                title: "Sale Items | Velvra",
-                heroTitle: "Sale",
-                heroDescription: "Discover our exclusive sale items with the best discounts. Shop now to get amazing deals on premium fashion pieces.",
-                products: products,
-                pagination: {
-                    currentPage: page,
-                    totalPages: totalPages,
-                    totalProducts: totalProducts,
-                    hasMore: hasMore,
-                    startItem: startItem,
-                    endItem: endItem,
-                    itemsPerPage: ITEMS_PER_PAGE
-                }
-            });
-        } catch (error) {
-            console.error('Error loading sale products:', error);
-            res.status(500).render('error', { message: 'Error loading sale products' });
-        }
-    });
+    .get(asyncWrap(async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        
+        // Build query for sale products
+        const query = { 
+            sale: true,
+            salePercentage: { $exists: true, $ne: null } // Ensure salePercentage exists and is not null
+        };
+        
+        // Get total count of sale products
+        const totalProducts = await Product.countDocuments(query);
+        
+        // Get sale products for current page, sorted by salePercentage
+        const products = await Product.find(query)
+            .sort({ salePercentage: -1 }) // Sort by salePercentage in descending order
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE);
+        
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+        const hasMore = page < totalPages;
+        const startItem = totalProducts > 0 ? skip + 1 : 0;
+        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+        
+        // Debug log to check product order
+        console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
+        res.render('page/shop', {
+            title: "Sale Items | Velvra",
+            heroTitle: "Sale",
+            heroDescription: "Discover our exclusive sale items with the best discounts. Shop now to get amazing deals on premium fashion pieces.",
+            products: products,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                hasMore: hasMore,
+                startItem: startItem,
+                endItem: endItem,
+                itemsPerPage: ITEMS_PER_PAGE
+            }
+        });
+    }));
 
 // ===== WISHLIST ROUTES =====
 
 // All wishlist endpoints below operate on productId only, not variant or stock. Users can wishlist any product regardless of stock status.
 // Check if product is in wishlist
-router.get('/wishlist/check/:productId', isLoggedIn, async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const wishlist = await Wishlist.findOne({ user: req.user._id });
-        const isInWishlist = wishlist ? wishlist.products.map(id => id.toString()).includes(productId) : false;
-        res.json({ success: true, isInWishlist });
-    } catch (error) {
-        console.error('Check wishlist error:', error);
-        res.status(500).json({ success: false, isInWishlist: false });
-    }
-});
+router.get('/wishlist/check/:productId', isLoggedIn, asyncWrap(async (req, res) => {
+    const { productId } = req.params;
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    const isInWishlist = wishlist ? wishlist.products.map(id => id.toString()).includes(productId) : false;
+    res.json({ success: true, isInWishlist });
+}));
 
 // Add product to wishlist
-router.post('/wishlist/add', isLoggedIn, async (req, res) => {
-    try {
-        const { productId } = req.body;
-        if (!productId) {
-            return res.status(400).json({ success: false, message: 'Product ID is required' });
-        }
-        // Verify product exists
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-        // Find or create wishlist
-        let wishlist = await Wishlist.findOne({ user: req.user._id });
-        if (!wishlist) {
-            wishlist = await Wishlist.create({ user: req.user._id, products: [] });
-        }
-        // Check if product is already in wishlist
-        if (wishlist.products.some(id => id.toString() === productId)) {
-            return res.status(400).json({ success: false, message: 'Product already in wishlist', wishlistCount: wishlist.products.length });
-        }
-        // Add product to wishlist
-        wishlist.products.push(productId);
-        await wishlist.save();
-        return res.json({ 
-            success: true, 
-            message: 'Product added to wishlist',
-            wishlistCount: wishlist.products.length
-        });
-    } catch (error) {
-        console.error('Add to wishlist error:', error);
-        res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+router.post('/wishlist/add', isLoggedIn, asyncWrap(async (req, res) => {
+    const { productId } = req.body;
+    if (!productId) {
+        throw new AppError('Product ID is required', 400);
     }
-});
+    // Verify product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+    // Find or create wishlist
+    let wishlist = await Wishlist.findOne({ user: req.user._id });
+    if (!wishlist) {
+        wishlist = await Wishlist.create({ user: req.user._id, products: [] });
+    }
+    // Check if product is already in wishlist
+    if (wishlist.products.some(id => id.toString() === productId)) {
+        throw new AppError('Product already in wishlist', 400);
+    }
+    // Add product to wishlist
+    wishlist.products.push(productId);
+    await wishlist.save();
+    return res.json({ 
+        success: true, 
+        message: 'Product added to wishlist',
+        wishlistCount: wishlist.products.length
+    });
+}));
 
 // Remove product from wishlist
-router.delete('/wishlist/remove', isLoggedIn, async (req, res) => {
-    try {
-        const { productId } = req.body;
-        if (!productId) {
-            return res.status(400).json({ success: false, message: 'Product ID is required' });
-        }
-        const wishlist = await Wishlist.findOne({ user: req.user._id });
-        if (!wishlist) {
-            return res.status(404).json({ success: false, message: 'Wishlist not found' });
-        }
-        // Remove product from wishlist only if present
-        const initialLength = wishlist.products.length;
-        wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
-        if (wishlist.products.length === initialLength) {
-            return res.status(400).json({ success: false, message: 'Product not in wishlist', wishlistCount: wishlist.products.length });
-        }
-        await wishlist.save();
-        return res.json({ 
-            success: true, 
-            message: 'Product removed from wishlist',
-            wishlistCount: wishlist.products.length
-        });
-    } catch (error) {
-        console.error('Remove from wishlist error:', error);
-        res.status(500).json({ success: false, message: 'Failed to remove product from wishlist' });
+router.delete('/wishlist/remove', isLoggedIn, asyncWrap(async (req, res) => {
+    const { productId } = req.body;
+    if (!productId) {
+        throw new AppError('Product ID is required', 400);
     }
-});
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    if (!wishlist) {
+        throw new AppError('Wishlist not found', 404);
+    }
+    // Remove product from wishlist only if present
+    const initialLength = wishlist.products.length;
+    wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
+    if (wishlist.products.length === initialLength) {
+        throw new AppError('Product not in wishlist', 400);
+    }
+    await wishlist.save();
+    return res.json({ 
+        success: true, 
+        message: 'Product removed from wishlist',
+        wishlistCount: wishlist.products.length
+    });
+}));
 
 // Get wishlist count
-router.get('/wishlist/count', isLoggedIn, async (req, res) => {
-    try {
-        const wishlist = await Wishlist.findOne({ user: req.user._id });
-        const count = wishlist ? wishlist.products.length : 0;
-        res.json({ success: true, count });
-    } catch (error) {
-        console.error('Get wishlist count error:', error);
-        res.status(500).json({ success: false, count: 0 });
-    }
-});
+router.get('/wishlist/count', isLoggedIn, asyncWrap(async (req, res) => {
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    const count = wishlist ? wishlist.products.length : 0;
+    res.json({ success: true, count });
+}));
 
 // API endpoint to get current user's wishlist product IDs
-router.get('/api/user/wishlist-ids', isLoggedIn, async (req, res) => {
-    try {
-        const wishlist = await Wishlist.findOne({ user: req.user._id });
-        const productIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
-        res.json({ success: true, productIds });
-    } catch (error) {
-        console.error('Error fetching wishlist IDs:', error);
-        res.status(500).json({ success: false, productIds: [] });
-    }
-});
+router.get('/api/user/wishlist-ids', isLoggedIn, asyncWrap(async (req, res) => {
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    const productIds = wishlist ? wishlist.products.map(id => id.toString()) : [];
+    res.json({ success: true, productIds });
+}));
 
 module.exports = router;

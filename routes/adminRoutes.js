@@ -13,6 +13,8 @@ const Product = require('../models/product');
 const Order = require('../models/order');
 const Seller = require('../models/Seller');
 const Cart = require('../models/cart');
+const AppError = require('../utils/AppError');
+const asyncWrap = require('../utils/asyncWrap');
 
 // Admin login routes (no authentication required)
 router.get('/login', preventAdminLoginAccess, showAdminLogin);
@@ -23,8 +25,7 @@ router.get('/logout', adminLogout);
 router.use(requireAdminAuth);
 
 // Admin Dashboard Home
-router.get('/dashboard', async (req, res) => {
-    try {
+router.get('/dashboard', asyncWrap(async (req, res) => {
         // Get dashboard statistics
         const totalUsers = await User.countDocuments({ role: 'user' });
         const totalSellers = await User.countDocuments({ role: 'seller' });
@@ -135,16 +136,10 @@ router.get('/dashboard', async (req, res) => {
             categoryStats,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Admin dashboard error:', error);
-        req.flash('error', 'Error loading dashboard data');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // User Management
-router.get('/users', async (req, res) => {
-    try {
+router.get('/users', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
         const skip = (page - 1) * limit;
@@ -200,16 +195,10 @@ router.get('/users', async (req, res) => {
             bannedUsers,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('User management error:', error);
-        req.flash('error', 'Error loading users');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Product Management
-router.get('/products', async (req, res) => {
-    try {
+router.get('/products', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
         const skip = (page - 1) * limit;
@@ -231,16 +220,10 @@ router.get('/products', async (req, res) => {
             totalProducts,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Product management error:', error);
-        req.flash('error', 'Error loading products');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Order Management
-router.get('/orders', async (req, res) => {
-    try {
+router.get('/orders', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
         const skip = (page - 1) * limit;
@@ -263,16 +246,10 @@ router.get('/orders', async (req, res) => {
             totalOrders,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Order management error:', error);
-        req.flash('error', 'Error loading orders');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Inventory Management
-router.get('/inventory', async (req, res) => {
-    try {
+router.get('/inventory', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
         const skip = (page - 1) * limit;
@@ -300,16 +277,10 @@ router.get('/inventory', async (req, res) => {
             totalProducts,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Inventory management error:', error);
-        req.flash('error', 'Error loading inventory data');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Finance and Reports
-router.get('/finance', async (req, res) => {
-    try {
+router.get('/finance', asyncWrap(async (req, res) => {
         // Get financial statistics
         const totalRevenue = await Order.aggregate([
             { $match: { status: 'completed' } },
@@ -342,16 +313,10 @@ router.get('/finance', async (req, res) => {
             recentOrders,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Finance reports error:', error);
-        req.flash('error', 'Error loading financial data');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Promotions Management
-router.get('/promotions', async (req, res) => {
-    try {
+router.get('/promotions', asyncWrap(async (req, res) => {
         const products = await Product.find({ sale: true })
             .populate('seller', 'firstName lastName')
             .sort({ salePercentage: -1 });
@@ -361,16 +326,10 @@ router.get('/promotions', async (req, res) => {
             products,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Promotions management error:', error);
-        req.flash('error', 'Error loading promotions data');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Complaints Management
-router.get('/complaints', async (req, res) => {
-    try {
+router.get('/complaints', asyncWrap(async (req, res) => {
         // This would typically connect to a complaints model
         // For now, we'll show a placeholder
         const complaints = []; // Placeholder for complaints data
@@ -380,115 +339,78 @@ router.get('/complaints', async (req, res) => {
             complaints,
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Complaints management error:', error);
-        req.flash('error', 'Error loading complaints data');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
 // Settings
-router.get('/settings', async (req, res) => {
-    try {
+router.get('/settings', asyncWrap(async (req, res) => {
         res.render('admin/AdminSettings', {
             title: 'Admin Settings',
             adminUser: req.user
         });
-    } catch (error) {
-        console.error('Settings error:', error);
-        req.flash('error', 'Error loading settings');
-        res.redirect('/admin/dashboard');
-    }
-});
+}));
 
-router.get('/sellers', async (req, res) => {
-    try {
-        res.render('admin/sellerManagement', {
-            title: 'Seller Management',
-            adminUser: req.user
-        });
-    } catch (error) {
-        console.error('Seller management error:', error);
-        req.flash('error', 'Error loading seller data');
-        res.redirect('/admin/dashboard');
-    }
-});
+router.get('/sellers', asyncWrap(async (req, res) => {
+    res.render('admin/sellerManagement', {
+        title: 'Seller Management',
+        adminUser: req.user
+    });
+}));
 
 // API Routes for AJAX requests
 
 // Update user role
-router.put('/users/:userId/role', isAdmin, async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { role } = req.body;
+router.put('/users/:userId/role', isAdmin, asyncWrap(async (req, res) => {
+    const { userId } = req.params;
+    const { role } = req.body;
 
-        if (!['user', 'seller', 'admin'].includes(role)) {
-            return res.status(400).json({ error: 'Invalid role' });
-        }
-
-        const user = await User.findByIdAndUpdate(userId, { role }, { new: true });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({ success: true, user });
-    } catch (error) {
-        console.error('Update user role error:', error);
-        res.status(500).json({ error: 'Server error' });
+    if (!['user', 'seller', 'admin'].includes(role)) {
+        throw new AppError('Invalid role', 400);
     }
-});
+
+    const user = await User.findByIdAndUpdate(userId, { role }, { new: true });
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    res.json({ success: true, user });
+}));
 
 // Delete user
-router.delete('/users/:userId', isAdmin, async (req, res) => {
-    try {
-        const { userId } = req.params;
-        
-        const user = await User.findByIdAndDelete(userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Delete user error:', error);
-        res.status(500).json({ error: 'Server error' });
+router.delete('/users/:userId', isAdmin, asyncWrap(async (req, res) => {
+    const { userId } = req.params;
+    
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
     }
-});
+
+    res.json({ success: true });
+}));
 
 // Update product status
-router.put('/products/:productId/status', isAdmin, async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { status } = req.body;
+router.put('/products/:productId/status', isAdmin, asyncWrap(async (req, res) => {
+    const { productId } = req.params;
+    const { status } = req.body;
 
-        const product = await Product.findByIdAndUpdate(productId, { status }, { new: true });
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        res.json({ success: true, product });
-    } catch (error) {
-        console.error('Update product status error:', error);
-        res.status(500).json({ error: 'Server error' });
+    const product = await Product.findByIdAndUpdate(productId, { status }, { new: true });
+    if (!product) {
+        throw new AppError('Product not found', 404);
     }
-});
+
+    res.json({ success: true, product });
+}));
 
 // Update order status
-router.put('/orders/:orderId/status', isAdmin, async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        const { status } = req.body;
+router.put('/orders/:orderId/status', isAdmin, asyncWrap(async (req, res) => {
+    const { orderId } = req.params;
+    const { status } = req.body;
 
-        const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        res.json({ success: true, order });
-    } catch (error) {
-        console.error('Update order status error:', error);
-        res.status(500).json({ error: 'Server error' });
+    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+    if (!order) {
+        throw new AppError('Order not found', 404);
     }
-});
+
+    res.json({ success: true, order });
+}));
 
 module.exports = router; 

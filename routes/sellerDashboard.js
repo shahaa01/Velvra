@@ -8,15 +8,16 @@ const Conversation = require('../models/conversation');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
 const mongoose = require('mongoose');
 const User = require('../models/user');
+const AppError = require('../utils/AppError');
+const asyncWrap = require('../utils/asyncWrap');
 
 // Main Seller Dashboard
-router.get('/', isLoggedIn, async (req, res) => {
-    try {
-        // Find the seller for the logged-in user
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
+router.get('/', isLoggedIn, asyncWrap(async (req, res) => {
+    // Find the seller for the logged-in user
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
+    }
 
         // Get all products for this seller
         const products = await Product.find({ seller: seller._id });
@@ -169,53 +170,43 @@ router.get('/', isLoggedIn, async (req, res) => {
             chartData90Days,
             currentPage: 'dashboard'
         });
-    } catch (error) {
-        console.error('Seller dashboard error:', error);
-        res.status(500).render('error', { error: 'Failed to load dashboard' });
-    }
-});
+}));
 
 // Products Management
-router.get('/products', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
-
-        const products = await Product.find({ seller: seller._id })
-            .sort({ createdAt: -1 });
-
-        const stats = {
-            totalProducts: products.length,
-            activeProducts: products.filter(p => p.inStock && p.stock > 0).length,
-            lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
-            outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
-        };
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/product', {
-            title: 'Products - Velvra',
-            user,
-            seller,
-            products,
-            stats,
-            currentPage: 'products'
-        });
-    } catch (error) {
-        console.error('Products route error:', error);
-        res.status(500).render('error', { error: 'Failed to load products' });
+router.get('/products', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
     }
-});
+
+    const products = await Product.find({ seller: seller._id })
+        .sort({ createdAt: -1 });
+
+    const stats = {
+        totalProducts: products.length,
+        activeProducts: products.filter(p => p.inStock && p.stock > 0).length,
+        lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
+        outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
+    };
+
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/product', {
+        title: 'Products - Velvra',
+        user,
+        seller,
+        products,
+        stats,
+        currentPage: 'products'
+    });
+}));
 
 // Orders Management
-router.get('/orders', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
+router.get('/orders', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
+    }
 
         // Get all orders that include seller's products
         const orders = await Order.find({ 'items.seller': seller._id })
@@ -287,79 +278,64 @@ router.get('/orders', isLoggedIn, async (req, res) => {
             stats,
             currentPage: 'orders'
         });
-    } catch (error) {
-        console.error('Orders route error:', error);
-        res.status(500).render('error', { error: 'Failed to load orders' });
-    }
-});
+}));
 
 // Inventory Management
-router.get('/inventory', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
-
-        const products = await Product.find({ seller: seller._id })
-            .sort({ stock: 1, name: 1 });
-
-        const stats = {
-            totalProducts: products.length,
-            inStock: products.filter(p => p.inStock && p.stock > 0).length,
-            lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
-            outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
-        };
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/sellerInventory', {
-            title: 'Inventory - Velvra',
-            user,
-            seller,
-            products,
-            stats,
-            currentPage: 'inventory'
-        });
-    } catch (error) {
-        console.error('Inventory route error:', error);
-        res.status(500).render('error', { error: 'Failed to load inventory' });
+router.get('/inventory', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
     }
-});
+
+    const products = await Product.find({ seller: seller._id })
+        .sort({ stock: 1, name: 1 });
+
+    const stats = {
+        totalProducts: products.length,
+        inStock: products.filter(p => p.inStock && p.stock > 0).length,
+        lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
+        outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
+    };
+
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/sellerInventory', {
+        title: 'Inventory - Velvra',
+        user,
+        seller,
+        products,
+        stats,
+        currentPage: 'inventory'
+    });
+}));
 
 // Promotions Management
-router.get('/promotions', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
-
-        // Get products for promotion creation
-        const products = await Product.find({ seller: seller._id, inStock: true, stock: { $gt: 0 } });
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/promotions', {
-            title: 'Promotions - Velvra',
-            user,
-            seller,
-            products,
-            currentPage: 'promotions'
-        });
-    } catch (error) {
-        console.error('Promotions route error:', error);
-        res.status(500).render('error', { error: 'Failed to load promotions' });
+router.get('/promotions', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
     }
-});
+
+    // Get products for promotion creation
+    const products = await Product.find({ seller: seller._id, inStock: true, stock: { $gt: 0 } });
+
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/promotions', {
+        title: 'Promotions - Velvra',
+        user,
+        seller,
+        products,
+        currentPage: 'promotions'
+    });
+}));
 
 // Performance Analytics
-router.get('/performance', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
+router.get('/performance', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        return res.redirect('/seller');
+    }
 
         // Get orders for analytics
         const orders = await Order.find({ 'items.seller': seller._id })
@@ -414,220 +390,195 @@ router.get('/performance', isLoggedIn, async (req, res) => {
             productPerformance: Object.values(productPerformance),
             currentPage: 'performance'
         });
-    } catch (error) {
-        console.error('Performance route error:', error);
-        res.status(500).render('error', { error: 'Failed to load performance data' });
-    }
-});
+}));
 
 // Messages (Inbox)
-router.get('/messages', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
-
-        // Find all conversations where seller is a participant
-        const conversations = await Conversation.find({
-            'participants.id': seller._id,
-            'participants.model': 'Seller'
-        }).populate('order').sort({ updatedAt: -1 });
-
-        // Get comprehensive data for each conversation
-        const conversationsWithDetails = [];
-        for (const conversation of conversations) {
-            // Get the other participant (user)
-            const userParticipant = conversation.participants.find(p => p.model === 'User');
-            if (!userParticipant) continue;
-            
-            const user = await mongoose.model('User').findById(userParticipant.id);
-            if (!user) continue;
-            
-            // Get messages for this conversation
-            const messages = await Message.find({ conversationId: conversation._id })
-                .sort({ createdAt: -1 })
-                .limit(1);
-            
-            // Get unread count for this conversation
-            const unreadCount = await Message.countDocuments({
-                conversationId: conversation._id,
-                recipient: seller._id,
-                recipientModel: 'Seller',
-                isRead: false
-            });
-
-            conversationsWithDetails.push({
-                _id: conversation._id,
-                user: user,
-                lastMessage: conversation.lastMessage,
-                updatedAt: conversation.updatedAt,
-                unreadCount: unreadCount,
-                order: conversation.order,
-                latestMessage: messages[0] || null
-            });
-        }
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/sellerMessages', {
-            title: 'Messages - Velvra',
-            user,
-            seller,
-            conversations: conversationsWithDetails,
-            currentConversationId: null,
-            currentPage: 'messages'
-        });
-    } catch (error) {
-        console.error('Messages route error:', error);
-        res.status(500).render('error', { error: 'Failed to load messages' });
+router.get('/messages', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
     }
-});
+
+    // Find all conversations where seller is a participant
+    const conversations = await Conversation.find({
+        'participants.id': seller._id,
+        'participants.model': 'Seller'
+    }).populate('order').sort({ updatedAt: -1 });
+
+    // Get comprehensive data for each conversation
+    const conversationsWithDetails = [];
+    for (const conversation of conversations) {
+        // Get the other participant (user)
+        const userParticipant = conversation.participants.find(p => p.model === 'User');
+        if (!userParticipant) continue;
+        
+        const user = await mongoose.model('User').findById(userParticipant.id);
+        if (!user) continue;
+        
+        // Get messages for this conversation
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: -1 })
+            .limit(1);
+        
+        // Get unread count for this conversation
+        const unreadCount = await Message.countDocuments({
+            conversationId: conversation._id,
+            recipient: seller._id,
+            recipientModel: 'Seller',
+            isRead: false
+        });
+
+        conversationsWithDetails.push({
+            _id: conversation._id,
+            user: user,
+            lastMessage: conversation.lastMessage,
+            updatedAt: conversation.updatedAt,
+            unreadCount: unreadCount,
+            order: conversation.order,
+            latestMessage: messages[0] || null
+        });
+    }
+
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/sellerMessages', {
+        title: 'Messages - Velvra',
+        user,
+        seller,
+        conversations: conversationsWithDetails,
+        currentConversationId: null,
+        currentPage: 'messages'
+    });
+}));
 
 // Settings
-router.get('/settings', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.redirect('/seller');
-        }
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/sellerSetting', {
-            title: 'Settings - Velvra',
-            user,
-            seller,
-            currentPage: 'settings'
-        });
-    } catch (error) {
-        console.error('Settings route error:', error);
-        res.status(500).render('error', { error: 'Failed to load settings' });
+router.get('/settings', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
     }
-});
+
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/sellerSetting', {
+        title: 'Settings - Velvra',
+        user,
+        seller,
+        currentPage: 'settings'
+    });
+}));
 
 // Toggle user mode (buyer/seller)
 // (Removed, now handled globally in app.js)
 
 // API endpoint to get order details
-router.get('/api/orders/:orderId', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
-
-        const order = await Order.findById(req.params.orderId)
-            .populate('items.product')
-            .populate('user');
-
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        // Verify order contains seller's products
-        const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
-        if (!hasSellerItems) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        // Filter items that belong to this seller
-        const sellerItems = order.items.filter(item => String(item.seller) === String(seller._id));
-        const sellerTotal = sellerItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-
-        const formattedOrder = {
-            _id: order._id,
-            orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
-            customer: {
-                name: `${order.user.firstName} ${order.user.lastName}`,
-                email: order.user.email,
-                phone: order.user.phone || 'N/A',
-                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(order.user.firstName + ' ' + order.user.lastName)}&background=e8dcc6&color=1a1a1a`
-            },
-            items: sellerItems.map(item => ({
-                name: item.product ? item.product.name : 'Product Not Found',
-                quantity: item.quantity,
-                price: item.price,
-                totalPrice: item.totalPrice,
-                image: item.product && item.product.images && item.product.images.length > 0 
-                    ? item.product.images[0] 
-                    : 'https://via.placeholder.com/100x100?text=No+Image'
-            })),
-            total: sellerTotal,
-            status: order.orderStatus,
-            priority: order.priority || 'medium',
-            paymentStatus: order.paymentStatus || 'paid',
-            paymentMethod: order.paymentMethod || 'Credit Card',
-            shippingAddress: order.shippingAddress || 'Address not available',
-            orderDate: order.createdAt,
-            deliveryDate: order.deliveryDate,
-            trackingNumber: order.trackingNumber,
-            notes: order.notes || null
-        };
-
-        res.json({
-            success: true,
-            order: formattedOrder
-        });
-    } catch (error) {
-        console.error('Get order details error:', error);
-        res.status(500).json({ error: 'Failed to get order details' });
+router.get('/api/orders/:orderId', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
     }
-});
+
+    const order = await Order.findById(req.params.orderId)
+        .populate('items.product')
+        .populate('user');
+
+    if (!order) {
+        throw new AppError('Order not found', 404);
+    }
+
+    // Verify order contains seller's products
+    const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
+    if (!hasSellerItems) {
+        throw new AppError('Access denied', 403);
+    }
+
+    // Filter items that belong to this seller
+    const sellerItems = order.items.filter(item => String(item.seller) === String(seller._id));
+    const sellerTotal = sellerItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+
+    const formattedOrder = {
+        _id: order._id,
+        orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
+        customer: {
+            name: `${order.user.firstName} ${order.user.lastName}`,
+            email: order.user.email,
+            phone: order.user.phone || 'N/A',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(order.user.firstName + ' ' + order.user.lastName)}&background=e8dcc6&color=1a1a1a`
+        },
+        items: sellerItems.map(item => ({
+            name: item.product ? item.product.name : 'Product Not Found',
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.totalPrice,
+            image: item.product && item.product.images && item.product.images.length > 0 
+                ? item.product.images[0] 
+                : 'https://via.placeholder.com/100x100?text=No+Image'
+        })),
+        total: sellerTotal,
+        status: order.orderStatus,
+        priority: order.priority || 'medium',
+        paymentStatus: order.paymentStatus || 'paid',
+        paymentMethod: order.paymentMethod || 'Credit Card',
+        shippingAddress: order.shippingAddress || 'Address not available',
+        orderDate: order.createdAt,
+        deliveryDate: order.deliveryDate,
+        trackingNumber: order.trackingNumber,
+        notes: order.notes || null
+    };
+
+    res.json({
+        success: true,
+        order: formattedOrder
+    });
+}));
 
 // API endpoint to update order status
-router.post('/api/orders/:orderId/status', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
-
-        const { status } = req.body;
-        const orderId = req.params.orderId;
-
-        if (!status) {
-            return res.status(400).json({ error: 'Status is required' });
-        }
-
-        // Verify order exists and contains seller's products
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
-        if (!hasSellerItems) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        // Update order status
-        order.orderStatus = status;
-        order.updatedAt = new Date();
-        await order.save();
-
-        res.json({
-            success: true,
-            message: 'Order status updated successfully',
-            order: {
-                _id: order._id,
-                orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
-                status: order.orderStatus
-            }
-        });
-    } catch (error) {
-        console.error('Update order status error:', error);
-        res.status(500).json({ error: 'Failed to update order status' });
+router.post('/api/orders/:orderId/status', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
     }
-});
+
+    const { status } = req.body;
+    const orderId = req.params.orderId;
+
+    if (!status) {
+        throw new AppError('Status is required', 400);
+    }
+
+    // Verify order exists and contains seller's products
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new AppError('Order not found', 404);
+    }
+
+    const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
+    if (!hasSellerItems) {
+        throw new AppError('Access denied', 403);
+    }
+
+    // Update order status
+    order.orderStatus = status;
+    order.updatedAt = new Date();
+    await order.save();
+
+    res.json({
+        success: true,
+        message: 'Order status updated successfully',
+        order: {
+            _id: order._id,
+            orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
+            status: order.orderStatus
+        }
+    });
+}));
 
 // API endpoint to update shipping information
-router.post('/api/orders/:orderId/shipping', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
+router.post('/api/orders/:orderId/shipping', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
+    }
 
         const { trackingNumber, deliveryDate } = req.body;
         const orderId = req.params.orderId;
@@ -635,12 +586,12 @@ router.post('/api/orders/:orderId/shipping', isLoggedIn, async (req, res) => {
         // Verify order exists and contains seller's products
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
+            throw new AppError('Order not found', 404);
         }
 
         const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
         if (!hasSellerItems) {
-            return res.status(403).json({ error: 'Access denied' });
+            throw new AppError('Access denied', 403);
         }
 
         // Update shipping information
@@ -659,83 +610,73 @@ router.post('/api/orders/:orderId/shipping', isLoggedIn, async (req, res) => {
                 deliveryDate: order.deliveryDate
             }
         });
-    } catch (error) {
-        console.error('Update shipping info error:', error);
-        res.status(500).json({ error: 'Failed to update shipping information' });
-    }
-});
+}));
 
 // API endpoint to cancel order
-router.post('/api/orders/:orderId/cancel', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
-
-        const { reason } = req.body;
-        const orderId = req.params.orderId;
-
-        // Verify order exists and contains seller's products
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
-        if (!hasSellerItems) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        // Only allow cancellation of pending or processing orders
-        if (!['pending', 'processing'].includes(order.orderStatus)) {
-            return res.status(400).json({ error: 'Order cannot be cancelled in current status' });
-        }
-
-        // Update order status to cancelled
-        order.orderStatus = 'cancelled';
-        order.cancellationReason = reason;
-        order.updatedAt = new Date();
-
-        // Restore inventory for cancelled items
-        for (const item of order.items) {
-            const productDoc = await Product.findById(item.product);
-            if (productDoc) {
-                const colorObj = productDoc.colors.find(c => c.name === item.color);
-                if (colorObj) {
-                    const sizeObj = colorObj.sizes.find(s => s.size === item.size);
-                    if (sizeObj) {
-                        sizeObj.stock = sizeObj.stock + item.quantity;
-                    }
-                }
-                await productDoc.save();
-            }
-        }
-
-        await order.save();
-
-        res.json({
-            success: true,
-            message: 'Order cancelled successfully',
-            order: {
-                _id: order._id,
-                orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
-                status: order.orderStatus
-            }
-        });
-    } catch (error) {
-        console.error('Cancel order error:', error);
-        res.status(500).json({ error: 'Failed to cancel order' });
+router.post('/api/orders/:orderId/cancel', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
     }
-});
+
+    const { reason } = req.body;
+    const orderId = req.params.orderId;
+
+    // Verify order exists and contains seller's products
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new AppError('Order not found', 404);
+    }
+
+    const hasSellerItems = order.items.some(item => String(item.seller) === String(seller._id));
+    if (!hasSellerItems) {
+        throw new AppError('Access denied', 403);
+    }
+
+    // Only allow cancellation of pending or processing orders
+    if (!['pending', 'processing'].includes(order.orderStatus)) {
+        throw new AppError('Order cannot be cancelled in current status', 400);
+    }
+
+    // Update order status to cancelled
+    order.orderStatus = 'cancelled';
+    order.cancellationReason = reason;
+    order.updatedAt = new Date();
+
+    // Restore inventory for cancelled items
+    for (const item of order.items) {
+        const productDoc = await Product.findById(item.product);
+        if (productDoc) {
+            const colorObj = productDoc.colors.find(c => c.name === item.color);
+            if (colorObj) {
+                const sizeObj = colorObj.sizes.find(s => s.size === item.size);
+                if (sizeObj) {
+                    sizeObj.stock = sizeObj.stock + item.quantity;
+                }
+            }
+            await productDoc.save();
+        }
+    }
+
+    await order.save();
+
+    res.json({
+        success: true,
+        message: 'Order cancelled successfully',
+        order: {
+            _id: order._id,
+            orderNumber: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
+            status: order.orderStatus
+        }
+    });
+}));
 
 // API endpoint to get filtered orders
-router.get('/api/orders', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
+router.get('/api/orders', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
+    }
 
         const { status, dateFilter, search, sortBy } = req.query;
 
@@ -840,19 +781,14 @@ router.get('/api/orders', isLoggedIn, async (req, res) => {
             orders: filteredOrders,
             total: filteredOrders.length
         });
-    } catch (error) {
-        console.error('Get filtered orders error:', error);
-        res.status(500).json({ error: 'Failed to get orders' });
-    }
-});
+}));
 
 // API endpoint to fetch chart data for different time periods
-router.get('/api/chart-data/:period', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) {
-            return res.status(403).json({ error: 'Seller not found' });
-        }
+router.get('/api/chart-data/:period', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 403);
+    }
 
         const { period } = req.params;
         const days = parseInt(period) || 7;
@@ -899,19 +835,14 @@ router.get('/api/chart-data/:period', isLoggedIn, async (req, res) => {
                 period: days
             }
         });
-    } catch (error) {
-        console.error('Chart data API error:', error);
-        res.status(500).json({ error: 'Failed to fetch chart data' });
-    }
-});
+}));
 
 // --- SELLER MESSAGING API ENDPOINTS ---
 
 // Get all conversations for the seller (JSON)
-router.get('/api/messages', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+router.get('/api/messages', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
 
         // Find all conversations where seller is a participant
         const conversations = await Conversation.find({
@@ -949,109 +880,85 @@ router.get('/api/messages', isLoggedIn, async (req, res) => {
             });
         }
         res.json({ success: true, conversations: conversationsWithDetails });
-    } catch (error) {
-        console.error('Seller API: Get conversations error:', error);
-        res.status(500).json({ error: 'Failed to load conversations' });
-    }
-});
+}));
 
 // Get all messages for a conversation (JSON)
-router.get('/api/messages/:conversationId/messages', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) return res.status(403).json({ error: 'Seller not found' });
-        const conversation = await Conversation.findById(req.params.conversationId);
-        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
-        // Check seller is a participant
-        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
-        // Get messages
-        const messages = await Message.find({ conversationId: conversation._id })
-            .sort({ createdAt: 1 });
-        // Ensure sender is always a string (ObjectId)
-        const messagesWithSenderId = messages.map(msg => ({
-            ...msg.toObject(),
-            sender: msg.sender.toString(),
-            senderId: msg.sender.toString(),
-        }));
-        res.json({ success: true, messages: messagesWithSenderId });
-    } catch (error) {
-        console.error('Seller API: Get messages error:', error);
-        res.status(500).json({ error: 'Failed to get messages' });
-    }
-});
+router.get('/api/messages/:conversationId/messages', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    const conversation = await Conversation.findById(req.params.conversationId);
+    if (!conversation) throw new AppError('Conversation not found', 404);
+    // Check seller is a participant
+    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+    if (!isParticipant) throw new AppError('Access denied', 403);
+    // Get messages
+    const messages = await Message.find({ conversationId: conversation._id })
+        .sort({ createdAt: 1 });
+    // Ensure sender is always a string (ObjectId)
+    const messagesWithSenderId = messages.map(msg => ({
+        ...msg.toObject(),
+        sender: msg.sender.toString(),
+        senderId: msg.sender.toString(),
+    }));
+    res.json({ success: true, messages: messagesWithSenderId });
+}));
 
 // Send a message as the seller
-router.post('/api/messages/:conversationId/send', isLoggedIn, async (req, res) => {
-    try {
-        const { content } = req.body;
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) return res.status(403).json({ error: 'Seller not found' });
-        const conversation = await Conversation.findById(req.params.conversationId);
-        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
-        // Check seller is a participant
-        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
-        // Get the user participant
-        const userParticipant = conversation.participants.find(p => p.model === 'User');
-        if (!userParticipant) return res.status(400).json({ error: 'User participant not found' });
-        // Create the message
-        const message = await Message.create({
-            conversationId: conversation._id,
-            sender: seller._id,
-            senderModel: 'Seller',
-            recipient: userParticipant.id,
-            recipientModel: 'User',
-            order: conversation.order,
-            content: content.trim()
-        });
-        // Update conversation's last message
-        conversation.lastMessage = content.trim();
-        conversation.updatedAt = new Date();
-        await conversation.save();
-        // Populate sender details for response
-        await message.populate('sender', 'brandName');
-        res.json({ success: true, message });
-    } catch (error) {
-        console.error('Seller API: Send message error:', error);
-        res.status(500).json({ error: 'Failed to send message' });
-    }
-});
+router.post('/api/messages/:conversationId/send', isLoggedIn, asyncWrap(async (req, res) => {
+    const { content } = req.body;
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    const conversation = await Conversation.findById(req.params.conversationId);
+    if (!conversation) throw new AppError('Conversation not found', 404);
+    // Check seller is a participant
+    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+    if (!isParticipant) throw new AppError('Access denied', 403);
+    // Get the user participant
+    const userParticipant = conversation.participants.find(p => p.model === 'User');
+    if (!userParticipant) throw new AppError('User participant not found', 400);
+    // Create the message
+    const message = await Message.create({
+        conversationId: conversation._id,
+        sender: seller._id,
+        senderModel: 'Seller',
+        recipient: userParticipant.id,
+        recipientModel: 'User',
+        order: conversation.order,
+        content: content.trim()
+    });
+    // Update conversation's last message
+    conversation.lastMessage = content.trim();
+    conversation.updatedAt = new Date();
+    await conversation.save();
+    // Populate sender details for response
+    await message.populate('sender', 'brandName');
+    res.json({ success: true, message });
+}));
 
 // Mark all messages as read for the seller
-router.post('/api/messages/:conversationId/read', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) return res.status(403).json({ error: 'Seller not found' });
-        const conversation = await Conversation.findById(req.params.conversationId);
-        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
-        // Check seller is a participant
-        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
-        // Mark all unread messages as read
-        await Message.updateMany({
-            conversationId: conversation._id,
-            recipient: seller._id,
-            recipientModel: 'Seller',
-            isRead: false
-        }, { isRead: true });
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Seller API: Mark as read error:', error);
-        res.status(500).json({ error: 'Failed to mark messages as read' });
-    }
-});
+router.post('/api/messages/:conversationId/read', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    const conversation = await Conversation.findById(req.params.conversationId);
+    if (!conversation) throw new AppError('Conversation not found', 404);
+    // Check seller is a participant
+    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+    if (!isParticipant) throw new AppError('Access denied', 403);
+    // Mark all unread messages as read
+    await Message.updateMany({
+        conversationId: conversation._id,
+        recipient: seller._id,
+        recipientModel: 'Seller',
+        isRead: false
+    }, { isRead: true });
+    res.json({ success: true });
+}));
 
 // Get seller profile data
-router.get('/profile', isLoggedIn, async (req, res) => {
-    try {
-        const seller = await Seller.findOne({ user: req.user._id });
-        if (!seller) return res.status(403).json({ error: 'Seller not found' });
-        res.json({ success: true, sellerId: seller._id.toString() });
-    } catch (error) {
-        console.error('Seller profile error:', error);
-        res.status(500).json({ error: 'Failed to get seller profile' });
-    }
-});
+router.get('/profile', isLoggedIn, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    res.json({ success: true, sellerId: seller._id.toString() });
+}));
 
 module.exports = router;

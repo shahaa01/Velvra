@@ -1,0 +1,94 @@
+<% layout('layouts/boilerplate.ejs') %>
+
+<section class="min-h-screen bg-velvra-pearl flex items-center justify-center">
+  <div class="max-w-4xl mx-auto px-6 py-16 text-center">
+    <!-- 404 Number -->
+    <div class="mb-8">
+      <h1 class="text-9xl font-playfair font-bold text-velvra-charcoal opacity-20">404</h1>
+    </div>
+    
+    <!-- Main Message -->
+    <div class="mb-12">
+      <h2 class="text-4xl font-playfair font-semibold text-velvra-charcoal mb-4">
+        Page Not Found
+      </h2>
+      <p class="text-xl text-velvra-stone max-w-2xl mx-auto leading-relaxed">
+        The page you're looking for seems to have wandered off. Perhaps it's exploring our collection of premium fashion items?
+      </p>
+    </div>
+    
+    <!-- Error Details (if available) -->
+    <% if (typeof error !== 'undefined' && error.message) { %>
+      <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg max-w-2xl mx-auto">
+        <p class="text-red-700 text-sm">
+          <strong>Error:</strong> <%= error.message %>
+        </p>
+      </div>
+    <% } %>
+    
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+      <a href="/home" 
+         class="gold-gradient text-white font-semibold px-8 py-4 rounded-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-500">
+        Return Home
+      </a>
+      <a href="/shop" 
+         class="border-2 border-velvra-charcoal text-velvra-charcoal font-semibold px-8 py-4 rounded-xl hover:bg-velvra-charcoal hover:text-white transition-all duration-300">
+        Browse Collection
+      </a>
+    </div>
+    
+    <!-- Search Suggestion -->
+    <div class="bg-white/50 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto">
+      <h3 class="text-xl font-playfair font-semibold text-velvra-charcoal mb-4">
+        Looking for something specific?
+      </h3>
+      <p class="text-velvra-stone mb-6">
+        Use our search to find exactly what you're looking for in our premium collection.
+      </p>
+      <form action="/search" method="GET" class="flex gap-2">
+        <input type="text" 
+               name="q" 
+               placeholder="Search for products..." 
+               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-velvra-gold focus:border-velvra-gold transition-colors">
+        <button type="submit" 
+                class="gold-gradient text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300">
+          Search
+        </button>
+      </form>
+    </div>
+    
+    <!-- Helpful Links -->
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-velvra-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-velvra-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <h4 class="font-semibold text-velvra-charcoal mb-2">Search Products</h4>
+        <p class="text-sm text-velvra-stone">Find your perfect style</p>
+      </div>
+      
+      <div class="text-center">
+        <div class="w-16 h-16 bg-velvra-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-velvra-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h4 class="font-semibold text-velvra-charcoal mb-2">Need Help?</h4>
+        <p class="text-sm text-velvra-stone">Contact our support team</p>
+      </div>
+      
+      <div class="text-center">
+        <div class="w-16 h-16 bg-velvra-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-velvra-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </div>
+        <h4 class="font-semibold text-velvra-charcoal mb-2">Report Issue</h4>
+        <p class="text-sm text-velvra-stone">Let us know about problems</p>
+      </div>
+    </div>
+  </div>
+</section> 
