@@ -23,6 +23,7 @@ const http = require('http');
 const socketio = require('socket.io');
 const Message = require('./models/message');
 const Conversation = require('./models/conversation');
+const dbUrl = process.env.MONGO_ATLAS_URL;
 
 const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
@@ -35,7 +36,7 @@ require('./models/Review');
 // Session configuration
 const sessionConfig = {
     store: MongoStore.create({
-        mongoUrl: 'mongodb://127.0.0.1:27017/velvra',
+        mongoUrl: dbUrl,
         touchAfter: 24 * 3600 // time period in seconds
     }),
     secret: process.env.SECRET || 'thisshouldbeabettersecret',
@@ -139,7 +140,7 @@ app.use(express.json());
 main().then(() => console.log('Database connected successfully🚀')).catch(err => console.log('Database connection error:',err.message));
 
 async function main() {
-    await mongoose.connect('mongodb://127.0.0.1:27017/velvra');
+    await mongoose.connect(dbUrl);
     await Product.ensureIndexes();
 }
 
