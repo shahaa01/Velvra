@@ -92,6 +92,7 @@ router.route('/:id')
 
 // Review routes
 router.get('/:id/reviews', reviewController.getReviews);
+router.get('/:id/can-review', isLoggedIn, reviewController.canUserReview);
 router.post('/:id/reviews', isLoggedIn, reviewMulter.array('images', 5), reviewController.createOrUpdateReview);
 router.put('/:id/reviews/:reviewId', isLoggedIn, reviewMulter.array('images', 5), reviewController.editReview);
 router.delete('/:id/reviews/:reviewId', isLoggedIn, reviewController.deleteReview);

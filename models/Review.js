@@ -38,6 +38,7 @@ const reviewSchema = new mongoose.Schema({
   }
 });
 
-reviewSchema.index({ productId: 1, userId: 1 }, { unique: true }); // Prevent duplicate reviews per user/product
+// Remove the unique index constraint to allow multiple reviews per product
+// reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Review', reviewSchema); 

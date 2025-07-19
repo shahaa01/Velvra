@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Divaa - Reviews & Ratings</title>
+    <title>Reviews & Ratings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -18,22 +18,44 @@
         }
         
         .star {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 20px;
         }
         
         .star.filled {
-            color: #1f2937;
+            color: #fbbf24;
         }
         
         .star.empty {
-            color: #e5e7eb;
+            color: #d1d5db;
         }
         
         .star:hover {
             transform: scale(1.1);
+        }
+        
+        .star-rating-input .star {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .star-rating-input .star.filled {
+            color: #fbbf24 !important;
+        }
+        
+        .star-rating-input .star.empty {
+            color: #d1d5db !important;
+        }
+        
+        .star-rating-input .star:hover {
+            transform: scale(1.1);
+            color: #fbbf24 !important;
         }
         
         .rating-bar {
@@ -145,58 +167,20 @@
                     <!-- Overall Rating -->
                     <div class="overall-rating">
                         <div class="flex items-center gap-4 mb-4">
-                            <div class="text-4xl font-light text-gray-900">4.6</div>
+                            <div class="text-4xl font-light text-gray-900" id="averageRating">0.0</div>
                             <div>
-                                <div class="star-rating mb-1">
-                                    <span class="star filled">★</span>
-                                    <span class="star filled">★</span>
-                                    <span class="star filled">★</span>
-                                    <span class="star filled">★</span>
-                                    <span class="star filled">★</span>
+                                <div class="star-rating mb-1" id="averageStars">
+                                    <!-- Stars will be populated by JavaScript -->
                                 </div>
-                                <p class="text-sm text-gray-600">Based on 247 reviews</p>
+                                <p class="text-sm text-gray-600">Based on <span id="totalReviews">0</span> reviews</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Rating Distribution -->
                     <div class="rating-distribution">
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-600 w-8">5★</span>
-                                <div class="flex-1 rating-bar">
-                                    <div class="rating-fill" style="width: 72%"></div>
-                                </div>
-                                <span class="text-sm text-gray-500 w-8">178</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-600 w-8">4★</span>
-                                <div class="flex-1 rating-bar">
-                                    <div class="rating-fill" style="width: 18%"></div>
-                                </div>
-                                <span class="text-sm text-gray-500 w-8">45</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-600 w-8">3★</span>
-                                <div class="flex-1 rating-bar">
-                                    <div class="rating-fill" style="width: 6%"></div>
-                                </div>
-                                <span class="text-sm text-gray-500 w-8">15</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-600 w-8">2★</span>
-                                <div class="flex-1 rating-bar">
-                                    <div class="rating-fill" style="width: 3%"></div>
-                                </div>
-                                <span class="text-sm text-gray-500 w-8">7</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-600 w-8">1★</span>
-                                <div class="flex-1 rating-bar">
-                                    <div class="rating-fill" style="width: 1%"></div>
-                                </div>
-                                <span class="text-sm text-gray-500 w-8">2</span>
-                            </div>
+                        <div class="space-y-2" id="ratingDistribution">
+                            <!-- Rating bars will be populated by JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -224,7 +208,6 @@
                             <option value="3">3 Stars Only</option>
                             <option value="2">2 Stars Only</option>
                             <option value="1">1 Star Only</option>
-                            <option value="verified">Verified Only</option>
                         </select>
                     </div>
                 </div>
@@ -233,105 +216,15 @@
             <!-- Reviews List -->
             <div class="reviews-list mb-10">
                 <div id="reviewsContainer" class="space-y-0">
-                    <!-- Sample Reviews -->
-                    <div class="review-card p-6 fade-in" data-rating="5" data-verified="true" data-date="2024-07-15">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Sarah M.</h4>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <div class="star-rating">
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                    </div>
-                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
-                                </div>
-                            </div>
-                            <span class="text-sm text-gray-500">July 15, 2024</span>
-                        </div>
-                        <p class="text-gray-700 mb-3 leading-relaxed">Absolutely gorgeous piece! The fabric quality is exceptional and the fit is perfect. I've received so many compliments wearing this. The attention to detail is remarkable - you can really tell this is a premium piece.</p>
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (12)</button>
-                            <button class="hover:text-gray-700 transition-colors">Report</button>
-                        </div>
-                    </div>
-                    
-                    <div class="review-card p-6 fade-in" data-rating="4" data-verified="true" data-date="2024-07-12">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Emma L.</h4>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <div class="star-rating">
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star empty">★</span>
-                                    </div>
-                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
-                                </div>
-                            </div>
-                            <span class="text-sm text-gray-500">July 12, 2024</span>
-                        </div>
-                        <p class="text-gray-700 mb-3 leading-relaxed">Beautiful design and great quality fabric. Fits true to size. The only reason I'm not giving 5 stars is because the delivery took longer than expected, but the product itself is fantastic.</p>
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (8)</button>
-                            <button class="hover:text-gray-700 transition-colors">Report</button>
-                        </div>
-                    </div>
-                    
-                    <div class="review-card p-6 fade-in" data-rating="5" data-verified="false" data-date="2024-07-10">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Jessica R.</h4>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <div class="star-rating">
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="text-sm text-gray-500">July 10, 2024</span>
-                        </div>
-                        <p class="text-gray-700 mb-3 leading-relaxed">Love this piece! The cut is so flattering and the material feels luxurious. Perfect for both casual and formal occasions. Will definitely be ordering more from Divaa.</p>
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (15)</button>
-                            <button class="hover:text-gray-700 transition-colors">Report</button>
-                        </div>
-                    </div>
-                    
-                    <div class="review-card p-6 fade-in" data-rating="3" data-verified="true" data-date="2024-07-08">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-medium text-gray-900">Maria K.</h4>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <div class="star-rating">
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star filled">★</span>
-                                        <span class="star empty">★</span>
-                                        <span class="star empty">★</span>
-                                    </div>
-                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified Purchase</span>
-                                </div>
-                            </div>
-                            <span class="text-sm text-gray-500">July 8, 2024</span>
-                        </div>
-                        <p class="text-gray-700 mb-3 leading-relaxed">The quality is decent but the fit wasn't quite what I expected. It runs a bit large. The fabric is nice but not as luxurious as I hoped for the price point.</p>
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
-                            <button class="hover:text-gray-700 transition-colors">👍 Helpful (3)</button>
-                            <button class="hover:text-gray-700 transition-colors">Report</button>
-                        </div>
+                    <!-- Reviews will be populated by JavaScript -->
+                    <div id="loadingReviews" class="text-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                        <p class="text-gray-500 mt-2">Loading reviews...</p>
                     </div>
                 </div>
                 
                 <!-- Load More Button -->
-                <div class="text-center mt-8">
+                <div class="text-center mt-8" id="loadMoreContainer" style="display: none;">
                     <button id="loadMoreBtn" class="px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg">
                         Load More Reviews
                     </button>
@@ -347,21 +240,13 @@
                         <!-- Rating Input -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
-                            <div class="star-rating-input flex gap-1" data-rating="0">
-                                <span class="star-input star empty text-2xl" data-value="1">★</span>
-                                <span class="star-input star empty text-2xl" data-value="2">★</span>
-                                <span class="star-input star empty text-2xl" data-value="3">★</span>
-                                <span class="star-input star empty text-2xl" data-value="4">★</span>
-                                <span class="star-input star empty text-2xl" data-value="5">★</span>
+                            <div class="star-rating-input flex gap-2" data-rating="0">
+                                <span class="star-input star empty" data-value="1" style="font-size: 28px; color: #d1d5db; cursor: pointer; transition: all 0.2s ease;">★</span>
+                                <span class="star-input star empty" data-value="2" style="font-size: 28px; color: #d1d5db; cursor: pointer; transition: all 0.2s ease;">★</span>
+                                <span class="star-input star empty" data-value="3" style="font-size: 28px; color: #d1d5db; cursor: pointer; transition: all 0.2s ease;">★</span>
+                                <span class="star-input star empty" data-value="4" style="font-size: 28px; color: #d1d5db; cursor: pointer; transition: all 0.2s ease;">★</span>
+                                <span class="star-input star empty" data-value="5" style="font-size: 28px; color: #d1d5db; cursor: pointer; transition: all 0.2s ease;">★</span>
                             </div>
-                        </div>
-                        
-                        <!-- Name Input -->
-                        <div>
-                            <label for="reviewerName" class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-                            <input type="text" id="reviewerName" name="reviewerName" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors" 
-                                   placeholder="Enter your name">
                         </div>
                         
                         <!-- Review Text -->
@@ -399,200 +284,16 @@
         </section>
     </div>
     
-    <script>
-        // Star Rating Input Functionality
-        const starRatingInput = document.querySelector('.star-rating-input');
-        const starInputs = starRatingInput.querySelectorAll('.star-input');
-        let currentRating = 0;
-        
-        starInputs.forEach((star, index) => {
-            star.addEventListener('click', () => {
-                currentRating = index + 1;
-                starRatingInput.dataset.rating = currentRating;
-                updateStarDisplay();
-            });
-            
-            star.addEventListener('mouseenter', () => {
-                highlightStars(index + 1);
-            });
-        });
-        
-        starRatingInput.addEventListener('mouseleave', () => {
-            updateStarDisplay();
-        });
-        
-        function highlightStars(rating) {
-            starInputs.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('filled');
-                    star.classList.remove('empty');
-                } else {
-                    star.classList.add('empty');
-                    star.classList.remove('filled');
-                }
-            });
-        }
-        
-        function updateStarDisplay() {
-            highlightStars(currentRating);
-        }
-        
-        // Image Upload Preview
-        const imageUpload = document.getElementById('imageUpload');
-        const imagePreview = document.getElementById('imagePreview');
-        let uploadedImages = [];
-        
-        imageUpload.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            
-            if (uploadedImages.length + files.length > 5) {
-                alert('You can only upload up to 5 images.');
-                return;
-            }
-            
-            files.forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const imageData = {
-                            src: e.target.result,
-                            file: file
-                        };
-                        uploadedImages.push(imageData);
-                        renderImagePreview();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        });
-        
-        function renderImagePreview() {
-            if (uploadedImages.length === 0) {
-                imagePreview.classList.add('hidden');
-                return;
-            }
-            
-            imagePreview.classList.remove('hidden');
-            imagePreview.innerHTML = uploadedImages.map((image, index) => `
-                <div class="image-preview aspect-square bg-gray-100">
-                    <img src="${image.src}" alt="Preview ${index + 1}">
-                    <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
-                </div>
-            `).join('');
-        }
-        
-        function removeImage(index) {
-            uploadedImages.splice(index, 1);
-            renderImagePreview();
-        }
-        
-        // Form Submission
-        const reviewForm = document.getElementById('reviewForm');
-        const submitBtn = document.getElementById('submitReview');
-        
-        reviewForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const name = document.getElementById('reviewerName').value.trim();
-            const review = document.getElementById('reviewText').value.trim();
-            
-            if (!name || !review || currentRating === 0) {
-                alert('Please fill in all required fields and provide a rating.');
-                return;
-            }
-            
-            // Simulate form submission
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-            
-            setTimeout(() => {
-                alert('Thank you for your review! It will be published after moderation.');
-                reviewForm.reset();
-                currentRating = 0;
-                updateStarDisplay();
-                uploadedImages = [];
-                renderImagePreview();
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Review';
-            }, 2000);
-        });
-        
-        // Filter and Sort Functionality
-        const sortSelect = document.getElementById('sortSelect');
-        const filterSelect = document.getElementById('filterSelect');
-        const reviewsContainer = document.getElementById('reviewsContainer');
-        
-        sortSelect.addEventListener('change', filterAndSortReviews);
-        filterSelect.addEventListener('change', filterAndSortReviews);
-        
-        function filterAndSortReviews() {
-            const reviews = Array.from(reviewsContainer.querySelectorAll('.review-card'));
-            const sortBy = sortSelect.value;
-            const filterBy = filterSelect.value;
-            
-            // Filter reviews
-            const filteredReviews = reviews.filter(review => {
-                if (filterBy === 'all') return true;
-                if (filterBy === 'verified') return review.querySelector('.text-green-700');
-                return review.dataset.rating === filterBy;
-            });
-            
-            // Sort reviews
-            filteredReviews.sort((a, b) => {
-                switch (sortBy) {
-                    case 'newest':
-                        return new Date(b.dataset.date) - new Date(a.dataset.date);
-                    case 'oldest':
-                        return new Date(a.dataset.date) - new Date(b.dataset.date);
-                    case 'highest':
-                        return b.dataset.rating - a.dataset.rating;
-                    case 'lowest':
-                        return a.dataset.rating - b.dataset.rating;
-                    case 'helpful':
-                        const aHelpful = parseInt(a.querySelector('button').textContent.match(/\((\d+)\)/)?.[1] || '0');
-                        const bHelpful = parseInt(b.querySelector('button').textContent.match(/\((\d+)\)/)?.[1] || '0');
-                        return bHelpful - aHelpful;
-                    default:
-                        return 0;
-                }
-            });
-            
-            // Hide all reviews first
-            reviews.forEach(review => review.style.display = 'none');
-            
-            // Show filtered and sorted reviews
-            filteredReviews.forEach(review => {
-                review.style.display = 'block';
-                reviewsContainer.appendChild(review);
-            });
-        }
-        
-        // Load More Reviews
-        document.getElementById('loadMoreBtn').addEventListener('click', () => {
-            // Simulate loading more reviews
-            const btn = document.getElementById('loadMoreBtn');
-            btn.textContent = 'Loading...';
-            btn.disabled = true;
-            
-            setTimeout(() => {
-                btn.textContent = 'Load More Reviews';
-                btn.disabled = false;
-                // In a real application, you would load more reviews from the server
-            }, 1000);
-        });
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            updateStarDisplay();
-            
-            // Add subtle animation to rating bars
-            const ratingBars = document.querySelectorAll('.rating-fill');
-            ratingBars.forEach((bar, index) => {
-                setTimeout(() => {
-                    bar.style.width = bar.style.width;
-                }, index * 100);
-            });
-        });
-    </script>
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+        <div class="relative max-w-4xl max-h-full">
+            <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 z-10">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <img id="modalImage" src="" alt="Review image" class="max-w-full max-h-full object-contain rounded-lg">
+        </div>
+    </div>
 </body>
 </html>
