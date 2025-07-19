@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const Cart = require('../models/cart');
+const reviewController = require('../controllers/reviewController');
+const reviewMulter = require('../middlewares/reviewMulter');
+const { isLoggedIn } = require('../middlewares/authMiddleware');
 
 // API endpoint for loading more similar products
 router.get('/api/similar-products/:id', async (req, res) => {
@@ -86,5 +89,11 @@ router.route('/:id')
             res.status(500).render('error', {message: 'Internal Server Error'});
         }
     });
+
+// Review routes
+router.get('/:id/reviews', reviewController.getReviews);
+router.post('/:id/reviews', isLoggedIn, reviewMulter.array('images', 5), reviewController.createOrUpdateReview);
+router.put('/:id/reviews/:reviewId', isLoggedIn, reviewMulter.array('images', 5), reviewController.editReview);
+router.delete('/:id/reviews/:reviewId', isLoggedIn, reviewController.deleteReview);
 
 module.exports = router;

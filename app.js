@@ -30,6 +30,7 @@ const productRoutes = require('./routes/productRoute');
 const cartRoutes = require('./routes/cartRoute');
 const addressRoutes = require('./routes/address');
 const { notificationHeaderData } = require('./middlewares/notificationMiddleware');
+require('./models/Review');
 
 // Session configuration
 const sessionConfig = {

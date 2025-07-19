@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
             selectAddress(selectedAddress);
         }
     }
+
+    // Initialize address modal functionality
+    initializeAddressModal();
 });
 
 function selectPayment(method) {
@@ -255,6 +258,216 @@ function confirmCod() {
     closeCodModal();
     processPayment();
 }
+
+// Address Modal Functionality
+function initializeAddressModal() {
+    const addAddressBtn = document.getElementById('addAddressBtn');
+    const addressForm = document.getElementById('addressForm');
+
+    if (addAddressBtn) {
+        addAddressBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openAddressSidebar();
+        });
+    }
+
+    if (addressForm) {
+        // Initialize form validation
+        addressForm.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                validateField(e.target.name, e.target.value);
+            });
+        });
+
+        // Form submission
+        addressForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(addressForm);
+            const addressData = Object.fromEntries(formData.entries());
+            
+            // Convert checkbox value to boolean
+            addressData.defaultShipping = addressData.defaultShipping === 'on';
+            
+            // Validate all fields
+            let isValid = true;
+            for (const [field, value] of Object.entries(addressData)) {
+                if (!validateField(field, value)) {
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                const addressId = addressForm.dataset.addressId;
+                const method = addressId ? 'PUT' : 'POST';
+                const url = addressId ? `/address/${addressId}` : '/address/add';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(addressData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update address list
+                    updateAddressList(data.addresses);
+                    // Close sidebar and reset form
+                    closeAddressSidebar();
+                    addressForm.reset();
+                    delete addressForm.dataset.addressId;
+                    
+                    // Show success message
+                    showNotification('Address saved successfully!', 'success');
+                    
+                    // Reload page to refresh address list
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(data.error || 'Failed to save address', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to save address', 'error');
+            }
+        });
+    }
+}
+
+function openAddressSidebar() {
+    document.getElementById('addressSidebar').classList.remove('invisible');
+    document.body.classList.add('modal-open');
+}
+
+function closeAddressSidebar() {
+    document.getElementById('addressSidebar').classList.add('invisible');
+    document.body.classList.remove('modal-open');
+}
+
+// Form validation
+const validateField = (field, value) => {
+    const errorElement = document.getElementById(`${field}Error`);
+    let isValid = true;
+    let errorMessage = '';
+
+    switch (field) {
+        case 'name':
+            if (value.length < 2) {
+                isValid = false;
+                errorMessage = 'Name must be at least 2 characters long';
+            }
+            break;
+        case 'phone':
+            if (!/^[0-9]{10}$/.test(value)) {
+                isValid = false;
+                errorMessage = 'Please enter a valid 10-digit phone number';
+            }
+            break;
+        case 'street':
+            if (!value.trim()) {
+                isValid = false;
+                errorMessage = 'Street address is required';
+            }
+            break;
+        case 'city':
+            if (!value.trim()) {
+                isValid = false;
+                errorMessage = 'City is required';
+            }
+            break;
+        case 'state':
+            if (!value.trim()) {
+                isValid = false;
+                errorMessage = 'State is required';
+            }
+            break;
+        case 'postalCode':
+            if (!/^[0-9]{5}$/.test(value)) {
+                isValid = false;
+                errorMessage = 'Please enter a valid 5-digit postal code';
+            }
+            break;
+        case 'defaultShipping':
+            // Checkbox is optional, always valid
+            isValid = true;
+            break;
+        default:
+            // For any other fields, assume valid
+            isValid = true;
+            break;
+    }
+
+    if (!isValid) {
+        errorElement.textContent = errorMessage;
+        errorElement.classList.remove('hidden');
+    } else {
+        errorElement.classList.add('hidden');
+    }
+
+    return isValid;
+};
+
+// Function to update address list
+function updateAddressList(addresses) {
+    const addressList = document.getElementById('addressList');
+    const addressContent = document.getElementById('addressContent');
+    
+    if (!addresses || addresses.length === 0) {
+        addressContent.innerHTML = `
+            <div class="text-center py-4 text-gray-500">
+                No addresses found. Please add a delivery address.
+            </div>
+            <button id="addAddressBtn" class="flex items-center space-x-3 text-left touch-scale mt-4">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                <span class="font-medium">Add Delivery Address</span>
+            </button>
+        `;
+        return;
+    }
+
+    addressList.innerHTML = addresses.map((address) => `
+        <div class="address-card p-4 border ${address.defaultShipping ? 'border-gold-500 bg-gold-50 default-shipping' : 'border-gray-200'} rounded-xl transition-all duration-300 cursor-pointer"
+             id="address-${address._id}"
+             data-address-id="${address._id}"
+             data-name="${address.name}"
+             data-phone="${address.phone}"
+             data-street="${address.street}"
+             data-city="${address.city}"
+             data-state="${address.state}"
+             data-postal-code="${address.postalCode}"
+             onclick="selectAddress('${address._id}')">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-medium">${address.name}</h4>
+                        ${address.defaultShipping ? 
+                            '<span class="px-2 py-1 text-xs bg-gold-100 text-gold-700 rounded-full">Default</span>' : 
+                            ''}
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">${address.phone}</p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        ${address.street}<br>
+                        ${address.city}, ${address.state} ${address.postalCode}
+                    </p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Make closeAddressSidebar globally accessible
+window.closeAddressSidebar = closeAddressSidebar;
 
 // Add touch scale effect
 document.addEventListener('DOMContentLoaded', function() {
