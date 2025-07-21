@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const Fuse = require('fuse.js');
+const AppError = require('../utils/AppError');
+const asyncWrap = require('../utils/asyncWrap');
 
 // Enhanced fuzzy search options with better typo tolerance
 const fuseOptions = {
@@ -136,68 +138,67 @@ function parseSearchQuery(query) {
 }
 
 // Get search suggestions
-router.get('/suggestions', async (req, res) => {
-    try {
-        const query = req.query.q;
-        if (!query || query.length < 2) {
-            return res.json({ suggestions: [] });
+router.get('/suggestions', asyncWrap(async (req, res) => {
+    const query = req.query.q;
+    if (!query || query.length < 2) {
+        return res.json({ suggestions: [] });
+    }
+
+    // Parse the query with enhanced parser
+    const parsedQuery = parseSearchQuery(query);
+    
+    // Fetch products for fuzzy search
+    const products = await Product.find({}).limit(200).lean();
+    
+    // Create Fuse instance with lenient settings for suggestions
+    const suggestFuseOptions = {
+        ...fuseOptions,
+        threshold: 0.6, // More lenient for suggestions
+        includeScore: true,
+        includeMatches: true
+    };
+    
+    const fuse = new Fuse(products, suggestFuseOptions);
+    
+    // Search with all search terms
+    const allResults = [];
+    parsedQuery.searchTerms.forEach(term => {
+        const results = fuse.search(term);
+        allResults.push(...results);
+    });
+    
+    // Deduplicate and sort by score
+    const uniqueResults = new Map();
+    allResults.forEach(result => {
+        const id = result.item._id.toString();
+        if (!uniqueResults.has(id) || uniqueResults.get(id).score > result.score) {
+            uniqueResults.set(id, result);
         }
-
-        // Parse the query with enhanced parser
-        const parsedQuery = parseSearchQuery(query);
-        
-        // Fetch products for fuzzy search
-        const products = await Product.find({}).limit(200).lean();
-        
-        // Create Fuse instance with lenient settings for suggestions
-        const suggestFuseOptions = {
-            ...fuseOptions,
-            threshold: 0.6, // More lenient for suggestions
-            includeScore: true,
-            includeMatches: true
+    });
+    
+    // Convert to array and sort
+    const sortedResults = Array.from(uniqueResults.values())
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 8);
+    
+    // Format suggestions
+    const suggestions = sortedResults.map(result => {
+        const product = result.item;
+        return {
+            id: product._id,
+            title: product.name,
+            type: 'product',
+            brand: product.brand,
+            category: product.category,
+            price: product.salePrice || product.price,
+            matches: result.matches || []
         };
-        
-        const fuse = new Fuse(products, suggestFuseOptions);
-        
-        // Search with all search terms
-        const allResults = [];
-        parsedQuery.searchTerms.forEach(term => {
-            const results = fuse.search(term);
-            allResults.push(...results);
-        });
-        
-        // Deduplicate and sort by score
-        const uniqueResults = new Map();
-        allResults.forEach(result => {
-            const id = result.item._id.toString();
-            if (!uniqueResults.has(id) || uniqueResults.get(id).score > result.score) {
-                uniqueResults.set(id, result);
-            }
-        });
-        
-        // Convert to array and sort
-        const sortedResults = Array.from(uniqueResults.values())
-            .sort((a, b) => a.score - b.score)
-            .slice(0, 8);
-        
-        // Format suggestions
-        const suggestions = sortedResults.map(result => {
-            const product = result.item;
-            return {
-                id: product._id,
-                title: product.name,
-                type: 'product',
-                brand: product.brand,
-                category: product.category,
-                price: product.salePrice || product.price,
-                matches: result.matches || []
-            };
-        });
+    });
 
-        // Add category suggestions based on keywords
-        const categories = ['men', 'women', 'sweater', 'jacket', 'shirt', 'pants', 'accessories', 'bags', 'shoes'];
-        
-        parsedQuery.keywords.forEach(keyword => {
+    // Add category suggestions based on keywords
+    const categories = ['men', 'women', 'sweater', 'jacket', 'shirt', 'pants', 'accessories', 'bags', 'shoes'];
+    
+    parsedQuery.keywords.forEach(keyword => {
             categories.forEach(category => {
                 if (category.includes(keyword) || keyword.includes(category)) {
                     suggestions.push({
@@ -215,23 +216,18 @@ router.get('/suggestions', async (req, res) => {
         );
 
         res.json({ suggestions: uniqueSuggestions.slice(0, 8) });
-    } catch (error) {
-        console.error('Search suggestions error:', error);
-        res.status(500).json({ suggestions: [] });
-    }
-});
+}));
 
 // Main search endpoint
-router.get('/products', async (req, res) => {
-    try {
-        const searchQuery = req.query.q;
-        const page = parseInt(req.query.page) || 1;
-        const ITEMS_PER_PAGE = 12;
-        const skip = (page - 1) * ITEMS_PER_PAGE;
+router.get('/products', asyncWrap(async (req, res) => {
+    const searchQuery = req.query.q;
+    const page = parseInt(req.query.page) || 1;
+    const ITEMS_PER_PAGE = 12;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-        if (!searchQuery) {
-            return res.redirect('/shop');
-        }
+    if (!searchQuery) {
+        return res.redirect('/shop');
+    }
 
         // Parse query with enhanced parser
         const parsedQuery = parseSearchQuery(searchQuery);
@@ -339,23 +335,18 @@ router.get('/products', async (req, res) => {
                 itemsPerPage: ITEMS_PER_PAGE
             }
         });
-    } catch (error) {
-        console.error('Search error:', error);
-        res.status(500).render('error', { message: 'Error searching products' });
-    }
-});
+}));
 
 // API endpoint for filtered search results (for AJAX calls)
-router.get('/api/products', async (req, res) => {
-    try {
-        const searchQuery = req.query.q;
-        const page = parseInt(req.query.page) || 1;
-        const ITEMS_PER_PAGE = 12;
-        const skip = (page - 1) * ITEMS_PER_PAGE;
+router.get('/api/products', asyncWrap(async (req, res) => {
+    const searchQuery = req.query.q;
+    const page = parseInt(req.query.page) || 1;
+    const ITEMS_PER_PAGE = 12;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-        if (!searchQuery) {
-            return res.status(400).json({ error: 'Search query required' });
-        }
+    if (!searchQuery) {
+        throw new AppError('Search query required', 400);
+    }
 
         // Parse query with enhanced parser
         const parsedQuery = parseSearchQuery(searchQuery);
@@ -445,10 +436,6 @@ router.get('/api/products', async (req, res) => {
                 itemsPerPage: ITEMS_PER_PAGE
             }
         });
-    } catch (error) {
-        console.error('Search API error:', error);
-        res.status(500).json({ error: 'Error searching products' });
-    }
-});
+}));
 
 module.exports = router;

@@ -10,7 +10,7 @@ const defaultColorObj = product.colors.find(c => c.name === defaultColor.name);
 const defaultSizeObj = defaultColorObj?.sizes.find(s => s.size === defaultSize);
 const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
 %>
-<section class="mainSection bg-velvra-pearl font-montserrat">
+<section class="mainSection bg-velvra-pearl font-montserrat" data-product-id="<%= product._id %>">
     <!-- Product Detail Page -->
     <main class="luxury-gradient min-h-screen">
         <!-- Breadcrumb -->
@@ -437,6 +437,9 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
     selectedSize: '<%= product.sizes[0] %>',
     quantity: 1
   };
+  
+  // Set current user ID for review ownership checks
+  window.currentUserId = '<%= currentUser ? currentUser._id : "" %>';
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>

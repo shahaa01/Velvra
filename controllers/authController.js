@@ -1,5 +1,7 @@
 const User = require('../models/user');
 const passport = require('passport');
+const AppError = require('../utils/AppError');
+const asyncWrap = require('../utils/asyncWrap');
 
 // Render signup page
 const renderSignup = (req, res) => {
@@ -18,43 +20,35 @@ const renderLogin = (req, res) => {
 };
 
 // Handle user registration
-const signup = async (req, res) => {
-    try {
-        const { email, password, firstName, lastName } = req.body;
-        console.log('Signup attempt:', { email, firstName, lastName, password });
-        
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            req.flash('error', 'Email already registered');
-            return res.redirect('/auth/signup');
-        }
-
-        // Create new user with passport-local-mongoose
-        const user = await User.register(new User({
-            email,
-            firstName,
-            lastName: lastName || '' // Provide fallback for empty lastName
-        }), password);
-
-        console.log('User registered successfully:', user._id);
-
-        // Log the user in after successful registration
-        req.login(user, (err) => {
-            if (err) {
-                console.error('Login after registration error:', err);
-                req.flash('error', 'Error during login after registration');
-                return res.redirect('/auth/login');
-            }
-            req.flash('success', 'Welcome to Velvra!');
-            res.redirect('/home');
-        });
-    } catch (error) {
-        console.error('Signup error:', error);
-        req.flash('error', error.message || 'Error during registration');
-        res.redirect('/auth/signup');
+const signup = asyncWrap(async (req, res) => {
+    const { email, password, firstName, lastName } = req.body;
+    console.log('Signup attempt:', { email, firstName, lastName, password });
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        throw new AppError('Email already registered', 400);
     }
-};
+
+    // Create new user with passport-local-mongoose
+    const user = await User.register(new User({
+        email,
+        firstName,
+        lastName: lastName || '' // Provide fallback for empty lastName
+    }), password);
+
+    console.log('User registered successfully:', user._id);
+
+    // Log the user in after successful registration
+    req.login(user, (err) => {
+        if (err) {
+            console.error('Login after registration error:', err);
+            throw new AppError('Error during login after registration', 500);
+        }
+        req.flash('success', 'Welcome to Velvra!');
+        res.redirect('/home');
+    });
+});
 
 // Handle user login
 const login = (req, res) => {
@@ -69,8 +63,7 @@ const logout = (req, res) => {
     req.logout((err) => {
         if (err) {
             console.error('Logout error:', err);
-            req.flash('error', 'Error during logout');
-            return res.redirect('/home');
+            throw new AppError('Error during logout', 500);
         }
         req.flash('success', 'Goodbye!');
         res.redirect('/home');
@@ -108,8 +101,7 @@ const googleCallback = (req, res) => {
     })(req, res, (err) => {
         if (err) {
             console.error('Google OAuth callback error:', err);
-            req.flash('error', `Google authentication error: ${err.message}`);
-            return res.redirect('/auth/login');
+            throw new AppError(`Google authentication error: ${err.message}`, 500);
         }
         
         try {
@@ -132,8 +124,7 @@ const googleCallback = (req, res) => {
             res.redirect(redirectUrl);
         } catch (error) {
             console.error('Google callback processing error:', error);
-            req.flash('error', 'Error during Google authentication');
-            res.redirect('/auth/login');
+            throw new AppError('Error during Google authentication', 500);
         }
     });
 };
@@ -141,7 +132,7 @@ const googleCallback = (req, res) => {
 // Get current user info
 const getCurrentUser = (req, res) => {
     if (!req.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
+        throw new AppError('Not authenticated', 401);
     }
     res.json({
         id: req.user._id,

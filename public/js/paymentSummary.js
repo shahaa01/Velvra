@@ -173,48 +173,58 @@ const validateField = (field, value) => {
 
     switch (field) {
         case 'name':
-            if (value.length < 2) {
+            if (!value || value.length < 2) {
                 isValid = false;
                 errorMessage = 'Name must be at least 2 characters long';
             }
             break;
         case 'phone':
-            if (!/^[0-9]{10}$/.test(value)) {
+            if (!value || !/^[0-9]{10}$/.test(value)) {
                 isValid = false;
                 errorMessage = 'Please enter a valid 10-digit phone number';
             }
             break;
         case 'street':
-            if (!value.trim()) {
+            if (!value || !value.trim()) {
                 isValid = false;
                 errorMessage = 'Street address is required';
             }
             break;
         case 'city':
-            if (!value.trim()) {
+            if (!value || !value.trim()) {
                 isValid = false;
                 errorMessage = 'City is required';
             }
             break;
         case 'state':
-            if (!value.trim()) {
+            if (!value || !value.trim()) {
                 isValid = false;
                 errorMessage = 'State is required';
             }
             break;
         case 'postalCode':
-            if (!/^[0-9]{5}$/.test(value)) {
+            if (!value || !/^[0-9]{5}$/.test(value)) {
                 isValid = false;
                 errorMessage = 'Please enter a valid 5-digit postal code';
             }
             break;
+        case 'defaultShipping':
+            // Checkbox is optional, always valid
+            isValid = true;
+            break;
+        default:
+            // For any other fields, assume valid
+            isValid = true;
+            break;
     }
 
-    if (!isValid) {
-        errorElement.textContent = errorMessage;
-        errorElement.classList.remove('hidden');
-    } else {
-        errorElement.classList.add('hidden');
+    if (errorElement) {
+        if (!isValid) {
+            errorElement.textContent = errorMessage;
+            errorElement.classList.remove('hidden');
+        } else {
+            errorElement.classList.add('hidden');
+        }
     }
 
     return isValid;
@@ -225,72 +235,6 @@ addressForm.querySelectorAll('input').forEach(input => {
     input.addEventListener('input', (e) => {
         validateField(e.target.name, e.target.value);
     });
-});
-
-// Form submission
-addressForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(addressForm);
-    const addressData = Object.fromEntries(formData.entries());
-    
-    // Validate all fields
-    let isValid = true;
-    for (const [field, value] of Object.entries(addressData)) {
-        if (!validateField(field, value)) {
-            isValid = false;
-        }
-    }
-    
-    if (!isValid) return;
-    
-    try {
-        const addressId = addressForm.dataset.addressId;
-        const method = addressId ? 'PUT' : 'POST';
-        const url = addressId ? `/address/${addressId}` : '/address/add';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(addressData)
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Update address list
-            updateAddressList(data.addresses);
-            // Close sidebar and reset form
-            closeAddressSidebar();
-            addressForm.reset();
-            delete addressForm.dataset.addressId;
-            addressSaved = true;
-            
-            // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: addressId ? 'Address updated successfully' : 'Address saved successfully',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.error || 'Failed to save address'
-            });
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to save address'
-        });
-    }
 });
 
 // Function to update address list
@@ -448,17 +392,106 @@ window.closeAddressSidebar = closeAddressSidebar;
 
 // Load addresses when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    loadAddresses();
-    updateStockValidation(); // Initialize stock validation
+    console.log('DOM loaded, initializing address form...');
     
-    // Initialize form validation
+    // Re-get the form element to ensure it exists
+    const addressForm = document.getElementById('addressForm');
+    console.log('Address form found:', !!addressForm);
+    
     if (addressForm) {
+        // Add form submission event listener
+        addressForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            const formData = new FormData(addressForm);
+            const addressData = Object.fromEntries(formData.entries());
+            
+            console.log('Form data:', addressData);
+            
+            // Convert checkbox value to boolean
+            addressData.defaultShipping = addressData.defaultShipping === 'on';
+            
+            console.log('Processed address data:', addressData);
+            
+            // Validate all required fields (excluding checkbox)
+            const requiredFields = ['name', 'phone', 'street', 'city', 'state', 'postalCode'];
+            let isValid = true;
+            
+            for (const field of requiredFields) {
+                if (!validateField(field, addressData[field])) {
+                    isValid = false;
+                }
+            }
+            
+            console.log('Form validation result:', isValid);
+            
+            if (!isValid) return;
+            
+            try {
+                const addressId = addressForm.dataset.addressId;
+                const method = addressId ? 'PUT' : 'POST';
+                const url = addressId ? `/address/${addressId}` : '/address/add';
+                
+                console.log('Sending request to:', url, 'with method:', method);
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(addressData)
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok) {
+                    // Update address list
+                    updateAddressList(data.addresses);
+                    // Close sidebar and reset form
+                    closeAddressSidebar();
+                    addressForm.reset();
+                    delete addressForm.dataset.addressId;
+                    addressSaved = true;
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: addressId ? 'Address updated successfully' : 'Address saved successfully',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Failed to save address'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save address'
+                });
+            }
+        });
+        
+        // Initialize form validation
         addressForm.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', (e) => {
                 validateField(e.target.name, e.target.value);
             });
         });
+    } else {
+        console.error('Address form not found on DOM load');
     }
+    
+    loadAddresses();
+    updateStockValidation(); // Initialize stock validation
 });
 
 // Coupon handling

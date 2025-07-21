@@ -51,6 +51,16 @@ const productSchema = new mongoose.Schema({
     required: true
   },
 
+  // Review summary fields
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
