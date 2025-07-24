@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/nspell/dist/nspell.min.js"></script>
     <!-- nspell dictionary files should be placed in /public/js/dictionaries/en_US.aff and en_US.dic -->
 `); %>
-<section class="body bg-gray-50 min-h-screen">
+<section class="body bg-gray-50 min-h-screen" x-data="contentScore()">
     <div class="bg-white shadow-sm sticky top-0 z-40 border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
@@ -27,6 +27,11 @@
                     </button>
                     <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         Preview
+                    </button>
+                    <button :disabled="score < 80"
+                            :class="{ 'bg-blue-600 hover:bg-blue-700': score >= 80, 'bg-gray-400 cursor-not-allowed opacity-60': score < 80 }"
+                            class="px-4 py-2 text-white rounded-lg font-medium transition-colors duration-300">
+                        Publish Product
                     </button>
                 </div>
             </div>
@@ -752,12 +757,13 @@
 
             <!-- Content Score -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-sm border p-6 sticky top-24" x-data="contentScore()" style="max-height: 500px; overflow-y: auto;">
+                <div class="bg-white rounded-xl shadow-sm border p-6 sticky top-24" style="max-height: 500px; overflow-y: auto;">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Content Score</h3>
                     
                     <div class="mb-6">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-medium text-gray-700">Progress</span>
+                            <!-- Use 'score' directly -->
                             <span x-text="score + '%'" class="text-sm font-medium text-blue-600"></span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -907,7 +913,8 @@
                 <div class="flex items-center justify-between space-x-4">
                     <div class="flex items-center space-x-2">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span x-text="Math.round(contentScoreValue)" class="text-blue-600 text-sm font-medium"></span>
+                            <!-- 4. UPDATE THE SCORE DISPLAY TO USE 'score' -->
+                            <span x-text="Math.round(score)" class="text-blue-600 text-sm font-medium"></span>
                         </div>
                         <span class="text-sm text-gray-600">Content Score</span>
                     </div>
@@ -915,9 +922,10 @@
                         <button class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">
                             Save Draft
                         </button>
-                        <button :disabled="contentScoreValue < 80" 
-                                :class="contentScoreValue >= 80 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'"
-                                class="px-6 py-2 text-white rounded-lg font-medium publish-product">
+                        <!-- 5. REPLACE THE STICKY BUTTON WITH THIS -->
+                        <button :disabled="score < 80"
+                                :class="{ 'bg-blue-600 hover:bg-blue-700': score >= 80, 'bg-gray-400 cursor-not-allowed opacity-60': score < 80 }"
+                                class="px-6 py-2 text-white rounded-lg font-medium transition-colors duration-300">
                             Publish Product
                         </button>
                     </div>

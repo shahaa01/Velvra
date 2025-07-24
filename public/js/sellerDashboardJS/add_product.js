@@ -942,137 +942,136 @@ function contentScore() {
     descriptionChecks: { wordCount: false, formatting: false, keywords: false, spell: false },
     highlightChecks: { length: false },
     metadataChecks: { coreFields: false, optionalFields: false },
-    contentScoreValue: 0,
     interval: null,
     async updateScore() {
-      // --- 1. Basic Info (20 pts) ---
-      let basic = 0;
-      const name = document.getElementById('productName')?.value?.trim() || '';
-      const brand = window.Alpine?.store('brandSelector')?.selectedBrand?.trim() || '';
-      const images = (window.Alpine?.store('imageUploader')?.images || []).filter(img => img && img.url);
-      const hasName = name.length >= 30;
-      const hasImages = images.length >= 3;
-      let hasQuality = false;
-      if (hasName) basic += 5;
-      if (containsBrandOrStyle(name, brand) && hasName) basic += 3;
-      if (hasImages) basic += 5;
-      // Cover image background
-      this.imageChecks.coverBg = false;
-      if (images[0]) {
-        this.imageChecks.coverBg = await isWhiteBackground(images[0].url || images[0]);
-        if (this.imageChecks.coverBg) basic += 5;
-        hasQuality = hasQuality || this.imageChecks.coverBg;
+        // --- 1. Basic Info (20 pts) ---
+        let basic = 0;
+        const name = document.getElementById('productName')?.value?.trim() || '';
+        const brand = window.Alpine?.store('brandSelector')?.selectedBrand?.trim() || '';
+        const images = (window.Alpine?.store('imageUploader')?.images || []).filter(img => img && img.url);
+        const hasName = name.length >= 30;
+        const hasImages = images.length >= 3;
+        let hasQuality = false;
+        if (hasName) basic += 5;
+        if (containsBrandOrStyle(name, brand) && hasName) basic += 3;
+        if (hasImages) basic += 5;
+        // Cover image background
+        this.imageChecks.coverBg = false;
+        if (images[0]) {
+          this.imageChecks.coverBg = await isWhiteBackground(images[0].url || images[0]);
+          if (this.imageChecks.coverBg) basic += 5;
+          hasQuality = hasQuality || this.imageChecks.coverBg;
+        }
+        // All images high res
+        this.imageChecks.resolution = images.length > 0 ? await allImagesHighRes(images) : false;
+        if (this.imageChecks.resolution) basic += 3;
+        hasQuality = hasQuality || this.imageChecks.resolution;
+        // Diversity
+        this.imageChecks.diversity = images.length > 0 ? diverseAngles(images) : false;
+        if (this.imageChecks.diversity) basic += 2;
+        hasQuality = hasQuality || this.imageChecks.diversity;
+        this.breakdown.basicInfo = basic;
+        // Tick if name, 3+ images, and at least one image quality check
+        this.checks.basicInfo = hasName && hasImages && hasQuality;
+  
+        // --- 2. Category & Brand (10 pts) ---
+        let cat = 0;
+        // Use selectedPath for category depth
+        const selectedPath = (window.Alpine?.store('categorySelector')?.selectedPath || []).filter(Boolean);
+        if (selectedPath.length >= 3) cat += 5;
+        if (brand) cat += 5;
+        this.breakdown.categoryBrand = cat;
+        this.checks.categoryBrand = cat === 10;
+  
+        // --- 3. Variants & Pricing (20 pts) ---
+        let varScore = 0;
+        const colors = (window.Alpine?.store('variantManager')?.colors || []).filter(c => c && c.name && c.name.trim());
+        const sizeChart = (window.Alpine?.store('variantManager')?.sizeChart || []).filter(s => s && s.size && s.bodyPart && s.unit && s.value && s.value.toString().trim() !== '');
+        const combos = (window.Alpine?.store('variantManager')?.getVariantCombinations?.() || []).filter(c => c && c.color && c.size);
+        // Color image for each color
+        this.variantChecks.colors = colors.length > 0 && colors.every(c => c.imageUrl);
+        if (this.variantChecks.colors) varScore += 6;
+        // At least 1 size
+        this.variantChecks.sizes = sizeChart.length > 0;
+        if (this.variantChecks.sizes) varScore += 3;
+        // All combos have price, stock, SKU
+        this.variantChecks.stockAndPrice = combos.length > 0 && combos.every(c => c.price && c.stock && c.sku);
+        if (this.variantChecks.stockAndPrice) varScore += 8;
+        // Any combo has special price
+        if (combos.some(c => c.specialPrice)) varScore += 3;
+        this.breakdown.variants = varScore;
+        this.checks.variants = varScore >= 14;
+  
+        // --- 4. Description (20 pts) ---
+        let descScore = 0;
+        const editor = document.querySelector('[contenteditable="true"]');
+        const html = editor?.innerHTML || '';
+        let text = editor?.innerText?.trim() || '';
+        // Exclude placeholder text from scoring
+        if (text === 'Describe your fashion product in detail...') text = '';
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        this.descriptionChecks.wordCount = wordCount >= 30;
+        if (wordCount >= 30) descScore += 5;
+        if (wordCount >= 50) descScore += 2;
+        // Formatting
+        const fmt = parseDescriptionFormatting(html);
+        this.descriptionChecks.formatting = fmt.hasBold || fmt.hasItalic;
+        if (fmt.hasBold || fmt.hasItalic) descScore += 2;
+        if (fmt.hasList) descScore += 3;
+        // Keywords
+        this.descriptionChecks.keywords = /fabric|fit|cotton|denim|material|occasion|trend|style/i.test(text);
+        if (this.descriptionChecks.keywords) descScore += 5;
+        // Spellcheck
+        const spellErrors = spellcheckText(text);
+        this.descriptionChecks.spell = spellErrors <= 2;
+        if (spellErrors <= 2 && wordCount > 0) descScore += 3;
+        this.breakdown.description = descScore;
+        this.checks.description = descScore >= 15;
+  
+        // --- 5. Highlights (15 pts) ---
+        let highScore = 0;
+        // Only count highlights that are non-empty and >= 4 words
+        const highlights = (window.Alpine?.store('highlightsManager')?.highlights || []).filter(h => h && h.text && h.text.trim().length > 0);
+        if (highlights.length >= 3) highScore += 5;
+        this.highlightChecks.length = highlights.length >= 3 && highlights.every(h => (h.text || '').split(/\s+/).filter(Boolean).length >= 4);
+        if (this.highlightChecks.length) highScore += 5;
+        // Uses suggested or custom (non-empty)
+        if (highlights.some(h => h.text && h.text.length > 0)) highScore += 5;
+        this.breakdown.highlights = highScore;
+        this.checks.highlights = highScore >= 10;
+  
+        // --- 6. Metadata & Extras (15 pts) ---
+        let metaScore = 0;
+        const meta = window.Alpine?.store('moreDetailsManager')?.selected || {};
+        const coreFields = ['fabric', 'fashionTrend', 'fit', 'occasion', 'washCare', 'weaveType', 'neckType', 'pattern'];
+        let filledCore = 0;
+        for (const f of coreFields) if (meta[f] && meta[f].toString().trim()) filledCore++;
+        this.metadataChecks.coreFields = filledCore >= 4;
+        metaScore += Math.min(filledCore, 6) * 2;
+        // Optional fields
+        const optionalFields = ['sleeveLength', 'sleeveStyling', 'lining', 'surfaceStyling', 'closureType', 'transparency', 'length', 'multipack', 'numItems', 'packageContains', 'printPatternType'];
+        let filledOpt = 0;
+        for (const f of optionalFields) if (meta[f] && meta[f].toString().trim()) filledOpt++;
+        this.metadataChecks.optionalFields = filledOpt >= 5;
+        if (filledOpt >= 5) metaScore += 3;
+        this.breakdown.metadata = metaScore;
+        this.checks.metadata = metaScore >= 10;
+  
+        // --- Total ---
+        const total = this.breakdown.basicInfo + this.breakdown.categoryBrand + this.breakdown.variants + this.breakdown.description + this.breakdown.highlights + this.breakdown.metadata;
+        this.score = total === 0 ? 0 : total;
+        
+        // REMOVED: The imperative DOM manipulation is no longer needed.
+        // const publishBtn = document.querySelector('.sticky-actions button.publish-product');
+        // if (publishBtn) publishBtn.disabled = this.score < 80;
+      },
+      init() {
+        // Start periodic update
+        this.interval = setInterval(() => this.updateScore(), 1000);
+        this.updateScore();
       }
-      // All images high res
-      this.imageChecks.resolution = images.length > 0 ? await allImagesHighRes(images) : false;
-      if (this.imageChecks.resolution) basic += 3;
-      hasQuality = hasQuality || this.imageChecks.resolution;
-      // Diversity
-      this.imageChecks.diversity = images.length > 0 ? diverseAngles(images) : false;
-      if (this.imageChecks.diversity) basic += 2;
-      hasQuality = hasQuality || this.imageChecks.diversity;
-      this.breakdown.basicInfo = basic;
-      // Tick if name, 3+ images, and at least one image quality check
-      this.checks.basicInfo = hasName && hasImages && hasQuality;
-
-      // --- 2. Category & Brand (10 pts) ---
-      let cat = 0;
-      // Use selectedPath for category depth
-      const selectedPath = (window.Alpine?.store('categorySelector')?.selectedPath || []).filter(Boolean);
-      if (selectedPath.length >= 3) cat += 5;
-      if (brand) cat += 5;
-      this.breakdown.categoryBrand = cat;
-      this.checks.categoryBrand = cat === 10;
-
-      // --- 3. Variants & Pricing (20 pts) ---
-      let varScore = 0;
-      const colors = (window.Alpine?.store('variantManager')?.colors || []).filter(c => c && c.name && c.name.trim());
-      const sizeChart = (window.Alpine?.store('variantManager')?.sizeChart || []).filter(s => s && s.size && s.bodyPart && s.unit && s.value && s.value.toString().trim() !== '');
-      const combos = (window.Alpine?.store('variantManager')?.getVariantCombinations?.() || []).filter(c => c && c.color && c.size);
-      // Color image for each color
-      this.variantChecks.colors = colors.length > 0 && colors.every(c => c.imageUrl);
-      if (this.variantChecks.colors) varScore += 6;
-      // At least 1 size
-      this.variantChecks.sizes = sizeChart.length > 0;
-      if (this.variantChecks.sizes) varScore += 3;
-      // All combos have price, stock, SKU
-      this.variantChecks.stockAndPrice = combos.length > 0 && combos.every(c => c.price && c.stock && c.sku);
-      if (this.variantChecks.stockAndPrice) varScore += 8;
-      // Any combo has special price
-      if (combos.some(c => c.specialPrice)) varScore += 3;
-      this.breakdown.variants = varScore;
-      this.checks.variants = varScore >= 14;
-
-      // --- 4. Description (20 pts) ---
-      let descScore = 0;
-      const editor = document.querySelector('[contenteditable="true"]');
-      const html = editor?.innerHTML || '';
-      let text = editor?.innerText?.trim() || '';
-      // Exclude placeholder text from scoring
-      if (text === 'Describe your fashion product in detail...') text = '';
-      const wordCount = text.split(/\s+/).filter(Boolean).length;
-      this.descriptionChecks.wordCount = wordCount >= 30;
-      if (wordCount >= 30) descScore += 5;
-      if (wordCount >= 50) descScore += 2;
-      // Formatting
-      const fmt = parseDescriptionFormatting(html);
-      this.descriptionChecks.formatting = fmt.hasBold || fmt.hasItalic;
-      if (fmt.hasBold || fmt.hasItalic) descScore += 2;
-      if (fmt.hasList) descScore += 3;
-      // Keywords
-      this.descriptionChecks.keywords = /fabric|fit|cotton|denim|material|occasion|trend|style/i.test(text);
-      if (this.descriptionChecks.keywords) descScore += 5;
-      // Spellcheck
-      const spellErrors = spellcheckText(text);
-      this.descriptionChecks.spell = spellErrors <= 2;
-      if (spellErrors <= 2 && wordCount > 0) descScore += 3;
-      this.breakdown.description = descScore;
-      this.checks.description = descScore >= 15;
-
-      // --- 5. Highlights (15 pts) ---
-      let highScore = 0;
-      // Only count highlights that are non-empty and >= 4 words
-      const highlights = (window.Alpine?.store('highlightsManager')?.highlights || []).filter(h => h && h.text && h.text.trim().length > 0);
-      if (highlights.length >= 3) highScore += 5;
-      this.highlightChecks.length = highlights.length >= 3 && highlights.every(h => (h.text || '').split(/\s+/).filter(Boolean).length >= 4);
-      if (this.highlightChecks.length) highScore += 5;
-      // Uses suggested or custom (non-empty)
-      if (highlights.some(h => h.text && h.text.length > 0)) highScore += 5;
-      this.breakdown.highlights = highScore;
-      this.checks.highlights = highScore >= 10;
-
-      // --- 6. Metadata & Extras (15 pts) ---
-      let metaScore = 0;
-      const meta = window.Alpine?.store('moreDetailsManager')?.selected || {};
-      const coreFields = ['fabric', 'fashionTrend', 'fit', 'occasion', 'washCare', 'weaveType', 'neckType', 'pattern'];
-      let filledCore = 0;
-      for (const f of coreFields) if (meta[f] && meta[f].toString().trim()) filledCore++;
-      this.metadataChecks.coreFields = filledCore >= 4;
-      metaScore += Math.min(filledCore, 6) * 2;
-      // Optional fields
-      const optionalFields = ['sleeveLength', 'sleeveStyling', 'lining', 'surfaceStyling', 'closureType', 'transparency', 'length', 'multipack', 'numItems', 'packageContains', 'printPatternType'];
-      let filledOpt = 0;
-      for (const f of optionalFields) if (meta[f] && meta[f].toString().trim()) filledOpt++;
-      this.metadataChecks.optionalFields = filledOpt >= 5;
-      if (filledOpt >= 5) metaScore += 3;
-      this.breakdown.metadata = metaScore;
-      this.checks.metadata = metaScore >= 10;
-
-      // --- Total ---
-      // If all breakdowns are zero, set score to 0
-      const total = this.breakdown.basicInfo + this.breakdown.categoryBrand + this.breakdown.variants + this.breakdown.description + this.breakdown.highlights + this.breakdown.metadata;
-      this.score = this.contentScoreValue = total === 0 ? 0 : total;
-      // UI: update publish button
-      const publishBtn = document.querySelector('.sticky-actions button.publish-product');
-      if (publishBtn) publishBtn.disabled = this.score < 80;
-    },
-    init() {
-      // Start periodic update
-      this.interval = setInterval(() => this.updateScore(), 1000);
-      this.updateScore();
     }
   }
-}
 
 // Register Alpine stores for all major sections for global reactivity
 if (window.Alpine) {
