@@ -1,0 +1,45 @@
+<div id="notificationDropdown" class="absolute right-0 mt-2 w-96 bg-white border border-beige rounded-xl shadow-lg z-50 hidden">
+  <div class="p-4 border-b border-beige flex items-center justify-between">
+    <span class="font-semibold text-charcoal text-lg">Notifications</span>
+    <button id="markAllReadBtn" class="text-xs text-gold hover:underline">Mark all as read</button>
+  </div>
+  <div id="notificationList" class="max-h-96 overflow-y-auto">
+    <% if (notifications && notifications.length > 0) { %>
+      <% notifications.forEach(function(notification) { %>
+        <div class="flex items-start gap-3 px-4 py-3 border-b border-beige <%= notification.isRead ? '' : 'bg-gold/10' %> notification-item" data-id="<%= notification._id %>">
+          <div class="mt-1">
+            <% if (notification.type === 'order') { %>
+              <i class="fas fa-box text-blue-600"></i>
+            <% } else if (notification.type === 'promo') { %>
+              <i class="fas fa-bolt text-red-500"></i>
+            <% } else if (notification.type === 'style-tip') { %>
+              <i class="fas fa-tshirt text-green-600"></i>
+            <% } else if (notification.type === 'stock') { %>
+              <i class="fas fa-undo text-yellow-600"></i>
+            <% } else if (notification.type === 'campaign') { %>
+              <i class="fas fa-star text-purple-600"></i>
+            <% } else { %>
+              <i class="fas fa-bell text-stone"></i>
+            <% } %>
+          </div>
+          <div class="flex-1">
+            <div class="font-medium text-charcoal"><%= notification.title %></div>
+            <div class="text-sm text-stone"><%= notification.message %></div>
+            <div class="text-xs text-stone mt-1"><%= new Date(notification.createdAt).toLocaleString() %></div>
+          </div>
+          <% if (notification.link) { %>
+            <a href="<%= notification.link %>" class="ml-2 text-gold hover:underline text-xs">View</a>
+          <% } %>
+          <% if (!notification.isRead) { %>
+            <button class="ml-2 mark-read-btn text-xs text-blue-600 hover:underline">Mark as read</button>
+          <% } %>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="p-4 text-center text-stone">No notifications yet.</div>
+    <% } %>
+  </div>
+  <div class="p-2 text-center">
+    <a href="/dashboard/notifications" class="text-xs text-gold hover:underline">View all notifications</a>
+  </div>
+</div> 

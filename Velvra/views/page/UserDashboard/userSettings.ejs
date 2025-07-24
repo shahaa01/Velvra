@@ -1,0 +1,186 @@
+<% layout('layouts/dashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/dashboardSidebar.css">') %>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <%- include('../../components/dashboardSidebar', { currentPage: 'settings' }) %>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20">
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">Profile Settings</h2>
+                <p class="text-stone">Manage your account information and preferences</p>
+            </div>
+
+            <!-- Settings Sections -->
+            <div class="space-y-6">
+                <!-- Personal Information -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Personal Information</h3>
+                    
+                    <form id="personalForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" action="/dashboard/settings/personal-info" method="POST">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">First Name</label>
+                            <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" value="<%= user.lastName || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" value="<%= user.email %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="<%= user.phone || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" placeholder="1234567890">
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-charcoal mb-2">Date of Birth</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <select id="birthMonth" name="birthMonth" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                    <option value="1" <%= birthMonth == 1 ? 'selected' : '' %>>January</option>
+                                    <option value="2" <%= birthMonth == 2 ? 'selected' : '' %>>February</option>
+                                    <option value="3" <%= birthMonth == 3 ? 'selected' : '' %>>March</option>
+                                    <option value="4" <%= birthMonth == 4 ? 'selected' : '' %>>April</option>
+                                    <option value="5" <%= birthMonth == 5 ? 'selected' : '' %>>May</option>
+                                    <option value="6" <%= birthMonth == 6 ? 'selected' : '' %>>June</option>
+                                    <option value="7" <%= birthMonth == 7 ? 'selected' : '' %>>July</option>
+                                    <option value="8" <%= birthMonth == 8 ? 'selected' : '' %>>August</option>
+                                    <option value="9" <%= birthMonth == 9 ? 'selected' : '' %>>September</option>
+                                    <option value="10" <%= birthMonth == 10 ? 'selected' : '' %>>October</option>
+                                    <option value="11" <%= birthMonth == 11 ? 'selected' : '' %>>November</option>
+                                    <option value="12" <%= birthMonth == 12 ? 'selected' : '' %>>December</option>
+                                </select>
+                                <input type="number" id="birthDay" name="birthDay" value="<%= birthDay %>" min="1" max="31" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                                <input type="number" id="birthYear" name="birthYear" value="<%= birthYear %>" min="1900" max="2023" class="px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Shipping Address</h3>
+                    
+                    <form id="addressForm" class="space-y-4" action="/dashboard/settings/address" method="POST">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Street Address</label>
+                            <input type="text" id="address1" name="street" value="<%= defaultAddress.street || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Apartment, suite, etc. (optional)</label>
+                            <input type="text" id="address2" name="apartment" value="<%= defaultAddress.apartment || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">City</label>
+                                <input type="text" id="city" name="city" value="<%= defaultAddress.city || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">State</label>
+                                <input type="text" id="state" name="state" value="<%= defaultAddress.state || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal mb-2">ZIP Code</label>
+                                <input type="text" id="zipCode" name="postalCode" value="<%= defaultAddress.postalCode || '' %>" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Update Address
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password & Security -->
+                <% if (user.authMethod === 'local') { %>
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Password & Security</h3>
+                    
+                    <form id="passwordForm" class="space-y-4" action="/dashboard/settings/password" method="POST">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                            <p class="text-xs text-stone mt-1">Must be at least 8 characters with a mix of letters and numbers</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="w-full px-4 py-2 bg-pearl border border-beige rounded-lg focus:outline-none focus:border-gold transition-colors" required>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-6 pt-6 border-t border-beige">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-charcoal">Two-Factor Authentication</h4>
+                                <p class="text-sm text-stone mt-1">Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="toggle-switch" data-toggle="2fa"></div>
+                        </div>
+                    </div>
+                </div>
+                <% } else { %>
+                <div class="settings-section bg-cream rounded-xl p-6 border border-beige">
+                    <h3 class="text-lg font-semibold text-charcoal mb-4">Account Security</h3>
+                    <div class="text-center py-8">
+                        <i class="fas fa-shield-alt text-4xl text-stone mb-4"></i>
+                        <h4 class="font-medium text-charcoal mb-2">Social Login Account</h4>
+                        <p class="text-sm text-stone">Your account is secured through <%= user.authMethod === 'google' ? 'Google' : 'social login' %>. Password changes are managed through your <%= user.authMethod === 'google' ? 'Google' : 'social' %> account settings.</p>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('../../components/dashboardMobileButtomNav', { currentPage: 'settings', stats }) %>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-pearl rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+            <p class="text-stone mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+                <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-stone hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebarOverlay" class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+<% block('script').append('<script src="/js/userSettings.js"></script>') %>

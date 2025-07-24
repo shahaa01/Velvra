@@ -1,0 +1,61 @@
+<% if (typeof flashMessages !== 'undefined' && flashMessages.length > 0) { %>
+  <div id="flash-messages" class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+    <% flashMessages.forEach((flash, index) => { %>
+      <div id="flash-<%= index %>" 
+           class="<%= flash.classes %> border rounded-xl p-4 shadow-lg transform transition-all duration-500 ease-in-out opacity-0 translate-x-full"
+           role="alert">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <%- flash.icon %>
+          </div>
+          <div class="ml-3 flex-1">
+            <p class="text-sm font-medium">
+              <%= flash.message %>
+            </p>
+          </div>
+          <div class="ml-auto pl-3">
+            <div class="-mx-1.5 -my-1.5">
+              <button onclick="dismissFlash('<%= index %>')" 
+                      class="<%= flash.classes.replace('bg-', 'hover:bg-').replace('text-', 'hover:text-') %> rounded-lg inline-flex p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors">
+                <span class="sr-only">Dismiss</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <script>
+    // Animate flash messages in
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('[id^="flash-"]');
+      
+      flashMessages.forEach((message, index) => {
+        setTimeout(() => {
+          message.classList.remove('opacity-0', 'translate-x-full');
+          message.classList.add('opacity-100', 'translate-x-0');
+        }, index * 100);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          dismissFlash(index);
+        }, 5000 + (index * 100));
+      });
+    });
+
+    function dismissFlash(index) {
+      const message = document.getElementById(`flash-${index}`);
+      if (message) {
+        message.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => {
+          message.remove();
+        }, 500);
+      }
+    }
+  </script>
+<% } %>
+    

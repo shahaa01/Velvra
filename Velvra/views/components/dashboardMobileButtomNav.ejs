@@ -1,0 +1,27 @@
+<nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 left-0 right-0 bg-cream border-t border-beige" style="z-index:100;">
+    <div class="grid grid-cols-5 gap-1">
+        <a href="/dashboard" class="mobile-nav-item flex flex-col items-center py-2 text-xs <%= currentPage === 'dashboard' ? 'active text-charcoal' : 'text-stone' %>">
+            <i class="fas fa-home text-lg mb-1"></i>
+            <span>Home</span>
+        </a>
+        <a href="/dashboard/orders" class="mobile-nav-item flex flex-col items-center py-2 text-xs <%= currentPage === 'orders' ? 'active text-charcoal' : 'text-stone' %>">
+            <i class="fas fa-shopping-bag text-lg mb-1"></i>
+            <span>Orders</span>
+        </a>
+        <a href="/dashboard/wishlist" class="mobile-nav-item flex flex-col items-center py-2 text-xs <%= currentPage === 'wishlist' ? 'active text-charcoal' : 'text-stone' %>">
+            <i class="fas fa-heart text-lg mb-1"></i>
+            <span>Wishlist</span>
+        </a>
+        <a href="/dashboard/messages" class="mobile-nav-item flex flex-col items-center py-2 text-xs <%= currentPage === 'messages' ? 'active text-charcoal' : 'text-stone' %> relative">
+            <i class="fas fa-envelope text-lg mb-1"></i>
+            <span>Messages</span>
+            <% if (typeof stats !== 'undefined' && stats.unreadMessages > 0) { %>
+            <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            <% } %>
+        </a>
+        <a href="/dashboard/settings" class="mobile-nav-item flex flex-col items-center py-2 text-xs <%= currentPage === 'settings' ? 'active text-charcoal' : 'text-stone' %>">
+            <i class="fas fa-user text-lg mb-1"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+</nav>

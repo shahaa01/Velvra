@@ -1,0 +1,33 @@
+/* User Report Issue specific styles only */
+
+.issue-card {
+    transition: all 0.3s ease;
+}
+
+.issue-card:hover {
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.file-upload-zone {
+    transition: all 0.3s ease;
+}
+
+.file-upload-zone:hover {
+    border-color: #d4af37;
+    background-color: rgba(212, 175, 55, 0.05);
+}
+
+.file-upload-zone.dragover {
+    border-color: #d4af37;
+    background-color: rgba(212, 175, 55, 0.1);
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+} 

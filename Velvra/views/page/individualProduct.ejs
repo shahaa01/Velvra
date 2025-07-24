@@ -1,0 +1,449 @@
+<% layout('layouts/boilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/individualProduct.css">') %>
+<% block('css').append('<link rel="stylesheet" href="/css/reviews.css">') %>
+
+<%
+// Check if the default color and size combination is in stock
+const defaultColor = product.colors[0];
+const defaultSize = product.sizes[0];
+const defaultColorObj = product.colors.find(c => c.name === defaultColor.name);
+const defaultSizeObj = defaultColorObj?.sizes.find(s => s.size === defaultSize);
+const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
+%>
+<section class="mainSection bg-velvra-pearl font-montserrat" data-product-id="<%= product._id %>">
+    <!-- Product Detail Page -->
+    <main class="luxury-gradient min-h-screen">
+        <!-- Breadcrumb -->
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <nav class="breadcrumb flex items-center space-x-2 text-sm text-velvra-stone animate-fadeInUp">
+                <a href="/home" class="hover:text-velvra-charcoal transition-colors duration-300">Home</a>
+                <span>/</span>
+                <a href="/shop" class="hover:text-velvra-charcoal transition-colors duration-300">Shop</a>
+                <span>/</span>
+                <a href="/shop/<%= product.category %>" class="hover:text-velvra-charcoal transition-colors duration-300"><%= product.category.charAt(0).toUpperCase() + product.category.slice(1).toLowerCase() %></a>
+                <span>/</span>
+                <span class="text-velvra-charcoal font-medium"> <%= product.name %> </span>
+            </nav>
+        </div>
+
+        <!-- Main Product Section -->
+        <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-12">
+            <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12 lg:items-start">
+                
+                <!-- Product Images -->
+                <div class="productImageDiv animate-fadeInUp">
+                    <!-- Main Image -->
+                    <div class="imageDiv aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <img id="mainImage" 
+                             src="<%= product.images[0] %>" 
+                             alt="<%= product.name %>" 
+                             class="w-full h-full object-cover product-image-zoom cursor-zoom-in">
+                        
+                        <!-- Image Overlay Info -->
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <div class="flex justify-between items-center">
+                                <div class="glass-effect px-4 py-2 rounded-full border border-white/20">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="flex space-x-1">
+                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                        </div>
+                                        <span class="text-sm font-medium text-velvra-charcoal">4.9</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-effect px-4 py-2 rounded-full border border-white/20">
+                                    <span class="text-sm font-medium text-velvra-charcoal">Sold: 1,200+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thumbnail Gallery -->
+                    <div class="flex space-x-4 image-gallery overflow-x-auto pb-2">
+                        <% for(let image of product.images) { %>
+                        <button class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-velvra-gold shadow-lg" data-image="<%= image %>">
+                            <img src="<%= image %>" alt="<%= product.name %>" class="w-full h-full object-cover">
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Product Information -->
+                <div class="mt-6 lg:mt-0 animate-fadeInUp" style="animation-delay: 0.2s;">
+                    
+                    <!-- Brand & Title -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="inline-block px-4 py-2 bg-velvra-charcoal text-white text-sm font-medium tracking-wider uppercase rounded-full">
+                                <%= product.name %>
+                            </span>
+                            <button id="wishlistBtn" class="w-12 h-12 rounded-full glass-effect border border-white/20 flex items-center justify-center hover:bg-velvra-gold hover:text-white transition-all duration-300 group" data-product-id="<%= product._id %>" data-logged-in="<%= currentUser ? 'true' : 'false' %>">
+                                <svg class="w-6 h-6 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path class="heart-outline" fill="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-playfair font-semibold text-velvra-charcoal leading-tight mb-4">
+                            <% product.name %>
+                        </h1>
+                        <div class="flex items-baseline space-x-4">
+                            <span class="text-xl sm:text-2xl lg:text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice || product.price %>
+                            <% if(product.sale) { %>
+                            <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
+                            <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= product.salePercentage %>% OFF</span>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Color</h3>
+                        <div class="flex space-x-3">
+                            <% for(let i = 0; i < product.colors.length; i++) { %>
+                            <% const prodColor = product.colors[i]; %>
+                            <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
+                                    style="background-color: <%= prodColor.hex %>" 
+                                    data-color="<%= prodColor.name %>"
+                                    title="<%= prodColor.name %>"></button>
+                            <% } %>
+                        </div>
+                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedColor" class="font-medium text-velvra-charcoal"><%= product.colors[0].name %></span></p>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-velvra-charcoal">Size</h3>
+                            <button class="text-sm text-velvra-gold hover:text-velvra-charcoal transition-colors duration-300 underline">
+                                Size Guide
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-4 gap-3">
+                            <% for(let size of product.sizes) { %>
+                                <button class="size-selector py-3 px-4 border-2 border-gray-200 hover:border-velvra-gold rounded-xl text-center font-medium transition-all duration-300" data-size="<%= size %>"><%= size %></button>
+                            <% } %>
+                        </div>
+                        <p class="text-sm text-velvra-stone mt-2">Selected: <span id="selectedSize" class="font-medium text-velvra-charcoal"><%= product.sizes[0] %></span></p>
+                    </div>
+
+                    <!-- Quantity & Add to Cart -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-velvra-charcoal mb-4">Quantity</h3>
+                        <div class="flex items-center space-x-3 gap-2 sm:space-x-4 sm:gap-3">
+                            <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                                <button id="decreaseQty" class="px-4 py-3 hover:bg-gray-50 transition-colors duration-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                    </svg>
+                                </button>
+                                <input id="quantity" type="number" value="1" min="1" max="10" class="quantity-input w-16 py-3 text-center border-none focus:outline-none">
+                                <button id="increaseQty" class="px-4 py-3 hover:bg-gray-50 transition-colors duration-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <button id="addToCartBtn" 
+                                    class="flex-1 gold-gradient text-white font-semibold py-4 px-8 rounded-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group <%= isInCart ? 'in-cart' : '' %>"
+                                    data-logged-in="<%= currentUser ? 'true' : 'false' %>"
+                                    data-product-id="<%= product._id %>"
+                                    data-in-cart="<%= isInCart ? 'true' : 'false' %>"
+                                    <%= !defaultInStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' %>>
+                                <span class="relative z-10 flex items-center justify-center space-x-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5L12 21l7.5-3M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8m-8 0V9a2 2 0 012-2h4a2 2 0 012 2v4"></path>
+                                    </svg>
+                                    <span class="cartText"><%= isInCart ? '✔️ Added to Cart' : 'Add to Cart' %></span>
+                                </span>
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                            </button>
+                        </div>
+                        <div id="stockMessage" class="mt-3 text-center"></div>
+                        <div id="quantityError" class="mt-2 text-center"></div>
+                            <% if (!defaultInStock) { %>
+                        <div class="flex items-center justify-center mt-6">
+                          <span class="text-[#D4AF37] font-light text-2xl italic tracking-wide">Out of Stock</span>
+                        </div>
+                        <% } else { %>
+                        <div class="flex items-center space-x-5 gap-4 mt-5" id="buyNowContainer">
+                            <button id="buyNowBtn" 
+                                class="flex-1 gold-gradient text-white font-semibold py-4 px-8 rounded-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group"
+                                data-logged-in="<%= currentUser ? 'true' : 'false' %>"
+                                data-product-id="<%= product._id %>">
+                            <span class="relative z-10 flex items-center justify-center">
+                                Buy Now
+                            </span>
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        </button>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="flex items-center space-x-2 text-sm text-velvra-stone">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <span>Verified Seller</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-velvra-stone">
+                            <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17 8h1a1 1 0 011 1v10a1 1 0 01-1 1H6a1 1 0 01-1-1V9a1 1 0 011-1h1V7a5 5 0 1110 0v1zM7 10v8h10v-8H7zm3-2V7a3 3 0 116 0v1h-6z"/>
+                            </svg>
+                            <span>COD Available</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-velvra-stone">
+                            <svg class="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>Easy Returns</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+        <!-- Product Details Accordion -->
+        <div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-16">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- Product Details -->
+                <div class="border-b border-gray-200">
+                    <button class="accordion-trigger w-full py-6 flex items-center justify-between text-left" data-target="details">
+                        <h3 class="text-xl font-playfair font-semibold text-velvra-charcoal">Product Details</h3>
+                        <svg class="accordion-icon w-6 h-6 text-velvra-stone transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="details" class="accordion-content active">
+                        <div class="pb-6 text-velvra-stone leading-relaxed">
+                            <p class="mb-4">This exquisite double-breasted coat represents the pinnacle of Italian craftsmanship. Made from the finest cashmere sourced from Inner Mongolia, each piece is meticulously constructed by master tailors with over 20 years of experience.</p>
+                            <ul class="space-y-2">
+                                <li>• 100% Pure Cashmere outer shell</li>
+                                <li>• Silk-lined interior for comfort</li>
+                                <li>• Hand-finished buttonholes</li>
+                                <li>• Peak lapel design</li>
+                                <li>• Two front pockets with flap closures</li>
+                                <li>• Interior chest pocket</li>
+                                <li>• Made in Italy</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials & Care -->
+                <div class="border-b border-gray-200">
+                    <button class="accordion-trigger w-full py-6 flex items-center justify-between text-left" data-target="care">
+                        <h3 class="text-xl font-playfair font-semibold text-velvra-charcoal">Materials & Care</h3>
+                        <svg class="accordion-icon w-6 h-6 text-velvra-stone transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="care" class="accordion-content">
+                        <div class="pb-6 text-velvra-stone leading-relaxed">
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Composition</h4>
+                                    <ul class="space-y-1">
+                                        <li>• Outer: 100% Cashmere</li>
+                                        <li>• Lining: 100% Silk</li>
+                                        <li>• Interlining: 100% Cotton</li>
+                                        <li>• Buttons: Mother of Pearl</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Care Instructions</h4>
+                                    <ul class="space-y-1">
+                                        <li>• Dry clean only</li>
+                                        <li>• Store on padded hangers</li>
+                                        <li>• Use garment bags for storage</li>
+                                        <li>• Professional pressing recommended</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sizing -->
+                <div class="border-b border-gray-200">
+                    <button class="accordion-trigger w-full py-6 flex items-center justify-between text-left" data-target="sizing">
+                        <h3 class="text-xl font-playfair font-semibold text-velvra-charcoal">Sizing Guide</h3>
+                        <svg class="accordion-icon w-6 h-6 text-velvra-stone transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="sizing" class="accordion-content">
+                        <div class="pb-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-gray-200">
+                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Size</th>
+                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Chest (inches)</th>
+                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Length (inches)</th>
+                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Shoulder (inches)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-velvra-stone">
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-3">S</td>
+                                            <td class="py-3">38-40</td>
+                                            <td class="py-3">46</td>
+                                            <td class="py-3">17.5</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-3">M</td>
+                                            <td class="py-3">40-42</td>
+                                            <td class="py-3">47</td>
+                                            <td class="py-3">18</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-3">L</td>
+                                            <td class="py-3">42-44</td>
+                                            <td class="py-3">48</td>
+                                            <td class="py-3">18.5</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100">
+                                            <td class="py-3">XL</td>
+                                            <td class="py-3">44-46</td>
+                                            <td class="py-3">49</td>
+                                            <td class="py-3">19</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="mt-4 text-sm text-velvra-stone">Model is 6'2" and wearing size M. For the perfect fit, we recommend professional measurements.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Info -->
+                <div class="border-b border-gray-200">
+                    <button class="accordion-trigger w-full py-6 flex items-center justify-between text-left" data-target="delivery">
+                        <h3 class="text-xl font-playfair font-semibold text-velvra-charcoal">Delivery & Returns</h3>
+                        <svg class="accordion-icon w-6 h-6 text-velvra-stone transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="delivery" class="accordion-content">
+                        <div class="pb-6 text-velvra-stone leading-relaxed">
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Delivery</h4>
+                                    <ul class="space-y-2">
+                                        <li>• Free delivery on orders above ₹50,000</li>
+                                        <li>• Express delivery in 2-3 business days</li>
+                                        <li>• Standard delivery in 5-7 business days</li>
+                                        <li>• Signature required for delivery</li>
+                                        <li>• White glove delivery service available</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Returns & Exchanges</h4>
+                                    <ul class="space-y-2">
+                                        <li>• 30-day return policy</li>
+                                        <li>• Free returns and exchanges</li>
+                                        <li>• Items must be in original condition</li>
+                                        <li>• Professional cleaning acceptable</li>
+                                        <li>• Refunds processed within 5-7 days</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../components/reviews.ejs') %>
+
+<!-- Enhanced You May Also Like Section -->
+
+<div class="max-w-screen-xl mx-auto px-2 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-20">
+    <div class="mb-12 text-center">
+        <h2 class="text-3xl font-playfair font-semibold text-velvra-charcoal mb-4">You May Also Like</h2>
+        <p class="text-velvra-stone max-w-2xl mx-auto">Discover more pieces from our curated collection of premium menswear</p>
+    </div>
+    
+    <div class="relative">
+        <!-- Gradient Fade Indicators -->
+        <div class="scroll-fade-left absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-velvra-pearl to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300"></div>
+        <div class="scroll-fade-right absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-velvra-pearl to-transparent z-10 pointer-events-none"></div>
+
+        <!-- Related Products Container -->
+        <div id="relatedProducts" class="related-products-scroll flex gap-6 overflow-x-auto pb-4 scroll-smooth" data-product-id="<%= product._id %>">
+            <!-- Initial products - only render first 4 -->
+            <% for(let i = 0; i < Math.min(4, similarProducts.length); i++) { %>
+                <% const simProduct = similarProducts[i]; %>
+                <article class="product-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
+                    <!-- Wishlist button removed -->
+                    <% if(simProduct.salePercentage) { %>
+                        <div class="sale-badge absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full z-10">Sale <%= simProduct.salePercentage %>% Off</div>
+                    <% } %>
+                    <figure class="aspect-[4/5] relative overflow-hidden product-image-container">
+                        <a href="/product/<%= simProduct._id %>"> 
+                            <% for(let j = 0; j < simProduct.images.length; j++) { %>
+                                <img src="<%= simProduct.images[j] %>" alt="<%= simProduct.name %>" class="product-image <%= j === 0 ? 'active' : '' %> w-full h-full object-cover transition-transform duration-700" data-index="<%= j %>">
+                            <% } %>
+                        </a>
+                        <% if(simProduct.images.length > 1) { %>
+                            <div class="image-counter absolute bottom-2 right-2 bg-white/80 text-xs rounded-full px-2 py-0.5 shadow-sm"><span class="current-image">1</span>/<%= simProduct.images.length %></div>
+                        <% } %>
+                    </figure>
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-velvra-stone uppercase tracking-wider mb-2"><%= simProduct.brand || 'VELVRA' %></p>
+                        <h3 class="text-lg font-semibold text-velvra-charcoal mb-4 line-clamp-2"><%= simProduct.name %></h3>
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-xl font-semibold text-velvra-charcoal">₹<%= simProduct.salePrice || simProduct.price %></span>
+                            <% if(simProduct.sale) { %>
+                                <span class="text-sm text-red line-through decoration-red-500">₹<%= simProduct.price %></span>
+                            <% } %>
+                        </div>
+                    </div>
+                </article>
+            <% } %>
+            
+            <!-- Loader Sentinel - This triggers the infinite scroll -->
+            <div class="loader-sentinel flex-shrink-0 w-20" data-loading="false" style="min-height: 400px; background: transparent;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this script tag at the bottom of individualProduct.ejs before closing </section> -->
+</main>
+<script src="/js/infiniteScroll.js"></script>
+<script>
+  window.product = <%- JSON.stringify(product) %>;
+  // Initialize product state with first available color/size
+  window.productState = {
+    selectedColor: '<%= product.colors[0].name %>',
+    selectedSize: '<%= product.sizes[0] %>',
+    quantity: 1
+  };
+  
+  // Set current user ID for review ownership checks
+  window.currentUserId = '<%= currentUser ? currentUser._id : "" %>';
+</script>
+</section>
+<% block('script').append('<script src="/js/individualPage.js"></script>') %>
+<% block('script').append('<script src="/js/reviews.js"></script>') %>
+
+<% function getStockForColorSize(product, colorName, sizeName) { const color = product.colors.find(c => c.name === colorName); if (!color) return 0; const sizeObj = color.sizes.find(s => s.size === sizeName); return sizeObj ? sizeObj.stock : 0; } %>
+
