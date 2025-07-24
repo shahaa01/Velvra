@@ -1,0 +1,265 @@
+<% layout('layouts/sellerDashboardBoilerplate.ejs') %>
+<% block('css').append(`
+    <link rel="stylesheet" href="/css/sellerDashboardStyles/dashboardPromotions.css">
+`); %>
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <%- include('../../components/sellerDashboardSidebar', { user: user }) %>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-cream border-b border-beige sticky top-0 z-30">
+            <div class="px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobileMenuBtn" class="lg:hidden mr-4 text-charcoal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-charcoal">Promotions & Coupons</h2>
+                            <p class="text-sm text-gray-700">Create and manage discount campaigns</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openCreateModal()" class="flex items-center space-x-2 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                            <i class="fas fa-plus"></i>
+                            <span class="hidden sm:inline font-medium">Create Coupon</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Promotions Content -->
+        <main class="p-4 sm:p-6">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-700">Active Coupons</p>
+                            <p class="text-xl font-bold text-charcoal">8</p>
+                            <p class="text-xs text-green-600 mt-1">↑ 2 this week</p>
+                        </div>
+                        <i class="fas fa-ticket-alt text-gold"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-700">Total Uses</p>
+                            <p class="text-xl font-bold text-charcoal">1,234</p>
+                            <p class="text-xs text-gray-700 mt-1">This month</p>
+                        </div>
+                        <i class="fas fa-users text-gold"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-700">Revenue Impact</p>
+                            <p class="text-xl font-bold text-charcoal">$8.5k</p>
+                            <p class="text-xs text-green-600 mt-1">↑ 15%</p>
+                        </div>
+                        <i class="fas fa-chart-line text-gold"></i>
+                    </div>
+                </div>
+                <div class="bg-cream rounded-lg p-4 border border-beige">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-700">Avg. Discount</p>
+                            <p class="text-xl font-bold text-charcoal">18%</p>
+                            <p class="text-xs text-gray-700 mt-1">Per order</p>
+                        </div>
+                        <i class="fas fa-percentage text-gold"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-cream rounded-xl p-4 border border-beige mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <input type="search" id="searchInput" placeholder="Search coupons..." 
+                               class="w-full pl-10 pr-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-700"></i>
+                    </div>
+                    
+                    <select id="statusFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="expired">Expired</option>
+                        <option value="paused">Paused</option>
+                    </select>
+                    
+                    <select id="typeFilter" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="">All Types</option>
+                        <option value="percentage">Percentage Off</option>
+                        <option value="fixed">Fixed Amount</option>
+                        <option value="bogo">Buy One Get One</option>
+                        <option value="free-shipping">Free Shipping</option>
+                    </select>
+                    
+                    <select id="sortBy" class="px-4 py-2 border border-beige rounded-lg bg-pearl focus:outline-none focus:border-gold text-charcoal">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="most-used">Most Used</option>
+                        <option value="expiring">Expiring Soon</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Promotions Grid -->
+            <div id="promotionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Promotion cards will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-12">
+                <i class="fas fa-tags text-6xl text-gray-700 mb-4"></i>
+                <h3 class="text-xl font-semibold text-charcoal mb-2">No promotions yet</h3>
+                <p class="text-gray-700 mb-6">Create your first coupon to attract more customers</p>
+                <button onclick="openCreateModal()" class="px-6 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark">
+                    <i class="fas fa-plus mr-2"></i>Create Coupon
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Coupon Modal -->
+    <div id="couponModal" class="modal hidden">
+        <div class="modal-content bg-pearl rounded-xl shadow-xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b border-beige">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-charcoal">Create New Coupon</h3>
+                    <button onclick="closeModal()" class="text-gray-700 hover:text-charcoal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="couponForm" class="p-6">
+                <div class="space-y-6">
+                    <!-- Basic Info -->
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal mb-2">Coupon Code</label>
+                        <input type="text" name="code" required placeholder="SUMMER24" 
+                               class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold uppercase">
+                        <p class="text-xs text-gray-700 mt-1">Customers will enter this code at checkout</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal mb-2">Description</label>
+                        <input type="text" name="description" required placeholder="Summer Sale - 25% off all items"
+                               class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                    </div>
+                    
+                    <!-- Discount Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal mb-2">Discount Type</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="type" value="percentage" class="sr-only peer" checked>
+                                <div class="p-3 border border-beige rounded-lg text-center peer-checked:border-gold peer-checked:bg-gold/10">
+                                    <i class="fas fa-percentage text-gold mb-1"></i>
+                                    <p class="text-sm">Percentage</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="type" value="fixed" class="sr-only peer">
+                                <div class="p-3 border border-beige rounded-lg text-center peer-checked:border-gold peer-checked:bg-gold/10">
+                                    <i class="fas fa-dollar-sign text-gold mb-1"></i>
+                                    <p class="text-sm">Fixed</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="type" value="bogo" class="sr-only peer">
+                                <div class="p-3 border border-beige rounded-lg text-center peer-checked:border-gold peer-checked:bg-gold/10">
+                                    <i class="fas fa-gift text-gold mb-1"></i>
+                                    <p class="text-sm">BOGO</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="type" value="free-shipping" class="sr-only peer">
+                                <div class="p-3 border border-beige rounded-lg text-center peer-checked:border-gold peer-checked:bg-gold/10">
+                                    <i class="fas fa-truck text-gold mb-1"></i>
+                                    <p class="text-sm">Free Ship</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Discount Value</label>
+                            <input type="number" name="value" required placeholder="25"
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Minimum Purchase</label>
+                            <input type="number" name="minPurchase" placeholder="50"
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                        </div>
+                    </div>
+                    
+                    <!-- Usage Limits -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Total Usage Limit</label>
+                            <input type="number" name="totalLimit" placeholder="1000"
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                            <p class="text-xs text-gray-700 mt-1">Leave empty for unlimited</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Per Customer Limit</label>
+                            <input type="number" name="customerLimit" placeholder="1"
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                        </div>
+                    </div>
+                    
+                    <!-- Validity Period -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">Start Date</label>
+                            <input type="datetime-local" name="startDate" required
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-charcoal mb-2">End Date</label>
+                            <input type="datetime-local" name="endDate" required
+                                   class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                        </div>
+                    </div>
+                    
+                    <!-- Apply To -->
+                    <div>
+                        <label class="block text-sm font-medium text-charcoal mb-2">Apply To</label>
+                        <select name="applyTo" class="w-full px-4 py-2 border border-beige rounded-lg bg-cream focus:outline-none focus:border-gold">
+                            <option value="all">All Products</option>
+                            <option value="category">Specific Categories</option>
+                            <option value="products">Specific Products</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-beige flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal()" 
+                            class="px-6 py-2 border border-beige text-charcoal rounded-lg hover:bg-cream">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark">
+                        Create Coupon
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+<% block('script').append(`
+    <script src="/js/sellerDashboardJS/dashboardPromotion.js"></script>
+`); %>

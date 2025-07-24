@@ -1,0 +1,234 @@
+<% layout('layouts/dashboardBoilerplate.ejs') %>
+<% block('css').append('<link rel="stylesheet" href="/css/dashboardSidebar.css">') %>
+<% block('css').append('<link rel="stylesheet" href="/css/userOrders.css">') %>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <%- include('../../components/dashboardSidebar', { currentPage: 'orders' }) %>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+            <!-- Content Area - Only this scrolls -->
+            <div class="flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0">
+                <div class="p-4 sm:p-6 lg:p-8">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-semibold text-charcoal mb-2">My Orders</h2>
+                            <p class="text-stone">Track and manage your purchases</p>
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button class="filter-tab px-4 py-2 text-sm font-medium bg-gold text-charcoal rounded-lg transition-all" data-filter="all">
+                            All Orders
+                            <% if (typeof stats !== 'undefined' && stats.totalOrders > 0) { %>
+                            <span class="ml-2 bg-charcoal text-gold text-xs px-2 py-1 rounded-full"><%= stats.totalOrders %></span>
+                            <% } %>
+                        </button>
+                        <button class="filter-tab px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="processing">
+                            Processing
+                            <% if (typeof stats !== 'undefined' && stats.processingOrders > 0) { %>
+                            <span class="ml-2 bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full"><%= stats.processingOrders %></span>
+                            <% } %>
+                        </button>
+                        <button class="filter-tab px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="shipped">
+                            Shipped
+                            <% if (typeof stats !== 'undefined' && stats.shippedOrders > 0) { %>
+                            <span class="ml-2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full"><%= stats.shippedOrders %></span>
+                            <% } %>
+                        </button>
+                        <button class="filter-tab px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="delivered">
+                            Delivered
+                            <% if (typeof stats !== 'undefined' && stats.deliveredOrders > 0) { %>
+                            <span class="ml-2 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"><%= stats.deliveredOrders %></span>
+                            <% } %>
+                        </button>
+                        <button class="filter-tab px-4 py-2 text-sm font-medium text-stone bg-cream border border-beige rounded-lg hover:bg-pearl transition-all" data-filter="returned">
+                            Returned
+                            <% if (typeof stats !== 'undefined' && stats.returnedOrders > 0) { %>
+                            <span class="ml-2 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full"><%= stats.returnedOrders %></span>
+                            <% } %>
+                        </button>
+                    </div>
+
+                    <!-- Orders Container -->
+                    <div id="ordersContainer">
+                        <!-- Loading State -->
+                        <div id="loadingState" class="hidden space-y-4">
+                            <div class="bg-cream rounded-xl p-6 border border-beige">
+                                <div class="loading-skeleton h-6 w-32 mb-4 rounded"></div>
+                                <div class="loading-skeleton h-4 w-full mb-2 rounded"></div>
+                                <div class="loading-skeleton h-4 w-3/4 rounded"></div>
+                            </div>
+                            <div class="bg-cream rounded-xl p-6 border border-beige">
+                                <div class="loading-skeleton h-6 w-32 mb-4 rounded"></div>
+                                <div class="loading-skeleton h-4 w-full mb-2 rounded"></div>
+                                <div class="loading-skeleton h-4 w-3/4 rounded"></div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState" class="hidden bg-cream rounded-xl p-12 border border-beige text-center">
+                            <i class="fas fa-shopping-bag text-6xl text-stone mb-4"></i>
+                            <h3 class="text-xl font-semibold text-charcoal mb-2">No orders found</h3>
+                            <p class="text-stone mb-6">Looks like you haven't placed any orders yet.</p>
+                        <a href="/shop" class="inline-block px-6 py-3 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                Start Shopping
+                            </a>
+                        </div>
+
+                        <!-- Orders List -->
+                        <div id="ordersList" class="space-y-4">
+                        <% if (orders.length === 0) { %>
+                            <div class="bg-cream rounded-xl p-12 border border-beige text-center">
+                                <i class="fas fa-shopping-bag text-6xl text-stone mb-4"></i>
+                                <h3 class="text-xl font-semibold text-charcoal mb-2">No orders found</h3>
+                                <p class="text-stone mb-6">Looks like you haven't placed any orders yet.</p>
+                                <a href="/shop" class="inline-block px-6 py-3 bg-gold text-charcoal font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                    Start Shopping
+                                </a>
+                            </div>
+                        <% } else { %>
+                            <% orders.forEach(function(order) { %>
+                                <div class="order-card bg-cream rounded-xl p-6 border border-beige fade-in">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                                        <div>
+                                            <h3 class="font-semibold text-charcoal mb-1">Order #<%= order.orderNumber %></h3>
+                                            <p class="text-sm text-stone">Placed on <%= order.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></p>
+                                        </div>
+                                        <span class="mt-2 sm:mt-0 inline-block px-3 py-1 text-xs font-medium rounded-full <%= order.orderStatus === 'delivered' ? 'bg-green-100 text-green-700' : order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-700' : order.orderStatus === 'processing' ? 'bg-yellow-100 text-yellow-700' : order.orderStatus === 'returned' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700' %>">
+                                            <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                        </span>
+                                    </div>
+                                    <% order.items.forEach(function(item) { %>
+                                        <div class="flex items-start space-x-4 mb-4">
+                                            <img src="<%= item.product?.images[0] %>" alt="<%= item.product?.name || 'Product' %>" class="w-20 h-20 rounded-lg object-cover">
+                                            <div class="flex-1">
+                                                <h4 class="font-medium text-charcoal"><%= item.product?.name || 'Product' %></h4>
+                                                <p class="text-sm text-stone">Size: <%= item.size %> | Color: <%= item.color %></p>
+                                                <p class="text-sm text-stone">Qty: <%= item.quantity %> | Seller: <%= item.seller?.brandName || item.product?.brand || '-' %></p>
+                                                <p class="text-sm font-semibold text-charcoal mt-1">₹<%= item.price.toLocaleString() %></p>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                    <div class="border-t border-beige pt-4 mt-4">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="font-medium text-charcoal">Total</span>
+                                            <span class="text-lg font-semibold text-charcoal">₹<%= order.total.toLocaleString() %></span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="/dashboard/orders/<%= order._id %>" class="px-4 py-2 bg-gold text-charcoal text-sm font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                                <i class="fas fa-eye mr-2"></i>View Details
+                                            </a>
+                                            <a href="/dashboard/order-history" class="px-4 py-2 bg-pearl border border-beige text-charcoal text-sm font-medium rounded-lg hover:bg-cream transition-colors">
+                                                <i class="fas fa-history mr-2"></i>View History
+                                            </a>
+                                            <% if (order.orderStatus === 'shipped' || order.orderStatus === 'delivered') { %>
+                                                <button onclick="showTrackingModal('<%= order._id %>')" class="px-4 py-2 bg-gold text-charcoal text-sm font-medium rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                                                    <i class="fas fa-map-marker-alt mr-2"></i>Track Order
+                                                </button>
+                                            <% } %>
+                                            <!-- DEBUG: Order <%= order._id %> has status: <%= order.orderStatus %> -->
+                                            <% if (order.orderStatus !== 'returned' && order.orderStatus !== 'cancelled') { %>
+                                                <button onclick="showSellerSelectionModal('<%= order._id %>')" 
+                                                        data-order-id="<%= order._id %>"
+                                                        class="px-4 py-2 bg-pearl border border-beige text-charcoal text-sm font-medium rounded-lg hover:bg-cream transition-colors">
+                                                    <i class="fas fa-comment mr-2"></i>Contact Support
+                                                </button>
+                                            <% } else { %>
+                                                <!-- Order status is: <%= order.orderStatus %> - Button hidden for order <%= order._id %> -->
+                                            <% } %>
+                                            <% if (order.orderStatus === 'pending' || order.orderStatus === 'processing') { %>
+                                                <button onclick="cancelOrder('<%= order._id %>')" 
+                                                        id="cancelBtn-<%= order._id %>"
+                                                        class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors">
+                                                    <i class="fas fa-times mr-2"></i>Cancel Order
+                                                </button>
+                                            <% } %>
+                                            <% if (order.orderStatus === 'delivered') { %>
+                                                <a href="/dashboard/report-issue?order=<%= order._id %>" class="px-4 py-2 bg-pearl border border-beige text-charcoal text-sm font-medium rounded-lg hover:bg-cream transition-colors">
+                                                    <i class="fas fa-exclamation-circle mr-2"></i>Report Issue
+                                                </a>
+                                            <% } %>
+                                            <% if (order.orderStatus === 'returned') { %>
+                                                <span class="px-4 py-2 text-sm text-stone">
+                                                    <i class="fas fa-check-circle text-green-600 mr-2"></i>Refund Processed
+                                                </span>
+                                            <% } %>
+                                            <% if (order.orderStatus === 'cancelled') { %>
+                                                <span class="px-4 py-2 text-sm text-stone">
+                                                    <i class="fas fa-times-circle text-red-600 mr-2"></i>Order Cancelled
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('../../components/dashboardMobileButtomNav', { currentPage: 'orders', stats }) %>
+
+    <!-- Tracking Modal -->
+    <div id="trackingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-charcoal">Order Tracking</h3>
+            <button id="closeTracking" class="text-charcoal hover:text-charcoal transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="trackingContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Seller Selection Modal -->
+    <div id="sellerSelectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-md w-full">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-charcoal">Select Seller to Contact</h3>
+                <button id="closeSellerSelection" class="text-charcoal hover:text-charcoal transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-stone mb-4">Choose which product's seller you'd like to contact:</p>
+                <div id="sellerOptions" class="space-y-3">
+                    <!-- Seller options will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-cream rounded-xl p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-charcoal mb-4">Confirm Logout</h3>
+        <p class="text-charcoal mb-6">Are you sure you want to log out of your account?</p>
+            <div class="flex space-x-3">
+            <button id="cancelLogout" class="flex-1 px-4 py-2 bg-pearl border border-beige rounded-lg text-charcoal hover:bg-cream transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmLogout" class="flex-1 px-4 py-2 bg-gold text-charcoal rounded-lg hover:bg-velvra-gold-dark transition-colors">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden lg:hidden"></div>
+<% block('script').append('<script src="/js/userOrders.js"></script>') %>
+

@@ -1,0 +1,50 @@
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Velvra Admin</h1>
+            <p class="text-gray-400 text-sm mt-1">Premium Marketplace</p>
+        </div>
+        
+        <nav class="mt-8">
+            <a href="/admin/dashboard" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Admin Dashboard') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-dashboard w-5"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="/admin/users" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'User Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-users w-5"></i>
+                <span class="ml-3">User Management</span>
+            </a>
+            <a href="/admin/sellers" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Seller Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-store w-5"></i>
+                <span class="ml-3">Seller Management</span>
+            </a>
+            <a href="/admin/products" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Product Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-box w-5"></i>
+                <span class="ml-3">Products</span>
+            </a>
+            <a href="/admin/orders" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Order Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-shopping-cart w-5"></i>
+                <span class="ml-3">Orders</span>
+            </a>
+            <a href="/admin/inventory" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Inventory Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-warehouse w-5"></i>
+                <span class="ml-3">Inventory</span>
+            </a>
+            <a href="/admin/promotions" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Promotions Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-tag w-5"></i>
+                <span class="ml-3">Promotions</span>
+            </a>
+            <a href="/admin/finance" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Finance & Reports') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-chart-line w-5"></i>
+                <span class="ml-3">Finance & Reports</span>
+            </a>
+            <a href="/admin/complaints" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Complaints Management') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-headset w-5"></i>
+                <span class="ml-3">Support</span>
+            </a>
+            <a href="/admin/settings" class="sidebar-link flex items-center px-6 py-3 <%= (typeof title !== 'undefined' && title === 'Admin Settings') ? 'bg-purple-600 text-white' : 'hover:bg-gray-800' %>">
+                <i class="fas fa-cog w-5"></i>
+                <span class="ml-3">Settings</span>
+            </a>
+        </nav>
+    </div>

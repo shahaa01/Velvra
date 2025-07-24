@@ -1,0 +1,87 @@
+<aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-charcoal sidebar-transition transform -translate-x-full lg:translate-x-0">
+    <div class="flex flex-col h-full">
+        <!-- Logo -->
+        <div class="px-6 py-6 border-b border-stone/20">
+            <h1 class="text-2xl font-bold text-gold brand-font">Velvra</h1>
+            <p class="text-xs text-stone mt-1">Seller Dashboard</p>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-6 overflow-y-auto">
+            <ul class="space-y-2">
+                <li>
+                    <a href="/seller-dashboard" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-home w-5"></i>
+                        <span class="ml-3">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/seller-dashboard/products" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'products' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-box w-5"></i>
+                        <span class="ml-3">Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/seller-dashboard/orders" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'orders' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-shopping-cart w-5"></i>
+                        <span class="ml-3">Orders</span>
+                        <span class="ml-auto bg-gold text-charcoal text-xs px-2 py-1 rounded-full">12</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/seller-dashboard/inventory" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'inventory' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-warehouse w-5"></i>
+                        <span class="ml-3">Inventory</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/seller-dashboard/promotions" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'promotions' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-tag w-5"></i>
+                        <span class="ml-3">Promotions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/seller-dashboard/performance" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'performance' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span class="ml-3">Analytics</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/seller-dashboard/messages" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'messages' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-envelope w-5"></i>
+                        <span class="ml-3">Messages</span>
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/seller-dashboard/settings" class="flex items-center px-4 py-3 rounded-lg transition-all <%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'text-pearl bg-gold/20' : 'text-stone hover:text-pearl hover:bg-gold/10' %>">
+                        <i class="fas fa-user-cog w-5"></i>
+                        <span class="ml-3">Account</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Profile Section -->
+        <div class="px-4 py-4 border-t border-stone/20">
+            <div class="flex items-center">
+                <img src="https://ui-avatars.com/api/?name=Fashion+Hub&background=d4af37&color=1a1a1a" alt="Store" class="w-10 h-10 rounded-full">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-pearl">Fashion Hub</p>
+                    <p class="text-xs text-stone">Premium Seller</p>
+                </div>
+            </div>
+        </div>
+        <% if (user && user.isSeller) { %>
+        <div class="mt-4 flex justify-center">
+            <form method="POST" action="/toggle-mode">
+                <button type="submit" class="px-4 py-2 rounded-lg border border-gold bg-pearl text-gold font-semibold shadow-sm hover:bg-gold hover:text-pearl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50">
+                    <span><%= user.activeMode === 'buyer' ? 'Switch to Seller Mode' : 'Switch to Buyer Mode' %></span>
+                </button>
+            </form>
+        </div>
+        <% } %>
+    </div>
+</aside>

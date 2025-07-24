@@ -1,0 +1,284 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.brand-font {
+    font-family: 'Playfair Display', serif;
+}
+
+.sidebar-transition {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.message-row {
+    transition: all 0.2s ease;
+}
+
+.message-row:hover {
+    background-color: rgba(212, 175, 55, 0.05);
+}
+
+.status-badge {
+    transition: all 0.3s ease;
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg, #f8f6f0 25%, #e8dcc6 50%, #f8f6f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8f6f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B8941F;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #a8a196;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Unread conversation row styling */
+.message-row.unread-debug {
+    border-left: 4px solid #d4af37 !important;
+    background: #fffbe6;
+}
+
+/* --- Adapted from userMessage.css for chat UI/UX parity --- */
+
+/* Chat layout fixes */
+#sellerChatWindow, #messageThread {
+    height: calc(100vh - 64px);
+}
+
+#sellerActiveChat, #threadContent {
+    position: relative;
+    height: 100%;
+}
+
+#sellerActiveChat .overflow-y-auto, #messagesScrollContainer {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile chat layout */
+@media (max-width: 768px) {
+    #sellerMobileChatWindow {
+        height: 100vh;
+    }
+    #messagesContainer {
+        height: calc(100vh - 64px - 60px);
+    }
+}
+
+/* Message bubbles */
+.message-bubble {
+    max-width: 70%;
+    word-wrap: break-word;
+    transition: all 0.2s ease;
+}
+
+.message-bubble-sent {
+    background-color: #d4af37;
+    color: #1a1a1a;
+    border-bottom-right-radius: 4px;
+}
+
+.message-bubble-received {
+    background-color: #f8f6f0;
+    color: #1a1a1a;
+    border-bottom-left-radius: 4px;
+}
+
+.message-bubble:hover {
+    transform: translateY(-1px);
+}
+
+/* Mobile transitions */
+.slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+}
+.slide-out-right {
+    animation: slideOutRight 0.3s ease-out;
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+@keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+}
+
+/* Message animations */
+.message-appear {
+    animation: messageAppear 0.3s ease-out;
+}
+@keyframes messageAppear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #messagesContainer { width: 100% !important; z-index: 45; }
+    .message-bubble { max-width: 85%; }
+}
+@media (max-width: 480px) {
+    .message-bubble { max-width: 90%; }
+}
+@media (max-width: 350px) {
+    .message-bubble { font-size: 0.875rem; }
+}
+
+/* Touch targets for mobile */
+@media (max-width: 768px) {
+    button, .conversation-item { min-height: 44px; }
+}
+
+/* Message status indicators */
+.message-status { font-size: 0.625rem; color: #a8a196; }
+.message-status.read { color: #d4af37; }
+
+/* Online status indicator */
+.online-indicator {
+    width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;
+    position: absolute; bottom: 0; right: 0; border: 2px solid #f8f6f0;
+}
+
+/* Input focus states */
+input:focus { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+
+/* Button hover states */
+button { transition: all 0.2s ease; }
+button:hover { transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+
+/* Attachment preview */
+.attachment-preview {
+    background-color: rgba(212, 175, 55, 0.1);
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+.attachment-preview:hover { background-color: rgba(212, 175, 55, 0.2); }
+
+/* Image messages */
+.message-image {
+    max-width: 250px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.message-image:hover { transform: scale(1.02); }
+
+/* Smooth transitions for all responsive changes */
+* { transition: padding 0.3s ease, margin 0.3s ease, font-size 0.3s ease; }
+
+/* --- End userMessage.css adaptation --- */
+
+/* Mobile full-screen chat overlay */
+@media (max-width: 1023px) {
+  #sellerActiveChat.mobile-fullscreen {
+    position: fixed !important;
+    inset: 0;
+    z-index: 50;
+    background: #f8f6f0;
+    border-radius: 0;
+    height: 100vh !important;
+    width: 100vw !important;
+    display: flex !important;
+    flex-direction: column;
+    box-shadow: none;
+  }
+}
+
+/* Ensure only the message list is scrollable, not the main content */
+.lg\:ml-64, .h-screen, .min-h-screen {
+  overflow: hidden !important;
+}
+
+#sellerChatWindow, .lg\:col-span-2, .flex-1, .min-h-0 {
+  min-height: 0 !important;
+}
+
+#sellerMessagesScrollArea {
+  overflow-y: auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  scroll-behavior: smooth;
+}
+
+#sellerActiveChat > .absolute.top-0,
+#sellerActiveChat > .absolute.bottom-0 {
+  position: absolute;
+  left: 0; right: 0;
+  z-index: 10;
+}
+
+#sellerActiveChat > .absolute.top-0 {
+  top: 0;
+}
+#sellerActiveChat > .absolute.bottom-0 {
+  bottom: 0;
+}
+
+#sellerActiveChat .flex-1.pt-20.pb-20 {
+  min-height: 0 !important;
+  height: 100% !important;
+}
