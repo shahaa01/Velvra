@@ -87,6 +87,9 @@ function imageUploader() {
         flipY: 1,
         isLoading: false,
         pendingReset: false,
+        // --- New loader states ---
+        isUploading: false,
+        isSavingEdit: false,
 
         async handleImageUpload(event) {
             const files = Array.from(event.target.files).slice(0, 7 - this.images.length);
@@ -95,6 +98,7 @@ function imageUploader() {
             files.forEach(file => {
                 formData.append('images', file);
             });
+            this.isUploading = true;
             try {
                 const response = await fetch('/images/upload', {
                     method: 'POST',
@@ -120,6 +124,7 @@ function imageUploader() {
             } catch (err) {
                 alert('Image upload failed.');
             }
+            this.isUploading = false;
             event.target.value = '';
         },
 
@@ -141,7 +146,18 @@ function imageUploader() {
         },
 
         editImage(index) {
-            this.editingImage = this.images[index];
+            // Create a deep working copy for modal edits
+            this.editingImageIndex = index;
+            const img = this.images[index];
+            this.workingImage = {
+                url: img.url,
+                originalUrl: img.originalUrl,
+                editedUrl: img.editedUrl,
+                name: img.name,
+                file: img.file,
+                serverPath: img.serverPath,
+                inReset: img.inReset
+            };
             this.showEditModal = true;
             this.pendingReset = false;
             this.$nextTick(() => {
@@ -150,9 +166,9 @@ function imageUploader() {
                 }
                 const image = document.getElementById('imageToEdit');
                 // Always use cache-busted URL for the modal
-                let cropperUrl = this.editingImage.editedUrl
-                    ? this.editingImage.editedUrl + '?t=' + Date.now()
-                    : this.editingImage.originalUrl + '?t=' + Date.now();
+                let cropperUrl = this.workingImage.editedUrl
+                    ? this.workingImage.editedUrl + '?t=' + Date.now()
+                    : this.workingImage.originalUrl + '?t=' + Date.now();
                 image.src = cropperUrl;
                 this.cropper = new Cropper(image, {
                     aspectRatio: this.aspectRatio === 'free' ? NaN : this.aspectRatio,
@@ -161,13 +177,11 @@ function imageUploader() {
                     responsive: true,
                     background: false,
                     ready: () => {
-                        // Listen for cropper events to clear pendingReset
                         image.addEventListener('crop', () => { this.pendingReset = false; });
                         image.addEventListener('zoom', () => { this.pendingReset = false; });
                         image.addEventListener('rotate', () => { this.pendingReset = false; });
                         image.addEventListener('move', () => { this.pendingReset = false; });
                         image.addEventListener('scale', () => { this.pendingReset = false; });
-                        // Add more events if needed
                     }
                 });
             });
@@ -194,50 +208,26 @@ function imageUploader() {
         },
 
         removeBackground() {
-            if (!this.editingImage) return;
+            if (!this.workingImage || !this.cropper) return;
             this.isLoading = true;
-            const formData = new FormData();
-            formData.append('originalUrl', this.editingImage.originalUrl);
-            // Use the edited image from server if exists, else the original file
-            if (this.editingImage.editedUrl && !this.pendingReset) {
-                fetch(this.editingImage.editedUrl)
-                    .then(res => res.blob())
-                    .then(blob => {
-                        formData.append('image', blob, 'edited.png');
-                        return fetch('/images/remove-bg', {
-                            method: 'POST',
-                            body: formData
-                        });
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        const newUrl = data.newImageUrl.startsWith('/uploads/') ? data.newImageUrl : `/uploads/${data.newImageUrl}`;
-                        const cacheBustedUrl = newUrl + '?t=' + Date.now();
-                        this.editingImage.editedUrl = newUrl;
-                        this.editingImage.url = cacheBustedUrl;
-                        this.cropper.replace(cacheBustedUrl);
-                    })
-                    .finally(() => this.isLoading = false);
-            } else {
-                fetch(this.editingImage.originalUrl)
-                    .then(res => res.blob())
-                    .then(blob => {
-                        formData.append('image', blob, 'original.png');
-                        return fetch('/images/remove-bg', {
-                            method: 'POST',
-                            body: formData
-                        });
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        const newUrl = data.newImageUrl.startsWith('/uploads/') ? data.newImageUrl : `/uploads/${data.newImageUrl}`;
-                        const cacheBustedUrl = newUrl + '?t=' + Date.now();
-                        this.editingImage.editedUrl = newUrl;
-                        this.editingImage.url = cacheBustedUrl;
-                        this.cropper.replace(cacheBustedUrl);
-                    })
-                    .finally(() => this.isLoading = false);
-            }
+            this.cropper.getCroppedCanvas().toBlob(blob => {
+                const formData = new FormData();
+                formData.append('image', blob, 'current.png');
+                formData.append('originalUrl', this.workingImage.originalUrl); // for reference
+                fetch('/images/remove-bg', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const newUrl = data.newImageUrl;
+                    const cacheBustedUrl = newUrl + '?t=' + Date.now();
+                    this.workingImage.editedUrl = newUrl;
+                    this.workingImage.url = cacheBustedUrl;
+                    this.cropper.replace(cacheBustedUrl);
+                })
+                .finally(() => this.isLoading = false);
+            }, 'image/png');
         },
 
         applyChanges() {
@@ -245,49 +235,43 @@ function imageUploader() {
                 this.showEditModal = false;
                 return;
             }
+            this.isSavingEdit = true;
             if (this.pendingReset) {
-                // If in reset state, delete edited image from server
-                fetch('/images/delete-edit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ editedUrl: this.editingImage.editedUrl })
-                })
-                .then(() => {
-                    this.editingImage.editedUrl = null;
-                    this.editingImage.url = this.editingImage.originalUrl;
-                    this.pendingReset = false;
-                    this.showEditModal = false;
-                    this.images = [...this.images];
-                    if (window.Alpine) Alpine.store('imageUploader', this);
-                    // Re-initialize cropper with original image for next edit
-                    this.$nextTick(() => {
-                        if (this.cropper) this.cropper.destroy();
-                        const image = document.getElementById('imageToEdit');
-                        image.src = this.editingImage.originalUrl + '?t=' + Date.now();
-                        this.cropper = new Cropper(image, {
-                            aspectRatio: this.aspectRatio === 'free' ? NaN : this.aspectRatio,
-                            viewMode: 1,
-                            autoCropArea: 0.8,
-                            responsive: true,
-                            background: false,
-                        });
-                    });
-                })
-                .catch(() => {
-                    this.editingImage.editedUrl = null;
-                    this.editingImage.url = this.editingImage.originalUrl;
-                    this.pendingReset = false;
-                    this.showEditModal = false;
-                    this.images = [...this.images];
-                    if (window.Alpine) Alpine.store('imageUploader', this);
-                });
+                const currentDataUrl = this.cropper.getCroppedCanvas().toDataURL('image/png');
+                const tempImg = new window.Image();
+                tempImg.onload = () => {
+                    const origImg = new window.Image();
+                    origImg.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = origImg.width;
+                        canvas.height = origImg.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(origImg, 0, 0);
+                        const origDataUrl = canvas.toDataURL('image/png');
+                        if (currentDataUrl === origDataUrl) {
+                            // Actually reset editedUrl to null
+                            this.workingImage.editedUrl = null;
+                            this.workingImage.url = this.workingImage.originalUrl;
+                            this.pendingReset = false;
+                            this._commitWorkingImage();
+                            this.isSavingEdit = false;
+                        } else {
+                            this._saveCroppedImage(true);
+                        }
+                    };
+                    origImg.src = this.workingImage.originalUrl;
+                };
+                tempImg.src = currentDataUrl;
                 return;
             }
-            // Save edited image to server
+            this._saveCroppedImage(true);
+        },
+
+        _saveCroppedImage(commitAfter = false) {
             this.cropper.getCroppedCanvas().toBlob(blob => {
                 const formData = new FormData();
                 formData.append('image', blob, 'edited.png');
-                formData.append('originalUrl', this.editingImage.originalUrl);
+                formData.append('originalUrl', this.workingImage.originalUrl);
                 fetch('/images/save-edit', {
                     method: 'POST',
                     body: formData
@@ -296,20 +280,30 @@ function imageUploader() {
                 .then(data => {
                     const newUrl = data.editedUrl;
                     const cacheBustedUrl = newUrl + '?t=' + Date.now();
-                    this.editingImage.editedUrl = newUrl;
-                    this.editingImage.url = cacheBustedUrl;
+                    this.workingImage.editedUrl = newUrl;
+                    this.workingImage.url = cacheBustedUrl;
                     this.pendingReset = false;
-                    this.showEditModal = false;
-                    this.images = [...this.images];
-                    if (window.Alpine) Alpine.store('imageUploader', this);
+                    if (commitAfter) this._commitWorkingImage();
                 })
                 .catch(() => {
                     this.pendingReset = false;
-                    this.showEditModal = false;
-                    this.images = [...this.images];
-                    if (window.Alpine) Alpine.store('imageUploader', this);
+                    if (commitAfter) this._commitWorkingImage();
+                })
+                .finally(() => {
+                    this.isSavingEdit = false;
                 });
             }, 'image/png');
+        },
+
+        _commitWorkingImage() {
+            // Commit the working copy to the main images array and editingImage
+            if (typeof this.editingImageIndex === 'number' && this.images[this.editingImageIndex]) {
+                Object.assign(this.images[this.editingImageIndex], this.workingImage);
+                this.editingImage = this.images[this.editingImageIndex];
+            }
+            this.showEditModal = false;
+            this.images = [...this.images];
+            if (window.Alpine) Alpine.store('imageUploader', this);
         },
 
         deleteImage() {
@@ -330,35 +324,35 @@ function imageUploader() {
         },
 
         resetImage() {
+            // Only set pendingReset and update cropper preview, do not modify editedUrl or url
             this.pendingReset = true;
             if (this.cropper && this.editingImage) {
                 this.cropper.replace(this.editingImage.originalUrl);
-                // Immediately update state
-                this.editingImage.editedUrl = null;
-                this.editingImage.url = this.editingImage.originalUrl;
             }
         },
 
         viewEdited() {
-            this.pendingReset = false;
-            if (this.editingImage && this.editingImage.editedUrl) {
-                const cacheBustedUrl = this.editingImage.editedUrl + '?t=' + Date.now();
-                this.editingImage.url = cacheBustedUrl;
+            // Always show the last edited image if it exists, regardless of pendingReset
+            if (this.workingImage && this.workingImage.editedUrl) {
+                const cacheBustedUrl = this.workingImage.editedUrl + '?t=' + Date.now();
+                this.workingImage.url = cacheBustedUrl;
                 if (this.cropper) this.cropper.replace(cacheBustedUrl);
-            } else if (this.editingImage) {
-                this.editingImage.url = this.editingImage.originalUrl;
-                if (this.cropper) this.cropper.replace(this.editingImage.originalUrl);
+            } else if (this.workingImage) {
+                this.workingImage.url = this.workingImage.originalUrl;
+                if (this.cropper) this.cropper.replace(this.workingImage.originalUrl);
             }
         },
 
         cancelModal() {
-            this.pendingReset = false;
-            if (this.editingImage && this.editingImage.editedUrl) {
-                const cacheBustedUrl = this.editingImage.editedUrl + '?t=' + Date.now();
-                this.editingImage.url = cacheBustedUrl;
-            } else if (this.editingImage) {
-                this.editingImage.url = this.editingImage.originalUrl;
+            // Discard all unsaved edits and restore the cropper and UI to the state when the modal was opened
+            if (typeof this.editingImageIndex === 'number' && this.images[this.editingImageIndex]) {
+                const img = this.images[this.editingImageIndex];
+                const cacheBustedUrl = (img.editedUrl ? img.editedUrl : img.originalUrl) + '?t=' + Date.now();
+                img.url = cacheBustedUrl;
+                if (this.cropper) this.cropper.replace(cacheBustedUrl);
+                this.editingImage = img;
             }
+            this.pendingReset = false;
             this.showEditModal = false;
         },
     }
@@ -436,7 +430,9 @@ function variantManager() {
             if (this.newColor.name) {
                 this.colors.push({
                     name: this.newColor.name,
-                    hex: this.newColor.hex
+                    hex: this.newColor.hex,
+                    imageUrl: null, // Initialize imageUrl
+                    publicId: null  // Initialize publicId
                 });
                 this.newColor = { name: '', hex: '#000000' };
                 this.showColorModal = false;
@@ -506,92 +502,141 @@ function variantManager() {
                 this.getVariantCombinations();
             });
         },
+// add_product.js
 
-        uploadColorImage(event, index) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('images', file);
-            fetch('/images/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.files && data.files[0]) {
-                    this.colors[index].imageUrl = data.files[0] + '?t=' + Date.now();
-                    // Open crop modal after upload
-                    this.editingColorIndex = index;
-                    this.editingColorImageUrl = this.colors[index].imageUrl;
-                    this.showColorImageModal = true;
-                    this.$nextTick(() => {
-                        if (this.colorCropper) this.colorCropper.destroy();
-                        const image = document.getElementById('colorImageToEdit');
-                        this.colorCropper = new Cropper(image, {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                            autoCropArea: 0.8,
-                            responsive: true,
-                            background: false
-                        });
-                    });
-                }
+// inside the return object of the variantManager() function
+// REPLACE the existing functions with these four new versions
+
+uploadColorImage(event, index) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Don't upload. Just read the file for a local cropper preview.
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        this.editingColorIndex = index;
+        this.workingColorImage = {
+            imageUrl: e.target.result // This is a base64 Data URL for the preview
+        };
+        this.showColorImageModal = true;
+        this.$nextTick(() => {
+            if (this.colorCropper) this.colorCropper.destroy();
+            const image = document.getElementById('colorImageToEdit');
+            image.src = e.target.result;
+            this.colorCropper = new Cropper(image, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 0.8
             });
-            event.target.value = '';
-        },
-        editColorImage(index) {
-            this.editingColorIndex = index;
-            this.editingColorImageUrl = this.colors[index].imageUrl;
-            this.showColorImageModal = true;
-            this.$nextTick(() => {
-                if (this.colorCropper) this.colorCropper.destroy();
-                const image = document.getElementById('colorImageToEdit');
-                this.colorCropper = new Cropper(image, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    autoCropArea: 0.8,
-                    responsive: true,
-                    background: false
-                });
-            });
-        },
-        applyColorImageChanges() {
-            if (!this.colorCropper || this.editingColorIndex === null) {
-                this.showColorImageModal = false;
-                return;
-            }
-            this.colorCropper.getCroppedCanvas().toBlob(blob => {
-                const formData = new FormData();
-                formData.append('image', blob, 'edited.png');
-                formData.append('originalUrl', this.colors[this.editingColorIndex].imageUrl.split('?')[0]);
-                fetch('/images/save-edit', {
+        });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+},
+
+editColorImage(index) {
+    this.editingColorIndex = index;
+    const color = this.colors[index];
+    this.workingColorImage = {
+        imageUrl: color.imageUrl
+    };
+    this.showColorImageModal = true;
+    this.$nextTick(() => {
+        if (this.colorCropper) this.colorCropper.destroy();
+        const image = document.getElementById('colorImageToEdit');
+        // Add a cache-busting timestamp
+        image.src = color.imageUrl + '?t=' + Date.now();
+        this.colorCropper = new Cropper(image, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 0.8
+        });
+    });
+},
+
+applyColorImageChanges() {
+    if (!this.colorCropper || this.editingColorIndex === null) {
+        this.showColorImageModal = false;
+        return;
+    }
+    this.showColorImageSaving = true;
+
+    // Capture the URL of the image that is about to be replaced.
+    const oldImageUrl = this.colors[this.editingColorIndex].imageUrl;
+
+    this.colorCropper.getCroppedCanvas({ width: 500, height: 500 }).toBlob(blob => {
+        if (!blob) {
+            this.showColorImageSaving = false;
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', blob, 'edited-color.png');
+        
+        // --- ADD THIS LINE ---
+        // The backend /save-edit route requires this field, even if it doesn't use it for overwriting.
+        formData.append('originalUrl', oldImageUrl || 'placeholder');
+
+        // Step 1: Upload the new, cropped image.
+        fetch('/images/save-edit', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('New image upload failed');
+            return res.json();
+        })
+        .then(data => {
+            const newImageUrl = data.editedUrl;
+
+            // Step 2: If an old image existed, delete it from the server now.
+            if (oldImageUrl) {
+                fetch('/images/delete', {
                     method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.editedUrl) {
-                        this.colors[this.editingColorIndex].imageUrl = data.editedUrl + '?t=' + Date.now();
-                    }
-                    this.showColorImageModal = false;
-                })
-                .catch(() => {
-                    this.showColorImageModal = false;
-                });
-            }, 'image/png');
-        },
-        deleteColorImage(index) {
-            const color = this.colors[index];
-            if (!color.imageUrl) return;
-            fetch('/images/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ originalUrl: color.imageUrl.split('?')[0] })
-            }).then(() => {
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ originalUrl: oldImageUrl.split('?')[0] })
+                }).catch(err => console.error("Non-critical: Could not delete old color image.", err));
+            }
+
+            // Step 3: Update the UI state with the single, new image URL.
+            this.colors[this.editingColorIndex].imageUrl = newImageUrl + '?t=' + Date.now();
+            this.showColorImageModal = false;
+        })
+        .catch(err => {
+            console.error("Failed to apply color image changes:", err);
+            alert("An error occurred while saving the image. Please try again.");
+            this.showColorImageModal = false;
+        })
+        .finally(() => {
+            this.showColorImageSaving = false;
+        });
+    }, 'image/png');
+},
+
+deleteColorImage(index) {
+    const color = this.colors[index];
+    if (!color.imageUrl) return;
+
+    if (confirm('Are you sure you want to delete this color image?')) {
+        fetch('/images/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ originalUrl: color.imageUrl.split('?')[0] })
+        }).then(res => {
+            if (res.ok) {
                 this.colors[index].imageUrl = null;
-            });
-        },
+            } else {
+                alert('Failed to delete the image from the server. Please try again.');
+            }
+        }).catch(err => {
+            console.error('Error deleting color image:', err);
+            alert('An error occurred. Failed to delete the image.');
+        });
+    }
+},
         cancelColorImageModal() {
+            // Discard the working copy and close the modal
+            this.workingColorImage = null;
             this.showColorImageModal = false;
         },
     }
