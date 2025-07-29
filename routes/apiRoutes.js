@@ -4,6 +4,7 @@ const asyncWrap = require('../utils/asyncWrap');
 const Product = require('../models/product');
 const Order = require('../models/order');
 const {authenticateJWT} = require('../middlewares/jwtMiddleware');
+const axios = require('axios');
 
 // Get featured/most popular products for home screen (limited set)
 router.get('/products/featured', asyncWrap(async (req, res) => {
@@ -121,6 +122,48 @@ router.get('/products/:id/similar', asyncWrap(async (req, res) => {
             itemsPerPage: limit
         }
     });
+}));
+
+// GET /api/fetch-image/:title - Fetch top 3 fashion images from Pexels
+router.get('/fetch-image/:title', asyncWrap(async (req, res) => {
+    const query = req.params.title;
+    const apiKey = process.env.PEXELS_API;
+    if (!apiKey) {
+        return res.status(500).json({ success: false, error: 'PEXELS_API key not set in environment.' });
+    }
+    try {
+        const response = await axios.get('https://api.pexels.com/v1/search', {
+            headers: { Authorization: apiKey },
+            params: {
+                query: query + ' fashion clothing', // bias toward clothing images
+                per_page: 10 // fetch more to filter
+            }
+        });
+        // Filter for images with people or clear clothing
+        const photos = response.data.photos || [];
+        // Simple filter: prefer images with people or clothing in the url/alt
+        const fashionImages = photos.filter(photo => {
+            const alt = (photo.alt || '').toLowerCase();
+            return (
+                alt.includes('fashion') ||
+                alt.includes('clothing') ||
+                alt.includes('model') ||
+                alt.includes('wear') ||
+                alt.includes('dress') ||
+                alt.includes('shirt') ||
+                alt.includes('suit') ||
+                alt.includes('skirt') ||
+                alt.includes('jacket') ||
+                alt.includes('outfit')
+            );
+        });
+        const top3 = (fashionImages.length >= 3 ? fashionImages : photos).slice(0, 3);
+        const imageUrls = top3.map(img => img.src.large);
+        res.json({ success: true, images: imageUrls });
+    } catch (err) {
+        console.error('Pexels API error:', err.message);
+        res.status(500).json({ success: false, error: 'Failed to fetch images from Pexels.' });
+    }
 }));
 
 // API endpoint to get the logged-in user's profile info (for mobile app)

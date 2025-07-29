@@ -144,8 +144,33 @@ class VelvraState {
         
         // Create product cards
         productGrid.innerHTML = products.map((product, index) => {
-            const saleBadge = product.salePercentage && product.salePercentage > 0 ? 
-                `<div class="sale-badge">${product.salePercentage}%</div>` : '';
+            // Calculate sale badge percentage from variants
+            let salePercentage = 0;
+            if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+                // Find variants with sale percentage > 0
+                const variantsWithSale = product.variants.filter(v => 
+                    (v.salePercentage && parseInt(v.salePercentage) > 0) || 
+                    (v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price)
+                );
+                
+                if (variantsWithSale.length > 0) {
+                    // Show highest sale percentage
+                    const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => {
+                        const currentPercentage = parseInt(current.salePercentage) || 0;
+                        const highestPercentage = parseInt(highest.salePercentage) || 0;
+                        return currentPercentage > highestPercentage ? current : highest;
+                    });
+                    salePercentage = parseInt(highestSalePercentageVariant.salePercentage) || 0;
+                }
+            }
+            
+            // Only fallback to old product-level salePercentage if no variants have sales
+            if (salePercentage === 0 && product.salePercentage && parseInt(product.salePercentage) > 0) {
+                salePercentage = parseInt(product.salePercentage);
+            }
+            
+            const saleBadge = salePercentage > 0 ? 
+                `<div class="sale-badge">${salePercentage}%</div>` : '';
             
             const images = product.images && product.images.length > 0 ? 
                 product.images.map((img, i) => 
@@ -164,9 +189,41 @@ class VelvraState {
                 `<button class="color-option ${product.colors.indexOf(color) === 0 ? 'selected' : ''}" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
             ).join('');
             
-            const currentPrice = product.salePrice || product.price;
-            const originalPrice = product.sale ? 
-                `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
+            // Calculate price from variants - using the same logic as createProductCard
+            let currentPrice = 0;
+            let originalPrice = '';
+            
+            if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+                // Find variants with sale prices
+                const variantsWithSale = product.variants.filter(v => 
+                    v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price
+                );
+                
+                if (variantsWithSale.length > 0) {
+                    // Show lowest sale price
+                    const lowestSaleVariant = variantsWithSale.reduce((lowest, current) => 
+                        current.salePrice < lowest.salePrice ? current : lowest
+                    );
+                    currentPrice = lowestSaleVariant.salePrice || 0;
+                    originalPrice = `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${lowestSaleVariant.price || 0}</span>`;
+                } else {
+                    // No sale prices, show lowest regular price
+                    const lowestPriceVariant = product.variants.reduce((lowest, current) => 
+                        (current.price || 0) < (lowest.price || 0) ? current : lowest
+                    );
+                    currentPrice = lowestPriceVariant.price || 0;
+                    originalPrice = '';
+                }
+            } else {
+                // Fallback to old structure
+                if (product.salePrice && product.salePrice < product.price) {
+                    currentPrice = product.salePrice;
+                    originalPrice = `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>`;
+                } else {
+                    currentPrice = product.price || 0;
+                    originalPrice = '';
+                }
+            }
             
             return `
                 <article class="product-card">
@@ -1733,6 +1790,19 @@ class LoadMoreManager {
     }
 
     createProductCard(product) {
+        // Debug logging
+        console.log('Creating product card for:', product.name);
+        console.log('Product variants:', product.variants);
+        console.log('Product variants type:', typeof product.variants);
+        console.log('Product variants is array:', Array.isArray(product.variants));
+        
+        // Quick test - if variants don't exist, try to use old structure
+        if (!product.variants || !Array.isArray(product.variants)) {
+            console.log('No variants found, trying old structure');
+            console.log('Product has price field:', product.price);
+            console.log('Product has salePrice field:', product.salePrice);
+        }
+        
         const article = document.createElement('article');
         article.className = 'product-card';
         
@@ -1749,8 +1819,25 @@ class LoadMoreManager {
         
         // Create sale badge if applicable
         let saleBadge = '';
-        if (product.salePercentage && product.salePercentage > 0) {
-            saleBadge = `<div class="sale-badge">${product.salePercentage}%</div>`;
+        let salePercentage = 0;
+        
+        if (product.variants && product.variants.length > 0) {
+            // Find variants with sale prices (salePrice exists, is not null, and is less than price)
+            const variantsWithSale = product.variants.filter(v => 
+                v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price
+            );
+            
+            if (variantsWithSale.length > 0) {
+                // Show highest sale percentage
+                const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => 
+                    (current.salePercentage || 0) > (highest.salePercentage || 0) ? current : highest
+                );
+                salePercentage = highestSalePercentageVariant.salePercentage || 0;
+            }
+        }
+        
+        if (salePercentage && salePercentage > 0) {
+            saleBadge = `<div class="sale-badge">${salePercentage}%</div>`;
         }
         
         // Create image container
@@ -1787,12 +1874,61 @@ class LoadMoreManager {
         
         // Create color options
         const colorOptions = product.colors.map(color => 
-                `<button class="color-option selected" style="background-color: ${color.hex}" data-color="${color.name}"></button>`
+                `<button class="color-option" style="background-color: ${color.hex}" data-color="${color.name}" title="${color.name}"></button>`
             ).join('');
         
         // Create price display
-        const currentPrice = product.salePrice || product.price;
-        const originalPrice = product.sale ? `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>` : '';
+        let displayPrice = 0;
+        let originalPrice = '';
+        
+        // Check if we have the new variant structure
+        if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+            // Debug logging
+            console.log('Processing variants for price calculation');
+            
+            // Find variants with sale prices (salePrice exists, is not null, and is less than price)
+            const variantsWithSale = product.variants.filter(v => 
+                v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price
+            );
+            
+            console.log('Variants with sale:', variantsWithSale);
+            
+            if (variantsWithSale.length > 0) {
+                // Show lowest sale price
+                const lowestSaleVariant = variantsWithSale.reduce((lowest, current) => 
+                    current.salePrice < lowest.salePrice ? current : lowest
+                );
+                displayPrice = lowestSaleVariant.salePrice || 0;
+                originalPrice = `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${lowestSaleVariant.price || 0}</span>`;
+                console.log('Using sale price:', displayPrice);
+            } else {
+                // No sale prices, show lowest regular price
+                const lowestPriceVariant = product.variants.reduce((lowest, current) => 
+                    (current.price || 0) < (lowest.price || 0) ? current : lowest
+                );
+                displayPrice = lowestPriceVariant.price || 0;
+                originalPrice = '';
+                console.log('Using regular price:', displayPrice, 'from variant:', lowestPriceVariant);
+            }
+        } else {
+            console.log('No variants found for product, trying old structure');
+            // Fallback to old structure if variants don't exist
+            if (product.salePrice && product.salePrice < product.price) {
+                displayPrice = product.salePrice;
+                originalPrice = `<span class="text-base sm:text-xl text-red-700 line-through mt-1 sm:mt-0">₹${product.price}</span>`;
+                console.log('Using old structure sale price:', displayPrice);
+            } else {
+                displayPrice = product.price || 0;
+                originalPrice = '';
+                console.log('Using old structure regular price:', displayPrice);
+            }
+        }
+        
+        console.log('Final display price:', displayPrice);
+        
+        // Ensure we have a valid price, fallback to 0 if undefined
+        const finalDisplayPrice = displayPrice || 0;
+        console.log('Final display price after fallback:', finalDisplayPrice);
         
         // Set the innerHTML first
         article.innerHTML = `
@@ -1805,7 +1941,7 @@ class LoadMoreManager {
                     ${colorOptions}
                 </div>
                 <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-x-3">
-                    <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${currentPrice}</span>
+                    <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹${finalDisplayPrice}</span>
                     ${originalPrice}
                 </div>
             </div>

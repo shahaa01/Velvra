@@ -656,9 +656,10 @@ router.post('/api/orders/:orderId/cancel', isLoggedIn, isSeller, asyncWrap(async
         if (productDoc) {
             const colorObj = productDoc.colors.find(c => c.name === item.color);
             if (colorObj) {
-                const sizeObj = colorObj.sizes.find(s => s.size === item.size);
-                if (sizeObj) {
-                    sizeObj.stock = sizeObj.stock + item.quantity;
+                // Find the variant and update its stock
+                const variant = productDoc.variants.find(v => v.color === item.color && v.size === item.size);
+                if (variant) {
+                    variant.stock = variant.stock + item.quantity;
                 }
             }
             await productDoc.save();

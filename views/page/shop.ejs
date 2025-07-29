@@ -477,6 +477,47 @@
             <!-- Product Card  -->
             <% for(let product of products) { %>
             <article class="product-card group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative flex flex-col">
+              <% 
+                // Calculate sale badge percentage from variants
+                let salePercentage = 0;
+                if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+                  // Find variants with sale percentage > 0
+                  const variantsWithSale = product.variants.filter(v => 
+                    (v.salePercentage && parseInt(v.salePercentage) > 0) || 
+                    (v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price)
+                  );
+                  
+                  if (variantsWithSale.length > 0) {
+                    // Show highest sale percentage
+                    const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => {
+                      const currentPercentage = parseInt(current.salePercentage) || 0;
+                      const highestPercentage = parseInt(highest.salePercentage) || 0;
+                      return currentPercentage > highestPercentage ? current : highest;
+                    });
+                    salePercentage = parseInt(highestSalePercentageVariant.salePercentage) || 0;
+                  }
+                }
+                
+                // Only fallback to old product-level salePercentage if no variants have sales
+                if (salePercentage === 0 && product.salePercentage && parseInt(product.salePercentage) > 0) {
+                  salePercentage = parseInt(product.salePercentage);
+                }
+                
+                // Debug: Check if this is the first product and log the calculation
+                if (product.name === "Fashion Leather Jacket for Men") {
+                  console.log('Product:', product.name);
+                  console.log('Product-level salePercentage:', product.salePercentage);
+                  console.log('All variants:', product.variants);
+                  console.log('Variants with sale:', product.variants.filter(v => 
+                    (v.salePercentage && parseInt(v.salePercentage) > 0) || 
+                    (v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price)
+                  ));
+                  console.log('Final calculated sale percentage:', salePercentage);
+                }
+              %>
+              <% if (salePercentage > 0) { %>
+                <div class="sale-badge"><%= salePercentage %>%</div>
+              <% } %>
               <button class="wishlist-btn" data-product-id="<%= product._id %>" data-logged-in="<%= typeof currentUser !== 'undefined' && currentUser ? 'true' : 'false' %>">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path class="heart-outline" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -500,17 +541,58 @@
                 <p class="product-brand font-light tracking-wide text-sm text-gray-700 mb-1"><%= product.brand %></p>
                 <h3 class="product-name font-normal text-base text-black mb-2 leading-tight line-clamp-2"><%= product.name %></h3>
                 <div class="flex items-end gap-2 mb-2">
-                  <% if (product.sale) { %>
-                    <span class="text-gray-400 line-through text-sm">₹<%= product.price %></span>
-                    <span class="text-black font-medium text-lg">₹<%= product.salePrice %></span>
-                    <span class="ml-2 px-2 py-0.5 bg-red-50 text-red-500 text-xs font-medium rounded-full border border-red-100"><%= product.salePercentage %>% OFF</span>
+                  <% 
+                    // Calculate price from variants - using the same logic as JavaScript
+                    let displayPrice = 0;
+                    let originalPrice = '';
+                    let hasSale = false;
+                    
+                    if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+                      // Find variants with sale prices
+                      const variantsWithSale = product.variants.filter(v => 
+                        v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price
+                      );
+                      
+                      if (variantsWithSale.length > 0) {
+                        // Show lowest sale price
+                        const lowestSaleVariant = variantsWithSale.reduce((lowest, current) => 
+                          current.salePrice < lowest.salePrice ? current : lowest
+                        );
+                        displayPrice = lowestSaleVariant.salePrice || 0;
+                        originalPrice = lowestSaleVariant.price || 0;
+                        hasSale = true;
+                      } else {
+                        // No sale prices, show lowest regular price
+                        const lowestPriceVariant = product.variants.reduce((lowest, current) => 
+                          (current.price || 0) < (lowest.price || 0) ? current : lowest
+                        );
+                        displayPrice = lowestPriceVariant.price || 0;
+                        originalPrice = '';
+                        hasSale = false;
+                      }
+                    } else {
+                      // Fallback to old structure
+                      if (product.salePrice && product.salePrice < product.price) {
+                        displayPrice = product.salePrice;
+                        originalPrice = product.price;
+                        hasSale = true;
+                      } else {
+                        displayPrice = product.price || 0;
+                        originalPrice = '';
+                        hasSale = false;
+                      }
+                    }
+                  %>
+                  <% if (hasSale && displayPrice > 0) { %>
+                    <span class="text-gray-400 line-through text-sm">₹<%= originalPrice %></span>
+                    <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹<%= displayPrice %></span>
                   <% } else { %>
-                    <span class="text-black font-medium text-lg">₹<%= product.price %></span>
+                    <span class="text-xl sm:text-2xl font-semibold text-velvra-charcoal">₹<%= displayPrice %></span>
                   <% } %>
                 </div>
                 <div class="color-options flex gap-1 mt-1 mb-1">
                   <% for(let productColor of product.colors) { %>
-                    <button class="color-option w-4 h-4 rounded-full border border-gray-200 shadow-sm <%= productColor.selected ? 'ring-2 ring-velvra-gold' : '' %>" style="background-color: <%= productColor.hex %>" data-color="<%= productColor.name %>"></button>
+                    <button class="color-option w-4 h-4 rounded-full border border-gray-200 shadow-sm" style="background-color: <%= productColor.hex %>" data-color="<%= productColor.name %>" title="<%= productColor.name %>"></button>
                   <% } %>
                 </div>
                 <% if (!isProductInStock(product)) { %>
@@ -596,11 +678,42 @@
 <script>
     // Pass user status to JavaScript
     window.currentUser = <%- typeof currentUser !== 'undefined' && currentUser ? 'true' : 'false' %>;
+    
+    // Debug: Log the first product's data to see what's happening
+    document.addEventListener('DOMContentLoaded', () => {
+        const firstProductCard = document.querySelector('.product-card');
+        if (firstProductCard) {
+            const productName = firstProductCard.querySelector('.product-name')?.textContent;
+            console.log('First product name:', productName);
+            
+            // Check if this is the product we're looking for
+            if (productName && productName.includes("Women's Premium Top")) {
+                console.log('Found the target product!');
+                
+                // Get the sale badge if it exists
+                const saleBadge = firstProductCard.querySelector('.sale-badge');
+                if (saleBadge) {
+                    console.log('Sale badge text:', saleBadge.textContent);
+                } else {
+                    console.log('No sale badge found');
+                }
+                
+                // Log all product cards to see their sale badges
+                document.querySelectorAll('.product-card').forEach((card, index) => {
+                    const name = card.querySelector('.product-name')?.textContent;
+                    const badge = card.querySelector('.sale-badge');
+                    console.log(`Product ${index + 1}:`, name, 'Sale badge:', badge?.textContent || 'None');
+                });
+            }
+        }
+    });
 </script>
 
 <% block('script').append('<script src="/js/shop.js"></script>') %>
 
-<% function isProductInStock(product) { return product.colors && product.colors.some(c => c.sizes && c.sizes.some(s => s.stock > 0)); } %>
+<% function isProductInStock(product) { 
+  return product.variants && product.variants.some(v => v.stock > 0 && v.active); 
+} %>
 
 
 

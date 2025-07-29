@@ -131,11 +131,9 @@ class VelvraCart {
 
     // Helper function to get stock for specific color and size
     getStockForColorSize(product, colorName, sizeName) {
-        if (!product.colors || !Array.isArray(product.colors)) return 0;
-        const color = product.colors.find(c => c.name === colorName);
-        if (!color) return 0;
-        const sizeObj = color.sizes.find(s => s.size === sizeName);
-        return sizeObj ? sizeObj.stock : 0;
+        if (!product.variants || !Array.isArray(product.variants)) return 0;
+        const variant = product.variants.find(v => v.color === colorName && v.size === sizeName);
+        return variant ? variant.stock : 0;
     }
 
     // Check if quantity change is allowed based on stock
@@ -161,9 +159,24 @@ class VelvraCart {
 
         const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
         const increaseButtons = document.querySelectorAll(`.increase-btn[data-cart-id="${cartItemId}"]`);
+        const decreaseButtons = document.querySelectorAll(`.decrease-btn[data-cart-id="${cartItemId}"]`);
         
+        // Handle increase buttons
         increaseButtons.forEach(btn => {
-            if (item.quantity >= currentStock) {
+            if (item.quantity >= currentStock || item.quantity >= 10) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'auto';
+            }
+        });
+        
+        // Handle decrease buttons
+        decreaseButtons.forEach(btn => {
+            if (item.quantity <= 1) {
                 btn.disabled = true;
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
                 btn.style.pointerEvents = 'none';
@@ -225,6 +238,10 @@ class VelvraCart {
                     this.showStockError(cartItemId, `Sorry, we only have ${currentStock} of this item in stock.`);
                     return;
                 }
+            }
+            // Check minimum quantity for decrease operations
+            if (delta < 0 && currentQuantity <= 1) {
+                return; // Don't allow decreasing below 1
             }
             updatedQuantity = Math.min(Math.max(1, currentQuantity + delta), 10);
         }
@@ -310,6 +327,13 @@ class VelvraCart {
             return;
         }
 
+        // Check if the new color exists in the product's colors array
+        const colorExists = item.product.colors && item.product.colors.find(c => c.name === newColor);
+        if (!colorExists) {
+            this.showStockError(cartItemId, 'This color is not available for this product.');
+            return;
+        }
+
         try {
             this.isUpdating = true;
             this.showLoading(cartItemId);
@@ -374,8 +398,102 @@ class VelvraCart {
             item.color = newColor;
         }
         
-    // Update stock status display
+        // Update price display for the new color
+        this.updatePriceDisplay(cartItemId);
+        
+        // Update stock status display
         this.updateStockStatusDisplay(cartItemId);
+    }
+    
+    // Update price display for specific item
+    updatePriceDisplay(cartItemId) {
+        const item = this.getCartItem(cartItemId);
+        if (!item) return;
+        
+        // Get the price for the current variant
+        const variant = item.product.variants.find(v => 
+            v.color === item.color && v.size === item.size
+        );
+        
+        if (!variant) return;
+        
+        const currentPrice = variant.salePrice || variant.price;
+        const originalPrice = variant.price;
+        const salePercentage = variant.salePercentage || 0;
+        
+        // Update mobile price display
+        const mobilePriceEl = document.querySelector(`.price-mobile[data-cart-id="${cartItemId}"]`);
+        const mobileOriginalPriceEl = document.querySelector(`.price-original-mobile[data-cart-id="${cartItemId}"]`);
+        const mobileBadgeEl = document.querySelector(`.badge-mobile[data-cart-id="${cartItemId}"]`);
+        
+        if (mobilePriceEl) {
+            mobilePriceEl.textContent = `₹${currentPrice.toLocaleString()}`;
+        }
+        
+        if (mobileOriginalPriceEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                mobileOriginalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                mobileOriginalPriceEl.style.display = 'inline';
+            } else {
+                mobileOriginalPriceEl.style.display = 'none';
+            }
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the original price element if it doesn't exist but there's a sale
+            const mobileCartItem = document.querySelector(`.cart-item-mobile[data-cart-id="${cartItemId}"]`);
+            if (mobileCartItem && mobilePriceEl) {
+                const originalPriceEl = document.createElement('span');
+                originalPriceEl.className = 'price-original-mobile';
+                originalPriceEl.setAttribute('data-cart-id', cartItemId);
+                originalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                mobilePriceEl.parentNode.insertBefore(originalPriceEl, mobilePriceEl.nextSibling);
+            }
+        }
+        
+        if (mobileBadgeEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                mobileBadgeEl.textContent = `${salePercentage}% OFF`;
+                mobileBadgeEl.style.display = 'inline';
+            } else {
+                mobileBadgeEl.style.display = 'none';
+            }
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the badge element if it doesn't exist but there's a sale
+            const mobileCartItem = document.querySelector(`.cart-item-mobile[data-cart-id="${cartItemId}"]`);
+            if (mobileCartItem && mobilePriceEl) {
+                const badgeEl = document.createElement('span');
+                badgeEl.className = 'badge-mobile bg-red-500 text-white';
+                badgeEl.setAttribute('data-cart-id', cartItemId);
+                badgeEl.textContent = `${salePercentage}% OFF`;
+                mobilePriceEl.parentNode.appendChild(badgeEl);
+            }
+        }
+        
+        // Update desktop price display
+        const desktopPriceEl = document.querySelector(`.desktop-price[data-cart-id="${cartItemId}"]`);
+        const desktopOriginalPriceEl = document.querySelector(`.desktop-original-price[data-cart-id="${cartItemId}"]`);
+        
+        if (desktopPriceEl) {
+            desktopPriceEl.textContent = `₹${currentPrice.toLocaleString()}`;
+        }
+        
+        if (desktopOriginalPriceEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                desktopOriginalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                desktopOriginalPriceEl.style.display = 'inline';
+            } else {
+                desktopOriginalPriceEl.style.display = 'none';
+            }
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the original price element if it doesn't exist but there's a sale
+            const desktopCartItem = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"]`);
+            if (desktopCartItem && desktopPriceEl) {
+                const originalPriceEl = document.createElement('span');
+                originalPriceEl.className = 'text-sm text-gray-500 line-through ml-2 desktop-original-price';
+                originalPriceEl.setAttribute('data-cart-id', cartItemId);
+                originalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                desktopPriceEl.parentNode.insertBefore(originalPriceEl, desktopPriceEl.nextSibling);
+            }
+        }
     }
     
     // Update stock status display for specific item
@@ -423,7 +541,7 @@ class VelvraCart {
         
         // Update desktop stock status
         const desktopStockEl = document.getElementById(`stock-desktop-${cartItemId}`);
-        const desktopQuantityControls = document.querySelector(`[data-cart-id="${cartItemId}"] .quantity-controls-mobile .quantity-controls-row`);
+        const desktopQuantityControls = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"] .quantity-controls-mobile .quantity-controls-row`);
         
         if (desktopStockEl || desktopQuantityControls) {
             if (isInStock) {
@@ -667,6 +785,11 @@ class VelvraCart {
         document.getElementById('subtotal').textContent = `₹${total.toLocaleString()}`;
         document.getElementById('desktopTotal').textContent = `₹${total.toLocaleString()}`;
         document.getElementById('mobileTotal').textContent = `₹${total.toLocaleString()}`;
+
+        // Update price displays for all items
+        this.cart.items.forEach(item => {
+            this.updatePriceDisplay(item._id);
+        });
 
         // Hide summary bar if cart is empty
         const summaryBar = document.querySelector('.mobile-summary-bar');

@@ -19,7 +19,8 @@ const variantCombinationSchema = new mongoose.Schema({
   color: { type: String, required: true },
   size: { type: String, required: true },
   price: { type: Number, required: true },
-  specialPrice: { type: Number },
+  salePrice: { type: Number },
+  salePercentage: { type: Number, default: 0 },
   stock: { type: Number, required: true },
   sku: { type: String, required: true },
   active: { type: Boolean, default: true }
@@ -27,17 +28,14 @@ const variantCombinationSchema = new mongoose.Schema({
 
 const moreDetailsSchema = new mongoose.Schema({
   fabric: String,
-  fabricOther: String,
   fashionTrend: String,
   fit: String,
   length: String,
   multipack: String,
   neckType: String,
   numItems: String,
-  numItemsCustom: String,
   occasion: String,
   packageContains: String,
-  packageContainsOther: String,
   pattern: String,
   printPatternType: String,
   sleeveLength: String,
@@ -53,7 +51,7 @@ const moreDetailsSchema = new mongoose.Schema({
 const colorSchema = new mongoose.Schema({
   name: { type: String, required: true },      // e.g., "Red"
   hex: { type: String, required: true },       // e.g., "#FF0000"
-  sizes: [sizeStockSchema],                    // Array of { size, stock }
+  sizes: [String],                             // Array of size names only (stock is in variants)
   imageUrl: { type: String }                   // Cloudinary URL for color swatch (optional)
 });
 
@@ -61,10 +59,9 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   brand: { type: String, required: true },
   // description: { type: String },             // Optional detailed description
-  price: { type: Number, required: true },
-  salePrice: { type: Number },               // Provided by the page ("Price after discount")
-  sale: { type: Boolean, default: false },   // Calculated in pre-save
-  salePercentage: { type: Number, default: 0 }, // Calculated in pre-save
+  // Note: price and salePrice are now handled at variant level only
+  sale: { type: Boolean, default: false },   // Calculated in pre-save based on variants
+  salePercentage: { type: Number, default: 0 }, // Calculated in pre-save based on variants
 
   images: {
     type: [String],
@@ -121,23 +118,52 @@ const productSchema = new mongoose.Schema({
   description: { type: String }, // HTML
 
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  contentScore: { type: Number, default: 0, required: true }
 });
 
-// Pre-save hook: calculate salePercentage and sale boolean from price and salePrice, and set category from categoryPath
+// Pre-save hook: calculate salePercentage and sale boolean from variants, and set category from categoryPath
 productSchema.pre('save', function (next) {
-  // If salePrice is provided and less than price, calculate salePercentage and set sale boolean
-  if (typeof this.salePrice === 'number' && typeof this.price === 'number' && this.salePrice < this.price) {
-    this.sale = true;
-    this.salePercentage = Math.round(100 * (this.price - this.salePrice) / this.price);
+  // Calculate sale and salePercentage based on variants
+  if (this.variants && this.variants.length > 0) {
+    const variantsWithSale = this.variants.filter(v => v.salePrice && v.salePrice < v.price);
+    if (variantsWithSale.length > 0) {
+      this.sale = true;
+      // Calculate average sale percentage across all variants with sales
+      const totalDiscount = variantsWithSale.reduce((sum, v) => {
+        return sum + ((v.price - v.salePrice) / v.price * 100);
+      }, 0);
+      this.salePercentage = Math.round(totalDiscount / variantsWithSale.length);
+      
+      // Calculate salePercentage for each variant
+      this.variants.forEach(variant => {
+        if (variant.salePrice && variant.salePrice < variant.price) {
+          variant.salePercentage = Math.round(((variant.price - variant.salePrice) / variant.price) * 100);
+        } else {
+          variant.salePercentage = 0;
+        }
+      });
+    } else {
+      this.sale = false;
+      this.salePercentage = 0;
+      // Set salePercentage to 0 for all variants
+      this.variants.forEach(variant => {
+        variant.salePercentage = 0;
+      });
+    }
   } else {
     this.sale = false;
     this.salePercentage = 0;
   }
 
-  // Set category to last element of categoryPath if provided
-  if (Array.isArray(this.categoryPath) && this.categoryPath.length > 0) {
-    this.category = this.categoryPath[this.categoryPath.length - 1];
+  // Set category to second element of categoryPath if provided (only if not already set)
+  if (!this.category && Array.isArray(this.categoryPath) && this.categoryPath.length > 1) {
+    this.category = this.categoryPath[1];
+  }
+  
+  // Set tags to categoryPath excluding 'Fashion' (only if not already set)
+  if ((!this.tags || this.tags.length === 0) && Array.isArray(this.categoryPath) && this.categoryPath.length > 0) {
+    this.tags = this.categoryPath.filter(tag => tag !== 'Fashion');
   }
 
   // Auto-update updatedAt timestamp
@@ -145,6 +171,54 @@ productSchema.pre('save', function (next) {
 
   next();
 });
+
+// Instance method to get best price information
+productSchema.methods.getBestPriceInfo = function() {
+  if (!this.variants || this.variants.length === 0) {
+    return {
+      displayPrice: 0,
+      originalPrice: 0,
+      salePercentage: 0,
+      hasSale: false
+    };
+  }
+
+  // Find variants with sale prices (salePrice exists, is not null, and is less than price)
+  const variantsWithSale = this.variants.filter(v => 
+    v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price
+  );
+  
+  if (variantsWithSale.length > 0) {
+    // Show lowest sale price
+    const lowestSaleVariant = variantsWithSale.reduce((lowest, current) => 
+      current.salePrice < lowest.salePrice ? current : lowest
+    );
+    
+    // Show highest sale percentage
+    const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => 
+      (current.salePercentage || 0) > (highest.salePercentage || 0) ? current : highest
+    );
+    
+    return {
+      displayPrice: lowestSaleVariant.salePrice || 0,
+      originalPrice: lowestSaleVariant.price || 0,
+      salePercentage: highestSalePercentageVariant.salePercentage || 0,
+      hasSale: true
+    };
+  } else {
+    // No sale prices, show lowest regular price
+    const lowestPriceVariant = this.variants.reduce((lowest, current) => 
+      (current.price || 0) < (lowest.price || 0) ? current : lowest
+    );
+    
+    return {
+      displayPrice: lowestPriceVariant.price || 0,
+      originalPrice: lowestPriceVariant.price || 0,
+      salePercentage: 0,
+      hasSale: false
+    };
+  }
+};
 
 
 productSchema.index({

@@ -759,3 +759,28 @@ html {
     }
 }
 
+/* Additional disabled state styles for better UX */
+.quantity-btn-mobile.opacity-50 {
+    opacity: 0.5 !important;
+}
+
+.quantity-btn-mobile.cursor-not-allowed {
+    cursor: not-allowed !important;
+}
+
+.quantity-btn-mobile[style*="pointer-events: none"] {
+    pointer-events: none !important;
+}
+
+/* Color swatch disabled state */
+.color-swatch-mobile:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.color-swatch-mobile:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+

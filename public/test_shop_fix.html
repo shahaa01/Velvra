@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Fix Test</title>
+</head>
+<body>
+    <h1>Shop Fix Test</h1>
+    <div id="testOutput"></div>
+    
+    <script>
+        // Test if the shop.js file loads without errors
+        const script = document.createElement('script');
+        script.src = '/js/shop.js';
+        script.onload = function() {
+            console.log('Shop.js loaded successfully');
+            document.getElementById('testOutput').innerHTML = '<p style="color: green;">✅ Shop.js loaded successfully</p>';
+            
+            // Test if the LoadMoreManager is accessible
+            if (typeof window.loadMoreManager !== 'undefined') {
+                console.log('LoadMoreManager is accessible');
+                document.getElementById('testOutput').innerHTML += '<p style="color: green;">✅ LoadMoreManager is accessible</p>';
+                
+                // Test if createProductCard function exists
+                if (typeof window.loadMoreManager.createProductCard === 'function') {
+                    console.log('createProductCard function is accessible');
+                    document.getElementById('testOutput').innerHTML += '<p style="color: green;">✅ createProductCard function is accessible</p>';
+                } else {
+                    console.error('createProductCard function is not accessible');
+                    document.getElementById('testOutput').innerHTML += '<p style="color: red;">❌ createProductCard function is not accessible</p>';
+                }
+            } else {
+                console.error('LoadMoreManager is not accessible');
+                document.getElementById('testOutput').innerHTML += '<p style="color: red;">❌ LoadMoreManager is not accessible</p>';
+            }
+        };
+        script.onerror = function() {
+            console.error('Failed to load shop.js');
+            document.getElementById('testOutput').innerHTML = '<p style="color: red;">❌ Failed to load shop.js</p>';
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html> 

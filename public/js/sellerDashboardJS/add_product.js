@@ -119,17 +119,37 @@ function imageUploader() {
                         });
                     });
                 } else {
-                    alert(data.error || 'Image upload failed.');
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Upload Failed',
+                      text: data.error || 'Image upload failed.',
+                      confirmButtonColor: '#d97706'
+                    });
                 }
             } catch (err) {
-                alert('Image upload failed.');
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Upload Failed',
+                  text: 'Image upload failed. Please try again.',
+                  confirmButtonColor: '#d97706'
+                });
             }
             this.isUploading = false;
             event.target.value = '';
         },
 
         removeImage(index) {
-            if (confirm('Are you sure you want to remove this image?')) {
+            Swal.fire({
+              title: 'Remove Image',
+              text: 'Are you sure you want to remove this image?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d97706',
+              cancelButtonColor: '#6b7280',
+              confirmButtonText: 'Yes, remove it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
                 const img = this.images[index];
                 // Remove from UI
                 this.images.splice(index, 1);
@@ -142,7 +162,8 @@ function imageUploader() {
                         editedUrl: img.editedUrl
                     })
                 });
-            }
+              }
+            });
         },
 
         editImage(index) {
@@ -478,7 +499,8 @@ function variantManager() {
                             color: color.name,
                             size,
                             price: '',
-                            specialPrice: '',
+                            salePrice: null,
+                            salePercentage: 0,
                             stock: '',
                             sku: '',
                             active: true
@@ -617,7 +639,17 @@ deleteColorImage(index) {
     const color = this.colors[index];
     if (!color.imageUrl) return;
 
-    if (confirm('Are you sure you want to delete this color image?')) {
+    Swal.fire({
+      title: 'Delete Color Image',
+      text: 'Are you sure you want to delete this color image?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d97706',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
         fetch('/images/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -626,13 +658,24 @@ deleteColorImage(index) {
             if (res.ok) {
                 this.colors[index].imageUrl = null;
             } else {
-                alert('Failed to delete the image from the server. Please try again.');
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Delete Failed',
+                  text: 'Failed to delete the image from the server. Please try again.',
+                  confirmButtonColor: '#d97706'
+                });
             }
         }).catch(err => {
             console.error('Error deleting color image:', err);
-            alert('An error occurred. Failed to delete the image.');
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred. Failed to delete the image.',
+              confirmButtonColor: '#d97706'
+            });
         });
-    }
+      }
+    });
 },
         cancelColorImageModal() {
             // Discard the working copy and close the modal
@@ -1042,8 +1085,8 @@ function contentScore() {
         // All combos have price, stock, SKU
         this.variantChecks.stockAndPrice = combos.length > 0 && combos.every(c => c.price && c.stock && c.sku);
         if (this.variantChecks.stockAndPrice) varScore += 8;
-        // Any combo has special price
-        if (combos.some(c => c.specialPrice)) varScore += 3;
+        // Any combo has sale price
+        if (combos.some(c => c.salePrice)) varScore += 3;
         this.breakdown.variants = varScore;
         this.checks.variants = varScore >= 14;
   
@@ -1105,6 +1148,10 @@ function contentScore() {
         // --- Total ---
         const total = this.breakdown.basicInfo + this.breakdown.categoryBrand + this.breakdown.variants + this.breakdown.description + this.breakdown.highlights + this.breakdown.metadata;
         this.score = total === 0 ? 0 : total;
+        // Sync to Alpine store for global access
+        if (window.Alpine && Alpine.store && Alpine.store('contentScore')) {
+          Alpine.store('contentScore').score = this.score;
+        }
         
         // REMOVED: The imperative DOM manipulation is no longer needed.
         // const publishBtn = document.querySelector('.sticky-actions button.publish-product');
@@ -1127,5 +1174,181 @@ if (window.Alpine) {
     Alpine.store('highlightsManager', highlightsManager());
     Alpine.store('moreDetailsManager', moreDetailsManager());
     Alpine.store('categorySelector', categorySelector());
+    Alpine.store('contentScore', contentScore()); // <-- Register contentScore as a global store
   });
 }
+
+// --- Publish Product Handler ---
+document.addEventListener('alpine:init', () => {
+  Alpine.data('publishProductHandler', () => ({
+    isPublishing: false,
+    async publishProduct() {
+      if (this.isPublishing) return;
+      this.isPublishing = true;
+      try {
+        // Gather all product data from Alpine stores
+        const name = document.getElementById('productName')?.value?.trim() || '';
+        const brand = Alpine.store('brandSelector')?.selectedBrand?.trim() || '';
+        const images = (Alpine.store('imageUploader')?.images || []).map(img => img.url).filter(Boolean);
+        
+        // Get colors with just size names (no stock info)
+        const uniqueSizes = Alpine.store('variantManager')?.getUniqueSizes?.() || [];
+        const colors = (Alpine.store('variantManager')?.colors || []).map(c => ({
+          name: c.name,
+          hex: c.hex,
+          sizes: uniqueSizes, // Use the unique sizes from sizeChart
+          imageUrl: c.imageUrl || null
+        }));
+        
+        const sizes = (Alpine.store('variantManager')?.getUniqueSizes?.() || []);
+        const categoryPath = (Alpine.store('categorySelector')?.selectedPath || []).map(c => c.name || c);
+        const tags = []; // Optionally gather tags if present
+        const sizeChart = (Alpine.store('variantManager')?.sizeChart || []);
+        const variants = (Alpine.store('variantManager')?.getVariantCombinations?.() || []);
+        
+        // Remove 'id' property from each variant for backend compatibility and clean data
+        const cleanVariants = variants.map(({ id, ...rest }) => ({
+          ...rest,
+          // Convert empty strings to null for optional fields
+          salePrice: rest.salePrice === '' ? null : rest.salePrice,
+          salePercentage: rest.salePercentage || 0,
+          // Convert empty strings to numbers for required fields
+          price: rest.price === '' ? 0 : Number(rest.price),
+          stock: rest.stock === '' ? 0 : Number(rest.stock)
+        }));
+        const highlights = (Alpine.store('highlightsManager')?.highlights || []).map(h => h.text).filter(Boolean);
+        const moreDetails = Alpine.store('moreDetailsManager')?.selected || {};
+        const description = Alpine.store('descriptionEditor')?.getHTML?.() || '';
+        const contentScore = this.score;
+
+        // Client-side validation (basic)
+        if (!name || !brand || images.length < 1 || colors.length < 1 || sizes.length < 1 || categoryPath.length < 1 || cleanVariants.length < 1) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please fill all required fields and ensure you have at least one image, color, size, and variant.',
+            confirmButtonColor: '#d97706'
+          });
+          this.isPublishing = false;
+          return;
+        }
+        if (contentScore < 80) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Content Score Too Low',
+            text: 'Content score must be at least 80 to publish.',
+            confirmButtonColor: '#d97706'
+          });
+          this.isPublishing = false;
+          return;
+        }
+
+        // Prepare payload - no top-level price/salePrice, everything is in variants
+        const payload = {
+          name,
+          brand,
+          images,
+          colors,
+          sizes,
+          categoryPath,
+          tags,
+          sizeChart,
+          variants: cleanVariants,
+          highlights,
+          moreDetails,
+          description,
+          contentScore
+        };
+
+        // Debug log to help troubleshoot
+        console.log('Payload being sent:', {
+          colors: colors.map(c => ({ name: c.name, sizes: c.sizes })),
+          variants: cleanVariants.length,
+          contentScore
+        });
+
+        // Send POST request
+        const response = await fetch('/product/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        // Check if user is not authenticated (redirect response)
+        if (response.redirected || response.url.includes('/auth/login')) {
+          alert('You must be logged in to publish a product. Please log in first.');
+          window.location.href = '/auth/login';
+          return;
+        }
+        
+        // Check for authentication issues first
+        if (response.status === 302 || response.status === 401 || response.status === 403) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Authentication Required',
+            text: 'You must be logged in to publish a product. Please log in first.',
+            confirmButtonColor: '#d97706',
+            confirmButtonText: 'Go to Login'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/auth/login';
+            }
+          });
+          return;
+        }
+        
+        // Try to parse JSON response
+        let data;
+        try {
+          data = await response.json();
+        } catch (error) {
+          // If response is not JSON, it might be a redirect or error page
+          Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'Server error. Please try again or contact support.',
+            confirmButtonColor: '#d97706'
+          });
+          console.error('Response parsing error:', error);
+          return;
+        }
+        
+        if (response.ok && data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Product published successfully!',
+            confirmButtonColor: '#d97706',
+            confirmButtonText: 'Show Product',
+            showCancelButton: true,
+            cancelButtonText: 'View All Products',
+            cancelButtonColor: '#6b7280'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Redirect to individual product page
+              window.location.href = `/product/${data.product._id}`;
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              // Redirect to seller dashboard products page
+              window.location.href = '/seller-dashboard/products';
+            }
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Publish Failed',
+            text: 'Failed to publish product: ' + (data.error || 'Unknown error'),
+            confirmButtonColor: '#d97706'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: 'An error occurred while publishing the product. Please check your connection and try again.',
+          confirmButtonColor: '#d97706'
+        });
+      }
+      this.isPublishing = false;
+    }
+  }));
+});

@@ -196,6 +196,7 @@ function initializeEventListeners(elements) {
     colorSelectors.forEach(selector => {
         selector.addEventListener('click', () => {
             const color = selector.dataset.color;
+            const imageUrl = selector.dataset.imageUrl;
             
             // Update visual states
             colorSelectors.forEach(s => {
@@ -209,9 +210,22 @@ function initializeEventListeners(elements) {
             productState.selectedColor = color;
             selectedColorSpan.textContent = color;
             
+            // Update color image if available
+            if (imageUrl) {
+                mainImage.src = imageUrl;
+            }
+            
+            // Update price and stock display for new variant
+            if (typeof updatePriceDisplay === 'function') {
+                updatePriceDisplay();
+            }
+            if (typeof updateStockDisplay === 'function') {
+                updateStockDisplay();
+            }
+            
             // Reset quantity to 1 for the new color/size combination
-            const maxStock = getStockForColorSize(window.product, color, productState.selectedSize);
-            if (maxStock > 0) {
+            const variant = getCurrentVariant();
+            if (variant && variant.stock > 0) {
                 productState.quantity = 1;
                 quantityInput.value = 1;
             } else {
@@ -239,9 +253,17 @@ function initializeEventListeners(elements) {
             productState.selectedSize = size;
             selectedSizeSpan.textContent = size;
             
+            // Update price and stock display for new variant
+            if (typeof updatePriceDisplay === 'function') {
+                updatePriceDisplay();
+            }
+            if (typeof updateStockDisplay === 'function') {
+                updateStockDisplay();
+            }
+            
             // Reset quantity to 1 for the new size/color combination
-            const maxStock = getStockForColorSize(window.product, productState.selectedColor, size);
-            if (maxStock > 0) {
+            const variant = getCurrentVariant();
+            if (variant && variant.stock > 0) {
                 productState.quantity = 1;
                 quantityInput.value = 1;
             } else {
@@ -262,13 +284,13 @@ function initializeEventListeners(elements) {
     });
 
     increaseBtn.addEventListener('click', () => {
-        const colorName = productState.selectedColor;
-        const sizeName = productState.selectedSize;
-        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
-        if (productState.quantity < maxStock) {
+        const variant = getCurrentVariant();
+        if (variant && productState.quantity < variant.stock && productState.quantity < 10) {
             productState.quantity++;
             quantityInput.value = productState.quantity;
             updateQuantityUI();
+        } else if (productState.quantity >= 10) {
+            showQuantityError('Maximum quantity allowed is 10');
         } else {
             showQuantityError('Sorry, we do not have more of this item in stock right now, try choosing different product');
         }
@@ -276,11 +298,12 @@ function initializeEventListeners(elements) {
 
     quantityInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
-        const colorName = productState.selectedColor;
-        const sizeName = productState.selectedSize;
-        const maxStock = getStockForColorSize(window.product, colorName, sizeName);
-        if (value >= 1 && value <= maxStock) {
+        const variant = getCurrentVariant();
+        if (variant && value >= 1 && value <= variant.stock && value <= 10) {
             productState.quantity = value;
+        } else if (value > 10) {
+            showQuantityError('Maximum quantity allowed is 10');
+            e.target.value = productState.quantity;
         } else {
             showQuantityError('Sorry, we do not have more of this item in stock right now, try choosing different product');
             e.target.value = productState.quantity;
@@ -383,6 +406,16 @@ function initializeEventListeners(elements) {
                     icon: 'warning',
                     title: 'Insufficient Stock',
                     text: `Only ${maxStock} item${maxStock > 1 ? 's' : ''} available for ${colorName} in size ${sizeName}.`,
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            if (productState.quantity > 10) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Quantity Limit Exceeded',
+                    text: 'Maximum quantity allowed is 10 items.',
                     confirmButtonText: 'OK'
                 });
                 return;
@@ -648,29 +681,35 @@ if (!document.querySelector('style[data-heart-animation]')) {
 
 // --- Stock/Quantity Logic ---
 function getSelectedColorObj() {
-    return window.productColors.find(c => c.name === productState.selectedColor);
+    return window.product.colors.find(c => c.name === productState.selectedColor);
+}
+
+function getCurrentVariant() {
+    return window.product.variants.find(v => 
+        v.color === productState.selectedColor && 
+        v.size === productState.selectedSize
+    );
 }
 
 function getStockForColorSize(product, colorName, sizeName) {
-    const color = product.colors.find(c => c.name === colorName);
-    if (!color) return 0;
-    const sizeObj = color.sizes.find(s => s.size === sizeName);
-    return sizeObj ? sizeObj.stock : 0;
+    const variant = product.variants.find(v => v.color === colorName && v.size === sizeName);
+    return variant ? variant.stock : 0;
 }
 
 function updateQuantityUI() {
     const colorName = productState.selectedColor;
     const sizeName = productState.selectedSize;
     const maxStock = getStockForColorSize(window.product, colorName, sizeName);
-    quantityInput.max = maxStock;
-    if (productState.quantity > maxStock) {
-        productState.quantity = maxStock;
-        quantityInput.value = maxStock;
+    const maxAllowed = Math.min(maxStock, 10); // Maximum allowed is 10 or stock, whichever is lower
+    quantityInput.max = maxAllowed;
+    if (productState.quantity > maxAllowed) {
+        productState.quantity = maxAllowed;
+        quantityInput.value = maxAllowed;
     }
     // Show stock left if less than 5
     const stockMsg = document.getElementById('stockMessage');
-    if (maxStock < 5 && maxStock > 0) {
-        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${maxStock} item${maxStock > 1 ? 's' : ''} of this variant left in stock</span>`;
+    if (maxAllowed < 5 && maxAllowed > 0) {
+        stockMsg.innerHTML = `<span style="color:#D7263D;font-weight:400;font-size:1.1rem;">Only ${maxAllowed} item${maxAllowed > 1 ? 's' : ''} of this variant left in stock</span>`;
     } else {
         stockMsg.innerHTML = '';
     }

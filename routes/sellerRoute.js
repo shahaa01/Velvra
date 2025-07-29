@@ -9,7 +9,6 @@ router.route('/')
     .get(sellerController.renderSellerForm)
     .post(
         isLoggedIn,
-        isSeller,
         // Validation and sanitization
         [
             body('brandName').trim().notEmpty().withMessage('Brand name is required'),

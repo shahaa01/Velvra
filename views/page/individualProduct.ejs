@@ -3,12 +3,15 @@
 <% block('css').append('<link rel="stylesheet" href="/css/reviews.css">') %>
 
 <%
-// Check if the default color and size combination is in stock
+// Get the default variant (first color, first size)
 const defaultColor = product.colors[0];
 const defaultSize = product.sizes[0];
+const defaultVariant = product.variants.find(v => v.color === defaultColor.name && v.size === defaultSize);
+const defaultInStock = defaultVariant ? defaultVariant.stock > 0 : false;
+
+// Get the default color image URL
 const defaultColorObj = product.colors.find(c => c.name === defaultColor.name);
-const defaultSizeObj = defaultColorObj?.sizes.find(s => s.size === defaultSize);
-const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
+const defaultColorImageUrl = defaultColorObj?.imageUrl;
 %>
 <section class="mainSection bg-velvra-pearl font-montserrat" data-product-id="<%= product._id %>">
     <!-- Product Detail Page -->
@@ -35,7 +38,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     <!-- Main Image -->
                     <div class="imageDiv aspect-[4/5] mb-6 relative overflow-hidden rounded-2xl bg-white shadow-2xl">
                         <img id="mainImage" 
-                             src="<%= product.images[0] %>" 
+                             src="<%= defaultColorImageUrl || product.images[0] %>" 
                              alt="<%= product.name %>" 
                              class="w-full h-full object-cover product-image-zoom cursor-zoom-in">
                         
@@ -101,10 +104,10 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                             <% product.name %>
                         </h1>
                         <div class="flex items-baseline space-x-4">
-                            <span class="text-xl sm:text-2xl lg:text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= product.salePrice || product.price %>
-                            <% if(product.sale) { %>
-                            <span class="text-xl text-velvra-stone line-through">₹<%= product.price %></span>
-                            <span class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= product.salePercentage %>% OFF</span>
+                            <span id="currentPrice" class="text-xl sm:text-2xl lg:text-3xl font-playfair font-semibold text-velvra-charcoal">₹<%= defaultVariant?.salePrice || defaultVariant?.price || 0 %></span>
+                            <% if(defaultVariant?.salePrice && defaultVariant.salePrice < defaultVariant.price) { %>
+                            <span id="originalPrice" class="text-xl text-velvra-stone line-through">₹<%= defaultVariant.price %></span>
+                            <span id="saleBadge" class="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full"><%= defaultVariant.salePercentage %>% OFF</span>
                             <% } %>
                         </div>
                     </div>
@@ -118,6 +121,7 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                             <button class="color-selector w-12 h-12 rounded-full border-4 shadow-lg transition-all duration-300 <%= i === 0 ? 'border-velvra-gold' : 'border-gray-200' %>" 
                                     style="background-color: <%= prodColor.hex %>" 
                                     data-color="<%= prodColor.name %>"
+                                    data-image-url="<%= prodColor.imageUrl || '' %>"
                                     title="<%= prodColor.name %>"></button>
                             <% } %>
                         </div>
@@ -233,16 +237,22 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     </button>
                     <div id="details" class="accordion-content active">
                         <div class="pb-6 text-velvra-stone leading-relaxed">
-                            <p class="mb-4">This exquisite double-breasted coat represents the pinnacle of Italian craftsmanship. Made from the finest cashmere sourced from Inner Mongolia, each piece is meticulously constructed by master tailors with over 20 years of experience.</p>
-                            <ul class="space-y-2">
-                                <li>• 100% Pure Cashmere outer shell</li>
-                                <li>• Silk-lined interior for comfort</li>
-                                <li>• Hand-finished buttonholes</li>
-                                <li>• Peak lapel design</li>
-                                <li>• Two front pockets with flap closures</li>
-                                <li>• Interior chest pocket</li>
-                                <li>• Made in Italy</li>
-                            </ul>
+                            <% if (product.description) { %>
+                                <div class="mb-6">
+                                    <%- product.description %>
+                                </div>
+                            <% } %>
+                            
+                            <% if (product.highlights && product.highlights.length > 0) { %>
+                                <div>
+                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Key Features</h4>
+                                    <ul class="space-y-2">
+                                        <% for(let highlight of product.highlights) { %>
+                                            <li>• <%= highlight %></li>
+                                        <% } %>
+                                    </ul>
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -258,24 +268,76 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     <div id="care" class="accordion-content">
                         <div class="pb-6 text-velvra-stone leading-relaxed">
                             <div class="grid md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Composition</h4>
-                                    <ul class="space-y-1">
-                                        <li>• Outer: 100% Cashmere</li>
-                                        <li>• Lining: 100% Silk</li>
-                                        <li>• Interlining: 100% Cotton</li>
-                                        <li>• Buttons: Mother of Pearl</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-velvra-charcoal mb-3">Care Instructions</h4>
-                                    <ul class="space-y-1">
-                                        <li>• Dry clean only</li>
-                                        <li>• Store on padded hangers</li>
-                                        <li>• Use garment bags for storage</li>
-                                        <li>• Professional pressing recommended</li>
-                                    </ul>
-                                </div>
+                                <% if (product.moreDetails) { %>
+                                    <div>
+                                        <h4 class="font-semibold text-velvra-charcoal mb-3">Composition & Details</h4>
+                                        <ul class="space-y-1">
+                                            <% if (product.moreDetails.fabric) { %>
+                                                <li>• Fabric: <%= product.moreDetails.fabric %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.weaveType) { %>
+                                                <li>• Weave Type: <%= product.moreDetails.weaveType %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.lining) { %>
+                                                <li>• Lining: <%= product.moreDetails.lining %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.transparency) { %>
+                                                <li>• Transparency: <%= product.moreDetails.transparency %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.surfaceStyling) { %>
+                                                <li>• Surface: <%= product.moreDetails.surfaceStyling %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.closureType) { %>
+                                                <li>• Closure: <%= product.moreDetails.closureType %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.pattern) { %>
+                                                <li>• Pattern: <%= product.moreDetails.pattern %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.printPatternType) { %>
+                                                <li>• Print Type: <%= product.moreDetails.printPatternType %></li>
+                                            <% } %>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-velvra-charcoal mb-3">Care & Styling</h4>
+                                        <ul class="space-y-1">
+                                            <% if (product.moreDetails.washCare) { %>
+                                                <li>• Care: <%= product.moreDetails.washCare %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.fit) { %>
+                                                <li>• Fit: <%= product.moreDetails.fit %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.length) { %>
+                                                <li>• Length: <%= product.moreDetails.length %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.sleeveLength) { %>
+                                                <li>• Sleeve: <%= product.moreDetails.sleeveLength %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.sleeveStyling) { %>
+                                                <li>• Sleeve Style: <%= product.moreDetails.sleeveStyling %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.neckType) { %>
+                                                <li>• Neck: <%= product.moreDetails.neckType %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.occasion) { %>
+                                                <li>• Occasion: <%= product.moreDetails.occasion %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.fashionTrend) { %>
+                                                <li>• Trend: <%= product.moreDetails.fashionTrend %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.multipack) { %>
+                                                <li>• Pack: <%= product.moreDetails.multipack %></li>
+                                            <% } %>
+                                            <% if (product.moreDetails.numItems) { %>
+                                                <li>• Items: <%= product.moreDetails.numItems %></li>
+                                            <% } %>
+                                        </ul>
+                                    </div>
+                                <% } else { %>
+                                    <div class="col-span-2 text-center text-velvra-stone">
+                                        <p>Product details not available</p>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
@@ -291,45 +353,49 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
                     </button>
                     <div id="sizing" class="accordion-content">
                         <div class="pb-6">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead>
-                                        <tr class="border-b border-gray-200">
-                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Size</th>
-                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Chest (inches)</th>
-                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Length (inches)</th>
-                                            <th class="text-left py-3 font-semibold text-velvra-charcoal">Shoulder (inches)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-velvra-stone">
-                                        <tr class="border-b border-gray-100">
-                                            <td class="py-3">S</td>
-                                            <td class="py-3">38-40</td>
-                                            <td class="py-3">46</td>
-                                            <td class="py-3">17.5</td>
-                                        </tr>
-                                        <tr class="border-b border-gray-100">
-                                            <td class="py-3">M</td>
-                                            <td class="py-3">40-42</td>
-                                            <td class="py-3">47</td>
-                                            <td class="py-3">18</td>
-                                        </tr>
-                                        <tr class="border-b border-gray-100">
-                                            <td class="py-3">L</td>
-                                            <td class="py-3">42-44</td>
-                                            <td class="py-3">48</td>
-                                            <td class="py-3">18.5</td>
-                                        </tr>
-                                        <tr class="border-b border-gray-100">
-                                            <td class="py-3">XL</td>
-                                            <td class="py-3">44-46</td>
-                                            <td class="py-3">49</td>
-                                            <td class="py-3">19</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="mt-4 text-sm text-velvra-stone">Model is 6'2" and wearing size M. For the perfect fit, we recommend professional measurements.</p>
+                            <% if (product.sizeChart && product.sizeChart.length > 0) { %>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="border-b border-gray-200">
+                                                <th class="text-left py-3 font-semibold text-velvra-charcoal">Size</th>
+                                                <% 
+                                                // Get unique body parts for table headers
+                                                const bodyParts = [...new Set(product.sizeChart.map(item => item.bodyPart))];
+                                                for(let bodyPart of bodyParts) { 
+                                                %>
+                                                    <th class="text-left py-3 font-semibold text-velvra-charcoal"><%= bodyPart %> (<%= product.sizeChart.find(item => item.bodyPart === bodyPart)?.unit || 'cm' %>)</th>
+                                                <% } %>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="text-velvra-stone">
+                                            <% 
+                                            // Get unique sizes
+                                            const sizes = [...new Set(product.sizeChart.map(item => item.size))];
+                                            for(let size of sizes) { 
+                                            %>
+                                                <tr class="border-b border-gray-100">
+                                                    <td class="py-3 font-medium text-velvra-charcoal"><%= size %></td>
+                                                    <% for(let bodyPart of bodyParts) { %>
+                                                        <% 
+                                                        const measurement = product.sizeChart.find(item => 
+                                                            item.size === size && item.bodyPart === bodyPart
+                                                        );
+                                                        %>
+                                                        <td class="py-3"><%= measurement ? measurement.value : '-' %></td>
+                                                    <% } %>
+                                                </tr>
+                                            <% } %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="mt-4 text-sm text-velvra-stone">For the perfect fit, we recommend professional measurements. Sizes may vary slightly between different body types.</p>
+                            <% } else { %>
+                                <div class="text-center text-velvra-stone py-8">
+                                    <p>Size chart not available for this product.</p>
+                                    <p class="mt-2 text-sm">Please refer to the size selector above or contact customer service for sizing assistance.</p>
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -440,6 +506,107 @@ const defaultInStock = defaultSizeObj ? defaultSizeObj.stock > 0 : false;
   
   // Set current user ID for review ownership checks
   window.currentUserId = '<%= currentUser ? currentUser._id : "" %>';
+  
+  // Function to get current variant based on selected color and size
+  function getCurrentVariant() {
+    return window.product.variants.find(v => 
+      v.color === window.productState.selectedColor && 
+      v.size === window.productState.selectedSize
+    );
+  }
+  
+  // Function to update price display
+  function updatePriceDisplay() {
+    const variant = getCurrentVariant();
+    if (!variant) return;
+    
+    const currentPriceEl = document.getElementById('currentPrice');
+    const originalPriceEl = document.getElementById('originalPrice');
+    const saleBadgeEl = document.getElementById('saleBadge');
+    
+    // Update current price
+    currentPriceEl.textContent = `₹${variant.salePrice || variant.price}`;
+    
+    // Update original price and sale badge
+    if (variant.salePrice && variant.salePrice < variant.price) {
+      if (originalPriceEl) {
+        originalPriceEl.textContent = `₹${variant.price}`;
+        originalPriceEl.style.display = 'inline';
+      } else {
+        // Create original price element if it doesn't exist
+        const newOriginalPrice = document.createElement('span');
+        newOriginalPrice.id = 'originalPrice';
+        newOriginalPrice.className = 'text-xl text-velvra-stone line-through';
+        newOriginalPrice.textContent = `₹${variant.price}`;
+        currentPriceEl.parentNode.insertBefore(newOriginalPrice, currentPriceEl.nextSibling);
+      }
+      
+      if (saleBadgeEl) {
+        saleBadgeEl.textContent = `${variant.salePercentage}% OFF`;
+        saleBadgeEl.style.display = 'inline';
+      } else {
+        // Create sale badge if it doesn't exist
+        const newSaleBadge = document.createElement('span');
+        newSaleBadge.id = 'saleBadge';
+        newSaleBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full';
+        newSaleBadge.textContent = `${variant.salePercentage}% OFF`;
+        currentPriceEl.parentNode.appendChild(newSaleBadge);
+      }
+    } else {
+      // Hide sale elements if no sale
+      if (originalPriceEl) originalPriceEl.style.display = 'none';
+      if (saleBadgeEl) saleBadgeEl.style.display = 'none';
+    }
+  }
+  
+  // Function to update stock display
+  function updateStockDisplay() {
+    const variant = getCurrentVariant();
+    if (!variant) return;
+    
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    const stockMessage = document.getElementById('stockMessage');
+    
+    if (variant.stock > 0) {
+      addToCartBtn.disabled = false;
+      addToCartBtn.style.opacity = '1';
+      addToCartBtn.style.cursor = 'pointer';
+      if (buyNowBtn) {
+        buyNowBtn.disabled = false;
+        buyNowBtn.style.opacity = '1';
+        buyNowBtn.style.cursor = 'pointer';
+      }
+      stockMessage.textContent = `${variant.stock} items in stock`;
+      stockMessage.className = 'mt-3 text-center text-green-600';
+    } else {
+      addToCartBtn.disabled = true;
+      addToCartBtn.style.opacity = '0.5';
+      addToCartBtn.style.cursor = 'not-allowed';
+      if (buyNowBtn) {
+        buyNowBtn.disabled = true;
+        buyNowBtn.style.opacity = '0.5';
+        buyNowBtn.style.cursor = 'not-allowed';
+      }
+      stockMessage.textContent = 'Out of stock';
+      stockMessage.className = 'mt-3 text-center text-red-600';
+    }
+  }
+  
+  // Function to update color image
+  function updateColorImage(colorName) {
+    const colorObj = window.product.colors.find(c => c.name === colorName);
+    if (colorObj && colorObj.imageUrl) {
+      const mainImage = document.getElementById('mainImage');
+      mainImage.src = colorObj.imageUrl;
+    }
+  }
+  
+  // Initialize display
+  document.addEventListener('DOMContentLoaded', function() {
+    updatePriceDisplay();
+    updateStockDisplay();
+  });
 </script>
 </section>
 <% block('script').append('<script src="/js/individualPage.js"></script>') %>

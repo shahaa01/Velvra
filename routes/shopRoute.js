@@ -26,6 +26,31 @@ const renderShop = async (req, res) => {
     // Debug: Log the first product to see its structure
     if (products.length > 0) {
         console.log('First product structure:', JSON.stringify(products[0], null, 2));
+        
+        // Debug sale percentage calculation for the first product
+        const firstProduct = products[0];
+        if (firstProduct.variants && Array.isArray(firstProduct.variants)) {
+            console.log('First product variants:', firstProduct.variants);
+            
+            // Find variants with sale percentage > 0
+            const variantsWithSale = firstProduct.variants.filter(v => 
+                (v.salePercentage && parseInt(v.salePercentage) > 0) || 
+                (v.salePrice !== null && v.salePrice !== undefined && v.salePrice < v.price)
+            );
+            console.log('Variants with sale:', variantsWithSale);
+            
+            if (variantsWithSale.length > 0) {
+                // Show highest sale percentage
+                const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => {
+                    const currentPercentage = parseInt(current.salePercentage) || 0;
+                    const highestPercentage = parseInt(highest.salePercentage) || 0;
+                    return currentPercentage > highestPercentage ? current : highest;
+                });
+                const calculatedSalePercentage = parseInt(highestSalePercentageVariant.salePercentage) || 0;
+                console.log('Calculated sale percentage:', calculatedSalePercentage);
+                console.log('Highest sale percentage variant:', highestSalePercentageVariant);
+            }
+        }
     }
     
     // Calculate pagination info
@@ -160,24 +185,28 @@ const buildFilterQuery = (filters, searchQuery) => {
     // ... rest of your existing filter conditions (price, category, etc.)
     // Keep all your existing filter code here
     
-    // Price filter
+    // Price filter - updated for variant structure
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
         andConditions.push({
-            $or: [
-                {
-                    salePrice: {
-                        $gte: filters.minPrice || 0,
-                        $lte: filters.maxPrice || Number.MAX_VALUE
-                    }
-                },
-                {
-                    salePrice: { $exists: false },
-                    price: {
-                        $gte: filters.minPrice || 0,
-                        $lte: filters.maxPrice || Number.MAX_VALUE
-                    }
+            variants: {
+                $elemMatch: {
+                    $or: [
+                        {
+                            salePrice: {
+                                $gte: filters.minPrice || 0,
+                                $lte: filters.maxPrice || Number.MAX_VALUE
+                            }
+                        },
+                        {
+                            salePrice: { $exists: false },
+                            price: {
+                                $gte: filters.minPrice || 0,
+                                $lte: filters.maxPrice || Number.MAX_VALUE
+                            }
+                        }
+                    ]
                 }
-            ]
+            }
         });
     }
     
@@ -196,17 +225,29 @@ const buildFilterQuery = (filters, searchQuery) => {
         andConditions.push({ brand: { $in: filters.brands } });
     }
     
-    // Size filter
+    // Size filter - updated for variant structure
     if (filters.sizes && filters.sizes.length > 0) {
-        andConditions.push({ sizes: { $in: filters.sizes } });
+        andConditions.push({
+            variants: {
+                $elemMatch: {
+                    size: { $in: filters.sizes }
+                }
+            }
+        });
     }
     
-    // Discount filter
+    // Discount filter - updated for variant structure
     if (filters.discounts && filters.discounts.length > 0) {
         const discountConditions = filters.discounts.map(discount => {
             const discountValue = parseInt(discount);
             if (!isNaN(discountValue)) {
-                return { sale: true, salePercentage: { $gte: discountValue } };
+                return {
+                    variants: {
+                        $elemMatch: {
+                            salePercentage: { $gte: discountValue }
+                        }
+                    }
+                };
             }
             return null;
         }).filter(condition => condition !== null);
@@ -216,9 +257,9 @@ const buildFilterQuery = (filters, searchQuery) => {
         }
     }
     
-    // Specific category (men/women)
+    // Specific category (men/women) - case-insensitive
     if (filters.category) {
-        andConditions.push({ category: filters.category });
+        andConditions.push({ category: { $regex: new RegExp('^' + filters.category + '$', 'i') } });
     }
     
     // If there are conditions, combine them with $and
@@ -290,14 +331,38 @@ router.get('/api/products', asyncWrap(async (req, res) => {
                 }
             });
         }
-        // --- Price Sorting (Aggregation) ---
+        // --- Price Sorting (Aggregation) - Updated for variant structure ---
         if (req.query.sort === 'price-low' || req.query.sort === 'price-high') {
-            // Use aggregation to sort by effective price
+            // Use aggregation to sort by effective price from variants
             const sortOrder = req.query.sort === 'price-low' ? 1 : -1;
             const pipeline = [
                 { $match: query },
                 { $addFields: {
-                    effectivePrice: { $ifNull: ['$salePrice', '$price'] }
+                    effectivePrice: {
+                        $let: {
+                            vars: {
+                                variantsWithSale: {
+                                    $filter: {
+                                        input: "$variants",
+                                        as: "variant",
+                                        cond: { 
+                                            $and: [
+                                                { $ne: ["$$variant.salePrice", null] },
+                                                { $lt: ["$$variant.salePrice", "$$variant.price"] }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            in: {
+                                $cond: {
+                                    if: { $gt: [{ $size: "$$variantsWithSale" }, 0] },
+                                    then: { $min: "$$variantsWithSale.salePrice" },
+                                    else: { $min: "$variants.price" }
+                                }
+                            }
+                        }
+                    }
                 }},
                 { $sort: { effectivePrice: sortOrder, createdAt: -1 } },
                 { $skip: skip },
@@ -357,28 +422,99 @@ router.get('/api/products', asyncWrap(async (req, res) => {
 router.get('/api/products/sale', asyncWrap(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * ITEMS_PER_PAGE;
-        // Build query for sale products
+        // Build query for sale products - updated for variant structure
         const query = {
-            sale: true,
-            salePercentage: { $exists: true, $ne: null }
+            variants: {
+                $elemMatch: {
+                    salePrice: { $exists: true, $ne: null },
+                    salePercentage: { $gt: 0 }
+                }
+            }
         };
         // Optionally add filters (price, categories, colors, brands, discounts, sizes)
-        if (req.query.minPrice) query.salePrice = Object.assign(query.salePrice || {}, { $gte: parseInt(req.query.minPrice) });
-        if (req.query.maxPrice) query.salePrice = Object.assign(query.salePrice || {}, { $lte: parseInt(req.query.maxPrice) });
+        if (req.query.minPrice || req.query.maxPrice) {
+            query.variants = {
+                $elemMatch: {
+                    ...query.variants.$elemMatch,
+                    $or: [
+                        {
+                            salePrice: {
+                                $gte: req.query.minPrice ? parseInt(req.query.minPrice) : 0,
+                                $lte: req.query.maxPrice ? parseInt(req.query.maxPrice) : Number.MAX_VALUE
+                            }
+                        },
+                        {
+                            salePrice: { $exists: false },
+                            price: {
+                                $gte: req.query.minPrice ? parseInt(req.query.minPrice) : 0,
+                                $lte: req.query.maxPrice ? parseInt(req.query.maxPrice) : Number.MAX_VALUE
+                            }
+                        }
+                    ]
+                }
+            };
+        }
         if (req.query.categories) query.tags = { $in: req.query.categories.split(',') };
         if (req.query.colors) query['colors.name'] = { $in: req.query.colors.split(',') };
         if (req.query.brands) query.brand = { $in: req.query.brands.split(',') };
         if (req.query.discounts) {
             const discounts = req.query.discounts.split(',').map(Number).filter(n => !isNaN(n));
             if (discounts.length > 0) {
-                query.salePercentage = { ...query.salePercentage, $gte: Math.min(...discounts) };
+                query.variants = {
+                    $elemMatch: {
+                        ...query.variants.$elemMatch,
+                        salePercentage: { $gte: Math.min(...discounts) }
+                    }
+                };
             }
         }
-        if (req.query.sizes) query['colors.sizes.size'] = { $in: req.query.sizes.split(',') };
-        // Sorting
-        let sortObj = { salePercentage: -1 };
-        if (req.query.sort === 'price-low') sortObj = { salePrice: 1 };
-        if (req.query.sort === 'price-high') sortObj = { salePrice: -1 };
+        if (req.query.sizes) query.variants = {
+            $elemMatch: {
+                ...query.variants.$elemMatch,
+                size: { $in: req.query.sizes.split(',') }
+            }
+        };
+        // Sorting - use aggregation for price sorting
+        let sortObj = { createdAt: -1 }; // Default sort
+        if (req.query.sort === 'price-low' || req.query.sort === 'price-high') {
+            // Use aggregation for price sorting
+            const sortOrder = req.query.sort === 'price-low' ? 1 : -1;
+            const pipeline = [
+                { $match: query },
+                { $addFields: {
+                    effectivePrice: {
+                        $min: {
+                            $map: {
+                                input: "$variants",
+                                as: "variant",
+                                in: { $ifNull: ["$$variant.salePrice", "$$variant.price"] }
+                            }
+                        }
+                    }
+                }},
+                { $sort: { effectivePrice: sortOrder, createdAt: -1 } },
+                { $skip: skip },
+                { $limit: ITEMS_PER_PAGE }
+            ];
+            const products = await Product.aggregate(pipeline);
+            const totalProducts = await Product.countDocuments(query);
+            const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+            const hasMore = page < totalPages;
+            const startItem = totalProducts > 0 ? skip + 1 : 0;
+            const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+            return res.json({
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalProducts,
+                    hasMore,
+                    startItem,
+                    endItem,
+                    itemsPerPage: ITEMS_PER_PAGE
+                }
+            });
+        }
         // Get total count of sale products
         const totalProducts = await Product.countDocuments(query);
         // Get sale products for current page, sorted
@@ -430,15 +566,25 @@ router.route('/men')
 
         // Build query based on ALL filters
         const query = buildFilterQuery(filters);
-
-        // Get total count of filtered products
-        const totalProducts = await Product.countDocuments(query);
         
-        // Get filtered products for current page
+        // Add men filter - check if first element of categoryPath is "men" (case-insensitive)
+        query['categoryPath.0'] = { $regex: new RegExp('^men$', 'i') };
+
+        // Debug: Log the query and results
+        console.log('Men route query:', JSON.stringify(query, null, 2));
+        const totalProducts = await Product.countDocuments(query);
+        console.log('Total men products found:', totalProducts);
+        
+        // Get filtered products for current page with sorting
         const products = await Product.find(query)
             .skip(skip)
             .limit(ITEMS_PER_PAGE)
-            .sort({ createdAt: -1 });
+            .sort({ 
+                contentScore: -1, 
+                averageRating: -1, 
+                salePercentage: -1, 
+                createdAt: -1 
+            });
         
         // Calculate pagination info
         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
@@ -446,8 +592,6 @@ router.route('/men')
         const startItem = totalProducts > 0 ? skip + 1 : 0;
         const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
         
-        // Debug log to check product order
-        console.log(products.map(p => ({ name: p.name, salePercentage: p.salePercentage })));
         res.render('page/shop', {
             title: "Men's Collection | Velvra", 
             heroDescription: "Discover our meticulously curated selection of premium menswear. Each piece embodies timeless elegance, exceptional craftsmanship, and contemporary sophistication.",
@@ -484,15 +628,23 @@ router.route('/women')
 
         // Build query based on ALL filters
         const query = buildFilterQuery(filters);
+        
+        // Add women filter - check if first element of categoryPath is "women" (case-insensitive)
+        query['categoryPath.0'] = { $regex: new RegExp('^women$', 'i') };
 
         // Get total count of filtered products
         const totalProducts = await Product.countDocuments(query);
         
-        // Get filtered products for current page
+        // Get filtered products for current page with sorting
         const products = await Product.find(query)
             .skip(skip)
             .limit(ITEMS_PER_PAGE)
-            .sort({ createdAt: -1 });
+            .sort({ 
+                contentScore: -1, 
+                averageRating: -1, 
+                salePercentage: -1, 
+                createdAt: -1 
+            });
         
         // Calculate pagination info
         const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
@@ -504,6 +656,67 @@ router.route('/women')
             title: "Women's Collection | Velvra",
             heroDescription: "Explore our meticulously curated collection of premium womenswear. Every piece embodies timeless elegance, refined craftsmanship, and modern femininity designed to empower and inspire.", 
             heroTitle: "Women's",
+            products: products,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                hasMore: hasMore,
+                startItem: startItem,
+                endItem: endItem,
+                itemsPerPage: ITEMS_PER_PAGE
+            }
+        });
+    }));
+
+// Add new route for unisex products
+router.route('/unisex')
+    .get(asyncWrap(async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        
+        // Parse all filters from query parameters
+        const filters = {
+            minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
+            maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
+            categories: req.query.categories ? req.query.categories.split(',') : [],
+            colors: req.query.colors ? req.query.colors.split(',') : [],
+            brands: req.query.brands ? req.query.brands.split(',') : [],
+            discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
+            sizes: req.query.sizes ? req.query.sizes.split(',') : [],
+            category: 'unisex'
+        };
+
+        // Build query based on ALL filters
+        const query = buildFilterQuery(filters);
+        
+        // Add unisex filter - check if first element of categoryPath is "unisex" (case-insensitive)
+        query['categoryPath.0'] = { $regex: new RegExp('^unisex$', 'i') };
+
+        // Get total count of filtered products
+        const totalProducts = await Product.countDocuments(query);
+        
+        // Get filtered products for current page with sorting
+        const products = await Product.find(query)
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ 
+                contentScore: -1, 
+                averageRating: -1, 
+                salePercentage: -1, 
+                createdAt: -1 
+            });
+        
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+        const hasMore = page < totalPages;
+        const startItem = totalProducts > 0 ? skip + 1 : 0;
+        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+        
+        res.render('page/shop', {
+            title: "Unisex Collection | Velvra",
+            heroDescription: "Discover our versatile unisex collection designed for everyone. Each piece transcends traditional gender boundaries with contemporary style and universal appeal.",
+            heroTitle: "Unisex",
             products: products,
             pagination: {
                 currentPage: page,

@@ -40,16 +40,22 @@ cartSchema.methods.calculateTotal = async function() {
     try {
         let total = 0;
         // Populate products if not already populated
-        if (!this.items[0]?.product?.price) {
+        if (!this.items[0]?.product?.variants) {
             await this.populate('items.product');
         }
         
         for (const item of this.items) {
             if (item.product) {
-                // Use salePrice if available, otherwise use regular price
-                const itemPrice = item.product.salePrice || item.product.price;
-                if (itemPrice) {
-                    total += itemPrice * item.quantity;
+                // Find the variant for this item's color and size
+                const variant = item.product.variants.find(v => 
+                    v.color === item.color && v.size === item.size
+                );
+                if (variant) {
+                    // Use salePrice if available, otherwise use regular price
+                    const itemPrice = variant.salePrice || variant.price;
+                    if (itemPrice) {
+                        total += itemPrice * item.quantity;
+                    }
                 }
             }
         }

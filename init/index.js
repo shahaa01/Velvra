@@ -100,21 +100,23 @@ async function main() {
     // Remove any existing seller field to avoid conflicts
     delete product.seller;
     product.seller = testSeller._id; // Use the real seller ID
-    product.price = Math.floor(Math.random() * (10000 - 300 + 1)) + 300;
 
-    // Define available sizes for this product
-    const availableSizes = product.sizes || ['S', 'M', 'L', 'XL'];
+    // Ensure required fields are present
+    if (!product.contentScore) {
+      product.contentScore = Math.floor(Math.random() * 20) + 80; // Random score between 80-100
+    }
 
-    // For each color, generate a sizes array with random stock
-    product.colors = product.colors.map(color => {
-      return {
-        ...color,
-        sizes: availableSizes.map(size => ({
-          size,
-          stock: Math.floor(Math.random() * 11) // between 0 and 10
-        }))
-      };
-    });
+    // Set category from categoryPath (since category is required but pre-save hook runs after validation)
+    if (Array.isArray(product.categoryPath) && product.categoryPath.length > 0) {
+      product.category = product.categoryPath[0];
+    }
+    
+    // Set tags to categoryPath excluding 'Fashion'
+    if (Array.isArray(product.categoryPath) && product.categoryPath.length > 0) {
+      product.tags = product.categoryPath.filter(tag => tag !== 'Fashion');
+      // Convert categoryPath to lowercase for consistency with shop routes
+      product.categoryPath = product.categoryPath.map(path => path.toLowerCase());
+    }
 
     // Log for debugging
     console.log('📦 Saving product:', product.name, 'with seller:', product.seller);
@@ -124,7 +126,13 @@ async function main() {
       await newProduct.save();
       console.log('✅ Saved product:', product.name);
     } catch (err) {
-      console.error('❌ Error saving product:', product.name, err);
+      console.error('❌ Error saving product:', product.name, err.message);
+      // Log more details for debugging
+      if (err.errors) {
+        Object.keys(err.errors).forEach(key => {
+          console.error(`  - ${key}: ${err.errors[key].message}`);
+        });
+      }
     }
   }
   

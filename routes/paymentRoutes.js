@@ -177,9 +177,10 @@ router.post('/create-buyNow-order', isLoggedIn, asyncWrap(async (req, res) => {
     if (productDoc) {
         const colorObj = productDoc.colors.find(c => c.name === color);
         if (colorObj) {
-            const sizeObj = colorObj.sizes.find(s => s.size === size);
-            if (sizeObj) {
-                sizeObj.stock = Math.max(0, sizeObj.stock - parseInt(quantity));
+            // Find the variant and update its stock
+            const variant = productDoc.variants.find(v => v.color === color && v.size === size);
+            if (variant) {
+                variant.stock = Math.max(0, variant.stock - parseInt(quantity));
             }
         }
         await productDoc.save();
@@ -213,15 +214,24 @@ router.post('/create-order', isLoggedIn, asyncWrap(async (req, res) => {
     }
 
     // Create order items from cart
-    const orderItems = cart.items.map(item => ({
-        product: item.product._id,
-        seller: item.product.seller,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color,
-        price: item.product.salePrice || item.product.price,
-        totalPrice: (item.product.salePrice || item.product.price) * item.quantity
-    }));
+    const orderItems = cart.items.map(item => {
+        // Find the variant for this item's color and size
+        const variant = item.product.variants.find(v => 
+            v.color === item.color && v.size === item.size
+        );
+        
+        const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
+        
+        return {
+            product: item.product._id,
+            seller: item.product.seller,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+            price: itemPrice,
+            totalPrice: itemPrice * item.quantity
+        };
+    });
 
     // Calculate totals
     const subtotal = cart.total;
@@ -249,9 +259,10 @@ router.post('/create-order', isLoggedIn, asyncWrap(async (req, res) => {
         if (productDoc) {
             const colorObj = productDoc.colors.find(c => c.name === item.color);
             if (colorObj) {
-                const sizeObj = colorObj.sizes.find(s => s.size === item.size);
-                if (sizeObj) {
-                    sizeObj.stock = Math.max(0, sizeObj.stock - item.quantity);
+                // Find the variant and update its stock
+                const variant = productDoc.variants.find(v => v.color === item.color && v.size === item.size);
+                if (variant) {
+                    variant.stock = Math.max(0, variant.stock - item.quantity);
                 }
             }
             await productDoc.save();

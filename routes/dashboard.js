@@ -421,12 +421,13 @@ router.post('/wishlist/add-to-cart', isLoggedIn, asyncWrap(async (req, res) => {
         throw new AppError('Color not available', 400);
     }
     
-    const sizeObj = colorObj.sizes.find(s => s.size === size);
-    if (!sizeObj) {
+    // Check if size is available for this color by checking variants
+    const variant = product.variants.find(v => v.color === color && v.size === size);
+    if (!variant) {
         throw new AppError('Size not available for this color', 400);
     }
     
-    if (sizeObj.stock < quantity) {
+    if (variant.stock < quantity) {
         throw new AppError('Not enough stock for this variant', 400);
     }
 
@@ -559,12 +560,17 @@ router.get('/wishlist/data', isLoggedIn, asyncWrap(async (req, res) => {
 
     // Apply filters
     if (filter === 'sale') {
-        products = products.filter(product => product.sale);
+        products = products.filter(product => {
+            // Check if any variant has a sale price
+            return product.variants && product.variants.some(variant => 
+                variant.salePrice && variant.salePrice < variant.price
+            );
+        });
     } else if (filter === 'instock') {
         products = products.filter(product => {
-            // Check if any color has any size with stock > 0
-            return product.colors.some(color => 
-                color.sizes.some(size => size.stock > 0)
+            // Check if any variant has stock > 0
+            return product.variants && product.variants.some(variant => 
+                variant.stock > 0 && variant.active
             );
         });
     }
@@ -576,15 +582,15 @@ router.get('/wishlist/data', isLoggedIn, asyncWrap(async (req, res) => {
             break;
         case 'price-low':
             products.sort((a, b) => {
-                const priceA = a.salePrice || a.price;
-                const priceB = b.salePrice || b.price;
+                const priceA = a.getBestPriceInfo ? a.getBestPriceInfo().displayPrice : 0;
+                const priceB = b.getBestPriceInfo ? b.getBestPriceInfo().displayPrice : 0;
                 return priceA - priceB;
             });
             break;
         case 'price-high':
             products.sort((a, b) => {
-                const priceA = a.salePrice || a.price;
-                const priceB = b.salePrice || b.price;
+                const priceA = a.getBestPriceInfo ? a.getBestPriceInfo().displayPrice : 0;
+                const priceB = b.getBestPriceInfo ? b.getBestPriceInfo().displayPrice : 0;
                 return priceB - priceA;
             });
             break;
@@ -1305,9 +1311,10 @@ router.put('/orders/:orderId/cancel', isLoggedIn, asyncWrap(async (req, res) => 
         if (productDoc) {
             const colorObj = productDoc.colors.find(c => c.name === item.color);
             if (colorObj) {
-                const sizeObj = colorObj.sizes.find(s => s.size === item.size);
-                if (sizeObj) {
-                    sizeObj.stock = sizeObj.stock + item.quantity;
+                // Find the variant and update its stock
+                const variant = productDoc.variants.find(v => v.color === item.color && v.size === item.size);
+                if (variant) {
+                    variant.stock = variant.stock + item.quantity;
                 }
             }
             await productDoc.save();

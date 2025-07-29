@@ -43,7 +43,24 @@ router.get('/', isLoggedIn, autoSwitchToBuyer, asyncWrap(async (req, res, next) 
         }
     }
 
-    res.render('page/cartPage', { cart });
+    // Helper function to get item price from variant
+    const getItemPrice = (item) => {
+        if (!item.product || !item.product.variants) return { price: 0, salePrice: null, salePercentage: 0 };
+        
+        const variant = item.product.variants.find(v => 
+            v.color === item.color && v.size === item.size
+        );
+        
+        if (!variant) return { price: 0, salePrice: null, salePercentage: 0 };
+        
+        return {
+            price: variant.price,
+            salePrice: variant.salePrice,
+            salePercentage: variant.salePercentage || 0
+        };
+    };
+
+    res.render('page/cartPage', { cart, getItemPrice });
 }));
 
 // Toggle cart item
@@ -92,12 +109,22 @@ router.post('/toggle', isLoggedIn, asyncWrap(async (req, res) => {
             throw new AppError('Color not available', 400);
         }
         
-        const sizeObj = colorObj.sizes.find(s => s.size === size);
-        if (!sizeObj) {
+        // Check if size is available for this color by checking variants
+        const variant = product.variants.find(v => v.color === color && v.size === size);
+        if (!variant) {
             throw new AppError('Size not available for this color', 400);
         }
         
-        if (sizeObj.stock < quantity) {
+        // Validate quantity constraints
+        if (quantity < 1) {
+            throw new AppError('Quantity must be at least 1', 400);
+        }
+        
+        if (quantity > 10) {
+            throw new AppError('Maximum quantity allowed is 10', 400);
+        }
+        
+        if (variant.stock < quantity) {
             throw new AppError('Not enough stock for this variant', 400);
         }
         

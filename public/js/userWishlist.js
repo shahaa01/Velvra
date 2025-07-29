@@ -179,9 +179,8 @@ class WishlistManager {
 
     createProductCard(product) {
         const isInStock = this.checkProductStock(product);
-        const currentPrice = product.salePrice || product.price;
-        const originalPrice = product.salePrice ? product.price : null;
-        const discountPercentage = originalPrice ? Math.round((originalPrice - currentPrice) / originalPrice * 100) : 0;
+        const priceInfo = this.getProductPriceInfo(product);
+        const availableColors = this.getAvailableColors(product);
 
         return `
             <div class="wishlist-card bg-cream rounded-xl border border-beige overflow-hidden fade-in" data-product-id="${product._id}">
@@ -192,9 +191,9 @@ class WishlistManager {
                     <button class="remove-wishlist-btn absolute top-2 right-2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-red-50 transition-colors" data-product-id="${product._id}">
                     <i class="heart-icon fas fa-heart text-red-500"></i>
                 </button>
-                    ${product.sale ? `
+                    ${priceInfo.hasSale ? `
                     <span class="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs rounded">
-                            ${discountPercentage}% OFF
+                            ${priceInfo.salePercentage}% OFF
                     </span>
                 ` : ''}
                     ${!isInStock ? `
@@ -211,9 +210,9 @@ class WishlistManager {
                     
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-2">
-                            <span class="text-lg font-bold text-charcoal">$${currentPrice.toFixed(2)}</span>
-                            ${originalPrice ? `
-                                <span class="text-stone line-through">$${originalPrice.toFixed(2)}</span>
+                            <span class="text-lg font-bold text-charcoal">₹${priceInfo.displayPrice.toLocaleString()}</span>
+                            ${priceInfo.hasSale ? `
+                                <span class="text-stone line-through">₹${priceInfo.originalPrice.toLocaleString()}</span>
                     ` : ''}
                         </div>
                         <span class="text-xs text-stone capitalize">${product.category}</span>
@@ -224,8 +223,8 @@ class WishlistManager {
                             <div class="flex space-x-2">
                                 <select class="product-color-select flex-1 px-3 py-2 bg-white border border-beige rounded-lg text-sm focus:outline-none focus:border-gold" data-product-id="${product._id}">
                                     <option value="">Select Color</option>
-                                    ${product.colors.map(color => `
-                                        <option value="${color.name}">${color.name}</option>
+                                    ${availableColors.map(color => `
+                                        <option value="${color}">${color}</option>
                                     `).join('')}
                                 </select>
                                 <select class="product-size-select flex-1 px-3 py-2 bg-white border border-beige rounded-lg text-sm focus:outline-none focus:border-gold" data-product-id="${product._id}" disabled>
@@ -252,9 +251,72 @@ class WishlistManager {
     }
 
     checkProductStock(product) {
-        return product.colors.some(color => 
-            color.sizes.some(size => size.stock > 0)
+        return product.variants && product.variants.some(variant => 
+            variant.stock > 0 && variant.active
         );
+    }
+
+    getProductPriceInfo(product) {
+        if (!product.variants || product.variants.length === 0) {
+            return {
+                displayPrice: 0,
+                originalPrice: 0,
+                hasSale: false,
+                salePercentage: 0
+            };
+        }
+
+        // Find variants with sale prices
+        const variantsWithSale = product.variants.filter(v => 
+            v.salePrice && v.salePrice < v.price
+        );
+        
+        if (variantsWithSale.length > 0) {
+            // Show lowest sale price
+            const lowestSaleVariant = variantsWithSale.reduce((lowest, current) => 
+                current.salePrice < lowest.salePrice ? current : lowest
+            );
+            
+            // Show highest sale percentage
+            const highestSalePercentageVariant = variantsWithSale.reduce((highest, current) => {
+                const currentPercentage = Math.round(((current.price - current.salePrice) / current.price) * 100);
+                const highestPercentage = Math.round(((highest.price - highest.salePrice) / highest.price) * 100);
+                return currentPercentage > highestPercentage ? current : highest;
+            });
+            
+            return {
+                displayPrice: lowestSaleVariant.salePrice,
+                originalPrice: lowestSaleVariant.price,
+                hasSale: true,
+                salePercentage: Math.round(((highestSalePercentageVariant.price - highestSalePercentageVariant.salePrice) / highestSalePercentageVariant.price) * 100)
+            };
+        } else {
+            // No sale prices, show lowest regular price
+            const lowestPriceVariant = product.variants.reduce((lowest, current) => 
+                current.price < lowest.price ? current : lowest
+            );
+            
+            return {
+                displayPrice: lowestPriceVariant.price,
+                originalPrice: lowestPriceVariant.price,
+                hasSale: false,
+                salePercentage: 0
+            };
+        }
+    }
+
+    getAvailableColors(product) {
+        if (!product.variants) return [];
+        
+        // Get unique colors from variants that have stock
+        const availableColors = new Set();
+        product.variants.forEach(variant => {
+            if (variant.stock > 0 && variant.active) {
+                availableColors.add(variant.color);
+            }
+        });
+        
+        return Array.from(availableColors);
     }
 
     addCardEventListeners() {
@@ -296,10 +358,12 @@ class WishlistManager {
 
     handleColorChange(productId, colorName) {
         const product = this.wishlistItems.find(p => p._id === productId);
-        if (!product) return;
+        if (!product || !product.variants) return;
 
-        const colorObj = product.colors.find(c => c.name === colorName);
-        if (!colorObj) return;
+        // Find variants for this color that have stock
+        const colorVariants = product.variants.filter(v => 
+            v.color === colorName && v.stock > 0 && v.active
+        );
 
         const sizeSelect = document.querySelector(`.product-size-select[data-product-id="${productId}"]`);
         const addToCartBtn = document.querySelector(`.add-to-cart-btn[data-product-id="${productId}"]`);
@@ -307,10 +371,8 @@ class WishlistManager {
 
         // Populate size options
         sizeSelect.innerHTML = '<option value="">Select Size</option>';
-        colorObj.sizes.forEach(size => {
-            if (size.stock > 0) {
-                sizeSelect.innerHTML += `<option value="${size.size}">${size.size} (${size.stock} available)</option>`;
-            }
+        colorVariants.forEach(variant => {
+            sizeSelect.innerHTML += `<option value="${variant.size}">${variant.size} (${variant.stock} available)</option>`;
         });
 
         // Enable size select

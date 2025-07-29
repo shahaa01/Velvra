@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/nspell/dist/nspell.min.js"></script>
     <!-- nspell dictionary files should be placed in /public/js/dictionaries/en_US.aff and en_US.dic -->
 `); %>
-<section class="body bg-gray-50 min-h-screen" x-data="contentScore()">
+<section class="body bg-gray-50 min-h-screen" x-data="Object.assign(contentScore(), publishProductHandler())">
     <div class="bg-white shadow-sm sticky top-0 z-40 border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
@@ -28,10 +28,14 @@
                     <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         Preview
                     </button>
-                    <button :disabled="score < 80"
-                            :class="{ 'bg-blue-600 hover:bg-blue-700': score >= 80, 'bg-gray-400 cursor-not-allowed opacity-60': score < 80 }"
-                            class="px-4 py-2 text-white rounded-lg font-medium transition-colors duration-300">
-                        Publish Product
+                    <button
+                        :disabled="score < 80 || isPublishing"
+                        :class="{ 'bg-blue-600 hover:bg-blue-700': score >= 80 && !isPublishing, 'bg-gray-400 cursor-not-allowed opacity-60': score < 80 || isPublishing }"
+                        class="px-4 py-2 text-white rounded-lg font-medium transition-colors duration-300"
+                        @click="publishProduct()"
+                    >
+                        <span x-show="!isPublishing">Publish Product</span>
+                        <span x-show="isPublishing"><i class='fas fa-spinner fa-spin'></i> Publishing...</span>
                     </button>
                 </div>
             </div>
@@ -442,7 +446,7 @@
                                                        class="w-full p-1 border rounded text-center" placeholder="0">
                                             </td>
                                             <td>
-                                                <input type="number" x-model="combination.specialPrice" 
+                                                <input type="number" x-model="combination.salePrice" 
                                                        class="w-full p-1 border rounded text-center" placeholder="0">
                                             </td>
                                             <td>
@@ -601,7 +605,7 @@
                                     <input type="radio" class="form-radio text-blue-600" name="fabric" value="Other" x-model="selected.fabric">
                                     <span class="ml-2">Other</span>
                                 </label>
-                                <input x-show="selected.fabric === 'Other'" type="text" x-model="selected.fabricOther" placeholder="Enter fabric" class="ml-2 mt-2 p-2 border rounded w-full" />
+                                <input x-show="selected.fabric === 'Other'" type="text" x-model="selected.fabric" placeholder="Enter fabric" class="ml-2 mt-2 p-2 border rounded w-full" />
                             </div>
                         </div>
                         <!-- Fashion Trend -->
@@ -668,7 +672,7 @@
                                     <input type="radio" class="form-radio text-blue-600" name="numItems" value="Custom" x-model="selected.numItems">
                                     <span class="ml-2">Custom</span>
                                 </label>
-                                <input x-show="selected.numItems === 'Custom'" type="number" min="1" x-model="selected.numItemsCustom" placeholder="Enter number" class="ml-2 mt-2 p-2 border rounded w-full" />
+                                <input x-show="selected.numItems === 'Custom'" type="number" min="1" x-model="selected.numItems" placeholder="Enter number" class="ml-2 mt-2 p-2 border rounded w-full" />
                             </div>
                         </div>
                         <!-- Occasion -->
@@ -690,7 +694,7 @@
                                     <option :value="item" x-text="item"></option>
                                 </template>
                             </select>
-                            <input x-show="selected.packageContains === 'Other'" type="text" x-model="selected.packageContainsOther" placeholder="Enter item" class="mt-2 p-2 border rounded w-full" />
+                            <input x-show="selected.packageContains === 'Other'" type="text" x-model="selected.packageContains" placeholder="Enter item" class="mt-2 p-2 border rounded w-full" />
                         </div>
                         <!-- Pattern -->
                         <div>
@@ -1040,17 +1044,14 @@ function moreDetailsManager() {
         ],
         selected: {
             fabric: '',
-            fabricOther: '',
             fashionTrend: '',
             fit: '',
             length: '',
             multipack: '',
             neckType: '',
             numItems: '',
-            numItemsCustom: '',
             occasion: '',
             packageContains: '',
-            packageContainsOther: '',
             pattern: '',
             printPatternType: '',
             sleeveLength: '',

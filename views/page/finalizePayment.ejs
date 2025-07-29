@@ -7,7 +7,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <h1 class="text-lg font-medium">Secure Payment</h1>
+            <h1 class="text-lg font-medium">Cash On Delivery</h1>
             <div class="flex items-center space-x-1 text-xs text-gray-500">
                 <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
@@ -26,13 +26,13 @@
                     <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
-                    <span>Secure Checkout</span>
+                    <span>Try On Delivery</span>
                 </div>
                 <div class="flex items-center space-x-2 text-xs text-gray-600">
                     <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
                     </svg>
-                    <span>Easy Returns</span>
+                    <span>Hassle-Free Returns</span>
                 </div>
             </div>
 
@@ -252,19 +252,19 @@
                     </div>
                     <div class="text-center">
                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 luxury-shadow">
-                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                            </svg>
-                        </div>
-                        <p class="text-xs font-medium">7-Day Returns</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 luxury-shadow">
                             <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                             </svg>
                         </div>
-                        <p class="text-xs font-medium">Secure Payment</p>
+                        <p class="text-xs font-medium">Try It On At Delivery</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 luxury-shadow">
+                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                            </svg>
+                        </div>
+                        <p class="text-xs font-medium">Return On Delivery If Not Satisfied</p>
                     </div>
                 </div>
             </div>
@@ -273,41 +273,53 @@
             <div class="bg-white rounded-2xl p-6 luxury-shadow slide-up" style="animation-delay: 0.4s">
                 <h3 class="font-medium mb-4">Frequently Asked Questions</h3>
                 <div class="space-y-3">
-                    <div class="border-b border-gray-100 pb-3">
-                        <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(0)">
-                            <span class="text-sm font-medium">What happens after payment?</span>
-                            <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="accordion-content">
-                            <p class="text-sm text-gray-600 pt-2">You'll receive an instant order confirmation via email and SMS. Your seller will begin preparing your order immediately.</p>
-                        </div>
+              
+                  <!-- NEW FAQ: Try On Delivery -->
+                  <div class="border-b border-gray-100 pb-3">
+                    <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(0)">
+                      <span class="text-sm font-medium">How does “Try On Delivery” work?</span>
+                      <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div class="accordion-content">
+                      <p class="text-sm text-gray-600 pt-2">
+                        Once the rider arrives, you must pay first to receive the package. You can then take the product inside to try it on. Please ensure you're quick—riders are instructed to wait a maximum of 7 minutes. If you're not satisfied, you can return the item on the spot and receive a full refund. Alternatively, you can ask the rider to bring another size the next day.
+                      </p>
                     </div>
-                    <div class="border-b border-gray-100 pb-3">
-                        <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(1)">
-                            <span class="text-sm font-medium">Can I cancel my order?</span>
-                            <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="accordion-content">
-                            <p class="text-sm text-gray-600 pt-2">Yes! You can cancel within 24 hours for a full refund. After that, cancellation depends on shipping status.</p>
-                        </div>
+                  </div>
+              
+                  <!-- Existing FAQ: What happens after payment? -->
+                  <div class="border-b border-gray-100 pb-3">
+                    <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(1)">
+                      <span class="text-sm font-medium">What happens after payment?</span>
+                      <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div class="accordion-content">
+                      <p class="text-sm text-gray-600 pt-2">
+                        You'll receive an instant order confirmation via email and SMS. Your seller will begin preparing your order immediately.
+                      </p>
                     </div>
-                    <div class="pb-3">
-                        <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(2)">
-                            <span class="text-sm font-medium">Is my payment information secure?</span>
-                            <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="accordion-content">
-                            <p class="text-sm text-gray-600 pt-2">Absolutely! We use bank-grade SSL encryption and never store your payment details. All transactions are processed through secure gateways.</p>
-                        </div>
+                  </div>
+              
+                  <!-- Existing FAQ: Can I cancel my order? -->
+                  <div class="border-b border-gray-100 pb-3">
+                    <button class="w-full text-left flex items-center justify-between py-2 touch-scale" onclick="toggleAccordion(2)">
+                      <span class="text-sm font-medium">Can I cancel my order?</span>
+                      <svg class="w-4 h-4 transform transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div class="accordion-content">
+                      <p class="text-sm text-gray-600 pt-2">
+                        Yes! You can cancel your order anytime before it is dispatched or shipped.                      </p>
                     </div>
+                  </div>
                 </div>
-            </div>
+              </div>
+              
         </div>
     </div>
 
