@@ -48,28 +48,50 @@ const defaultColorImageUrl = defaultColorObj?.imageUrl;
                                 <div class="glass-effect px-4 py-2 rounded-full border border-white/20">
                                     <div class="flex items-center space-x-2">
                                         <div class="flex space-x-1">
-                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                            </svg>
-                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                            </svg>
-                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                            </svg>
-                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                            </svg>
-                                            <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                            </svg>
+                                            <% 
+                                            // Generate star rating based on averageRating
+                                            const rating = product.averageRating || 0;
+                                            const fullStars = Math.floor(rating);
+                                            const hasHalfStar = rating % 1 >= 0.5;
+                                            
+                                            // Display full stars
+                                            for(let i = 0; i < fullStars; i++) { %>
+                                                <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                                </svg>
+                                            <% } %>
+                                            
+                                            <% if(hasHalfStar) { %>
+                                                <svg class="w-4 h-4 text-velvra-gold fill-current" viewBox="0 0 24 24">
+                                                    <defs>
+                                                        <linearGradient id="halfStar">
+                                                            <stop offset="50%" stop-color="#D4AF37"/>
+                                                            <stop offset="50%" stop-color="transparent"/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <path fill="url(#halfStar)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                                </svg>
+                                            <% } %>
+                                            
+                                            <% 
+                                            // Display empty stars
+                                            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                                            for(let i = 0; i < emptyStars; i++) { %>
+                                                <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 24 24">
+                                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                                </svg>
+                                            <% } %>
                                         </div>
-                                        <span class="text-sm font-medium text-velvra-charcoal">4.9</span>
+                                        <span class="text-sm font-medium text-velvra-charcoal">
+                                            <%= rating > 0 ? rating.toFixed(1) : 'No ratings' %>
+                                        </span>
                                     </div>
                                 </div>
                                 
                                 <div class="glass-effect px-4 py-2 rounded-full border border-white/20">
-                                    <span class="text-sm font-medium text-velvra-charcoal">Sold: 1,200+</span>
+                                    <span class="text-sm font-medium text-velvra-charcoal">
+                                        Sold: <%= totalSold > 0 ? totalSold.toLocaleString() + (totalSold >= 1000 ? '+' : '') : 'New' %>
+                                    </span>
                                 </div>
                             </div>
                         </div>

@@ -54,18 +54,26 @@ router.route('/buyNow')
             throw new AppError('Product not found', 404);
         }
 
+        // Find the specific variant for this color and size
+        const variant = product.variants.find(v => 
+            v.color === color && v.size === size
+        );
+        
+        if (!variant) {
+            throw new AppError('Product variant not found', 404);
+        }
+
         // Create a single item cart-like structure for the product
         const buyNowItem = {
             product: product,
             quantity: parseInt(quantity),
             size: size,
-            color: color,
-            price: product.salePrice || product.price,
-            totalPrice: (product.salePrice || product.price) * parseInt(quantity)
+            color: color
         };
 
-        // Calculate totals
-        const subtotal = buyNowItem.totalPrice;
+        // Calculate totals using variant pricing
+        const itemPrice = variant.salePrice || variant.price;
+        const subtotal = itemPrice * parseInt(quantity);
         const shippingCost = 0; // Free shipping
         const discount = 0; // No discount for now
         const total = subtotal + shippingCost - discount;
@@ -95,18 +103,26 @@ router.route('/buyNow/finalize')
             throw new AppError('Product not found', 404);
         }
 
+        // Find the specific variant for this color and size
+        const variant = product.variants.find(v => 
+            v.color === color && v.size === size
+        );
+        
+        if (!variant) {
+            throw new AppError('Product variant not found', 404);
+        }
+
         // Create a single item cart-like structure for the product
         const buyNowItem = {
             product: product,
             quantity: parseInt(quantity),
             size: size,
-            color: color,
-            price: product.salePrice || product.price,
-            totalPrice: (product.salePrice || product.price) * parseInt(quantity)
+            color: color
         };
 
-        // Calculate totals
-        const subtotal = buyNowItem.totalPrice;
+        // Calculate totals using variant pricing
+        const itemPrice = variant.salePrice || variant.price;
+        const subtotal = itemPrice * parseInt(quantity);
         const shippingCost = 0; // Free shipping
         const discount = 0; // No discount for now
         const total = subtotal + shippingCost - discount;
@@ -141,15 +157,25 @@ router.post('/create-buyNow-order', isLoggedIn, asyncWrap(async (req, res) => {
         throw new AppError('Product not found', 404);
     }
 
-    // Create order item
+    // Find the specific variant for this color and size
+    const variant = product.variants.find(v => 
+        v.color === color && v.size === size
+    );
+    
+    if (!variant) {
+        throw new AppError('Product variant not found', 404);
+    }
+
+    // Create order item using variant pricing
+    const itemPrice = variant.salePrice || variant.price;
     const orderItem = {
         product: product._id,
         seller: product.seller,
         quantity: parseInt(quantity),
         size: size,
         color: color,
-        price: product.salePrice || product.price,
-        totalPrice: (product.salePrice || product.price) * parseInt(quantity)
+        price: itemPrice,
+        totalPrice: itemPrice * parseInt(quantity)
     };
 
     // Calculate totals

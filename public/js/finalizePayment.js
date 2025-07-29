@@ -97,8 +97,11 @@ async function processPayment() {
         }
     }
     
-    // Show loading state
-    confirmBtn.innerHTML = '<span class="relative z-10">Processing...</span>';
+    // Show processing overlay
+    const processingOverlay = document.getElementById('processingOverlay');
+    processingOverlay.classList.remove('hidden');
+    
+    // Disable the confirm button
     confirmBtn.disabled = true;
     
     try {
@@ -158,31 +161,78 @@ async function processPayment() {
         const result = await response.json();
         
         if (result.success) {
-            showNotification('Order created successfully!', 'success');
+            // Update overlay message for success
+            const overlayTitle = processingOverlay.querySelector('h3');
+            const overlayMessage = processingOverlay.querySelector('p');
+            const overlayContent = processingOverlay.querySelector('div > div');
+            
+            // Add success animation
+            overlayContent.classList.add('success-animation');
+            
+            // Update content
+            overlayTitle.textContent = 'Order Created Successfully!';
+            overlayMessage.textContent = 'Redirecting to your orders...';
+            
+            // Update the processing steps to show completion
+            const processingSteps = processingOverlay.querySelectorAll('.flex.items-center.justify-center');
+            processingSteps.forEach((step, index) => {
+                const dot = step.querySelector('.w-2.h-2');
+                const text = step.querySelector('span');
+                
+                if (index === 0) {
+                    dot.className = 'w-2 h-2 bg-green-500 rounded-full';
+                    text.textContent = 'Payment method validated ✓';
+                } else if (index === 1) {
+                    dot.className = 'w-2 h-2 bg-green-500 rounded-full';
+                    text.textContent = 'Order created ✓';
+                } else if (index === 2) {
+                    dot.className = 'w-2 h-2 bg-green-500 rounded-full';
+                    text.textContent = 'Confirmation ready ✓';
+                }
+            });
             
             // Redirect based on payment method
             if (selectedPayment === 'cod') {
                 // For COD, redirect to order confirmation
                 setTimeout(() => {
                     window.location.href = `/dashboard/orders`;
-                }, 1500);
+                }, 2500);
             } else {
                 // For digital payments, redirect to payment gateway
                 setTimeout(() => {
                     window.location.href = `/payment/gateway/${result.order._id}`;
-                }, 1500);
+                }, 2500);
             }
         } else {
+            // Hide overlay and show error
+            processingOverlay.classList.add('hidden');
             showNotification(result.error || 'Failed to create order', 'error');
         }
         
     } catch (error) {
         console.error('Error creating order:', error);
+        // Hide overlay and show error
+        processingOverlay.classList.add('hidden');
         showNotification('An error occurred while creating your order', 'error');
     } finally {
         // Reset button state
-        confirmBtn.innerHTML = originalText;
         confirmBtn.disabled = false;
+    }
+}
+
+// Function to hide processing overlay
+function hideProcessingOverlay() {
+    const processingOverlay = document.getElementById('processingOverlay');
+    if (processingOverlay) {
+        processingOverlay.classList.add('hidden');
+    }
+}
+
+// Function to show processing overlay
+function showProcessingOverlay() {
+    const processingOverlay = document.getElementById('processingOverlay');
+    if (processingOverlay) {
+        processingOverlay.classList.remove('hidden');
     }
 }
 

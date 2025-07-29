@@ -241,6 +241,19 @@ router.route('/:id')
             throw new AppError('Product not found', 404);
         }
 
+        // Calculate total sales for this product
+        const Order = require('../models/order');
+        const salesData = await Order.aggregate([
+            { $unwind: '$items' },
+            { $match: { 'items.product': reqProduct._id } },
+            { $group: {
+                _id: null,
+                totalSold: { $sum: '$items.quantity' }
+            }}
+        ]);
+        
+        const totalSold = salesData.length > 0 ? salesData[0].totalSold : 0;
+
         // Get initial similar products (first 4)
         const similarProducts = await Product.find({
             category: reqProduct.category,
@@ -266,7 +279,8 @@ router.route('/:id')
             product: reqProduct,
             similarProducts: similarProducts,
             isInCart: isInCart,
-            currentUser: req.user
+            currentUser: req.user,
+            totalSold: totalSold
         });
     }));
 

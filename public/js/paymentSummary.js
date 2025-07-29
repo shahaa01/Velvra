@@ -129,14 +129,29 @@ function updateQuantity(change) {
 }
 
 function updatePrices() {
-    // Only update prices for cart orders, not buy now
-    if (isBuyNow) return;
-    
-    const subtotal = basePrice * quantity;
-    const total = subtotal - discount;
-    
-    document.getElementById('subtotal').textContent = `NPR ${subtotal.toLocaleString()}`;
-    document.getElementById('totalPrice').textContent = `NPR ${total.toLocaleString()}`;
+    if (isBuyNow) {
+        // For buy now, get the price from the page data
+        const buyNowItem = window.buyNowItem;
+        if (buyNowItem && buyNowItem.product) {
+            // Find the variant for this buy now item
+            const variant = buyNowItem.product.variants.find(v => 
+                v.color === buyNowItem.color && v.size === buyNowItem.size
+            );
+            const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
+            const subtotal = itemPrice * buyNowItem.quantity;
+            const total = subtotal - discount;
+            
+            document.getElementById('subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+            document.getElementById('totalPrice').textContent = `₹${total.toLocaleString()}`;
+        }
+    } else {
+        // For cart orders
+        const subtotal = basePrice * quantity;
+        const total = subtotal - discount;
+        
+        document.getElementById('subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+        document.getElementById('totalPrice').textContent = `₹${total.toLocaleString()}`;
+    }
 }
 
 // Address Form Handling
@@ -502,11 +517,16 @@ document.getElementById('applyBtn').addEventListener('click', () => {
     
     if (code === 'VELVRA20') {
         if (isBuyNow) {
-            // For buy now, get the price from the page
-            const subtotalElement = document.getElementById('subtotal');
-            const subtotalText = subtotalElement.textContent.replace('₹', '').replace(',', '');
-            const currentSubtotal = parseInt(subtotalText);
-            discount = Math.floor(currentSubtotal * 0.2);
+            // For buy now, get the price from the page data
+            const buyNowItem = window.buyNowItem;
+            if (buyNowItem && buyNowItem.product) {
+                const variant = buyNowItem.product.variants.find(v => 
+                    v.color === buyNowItem.color && v.size === buyNowItem.size
+                );
+                const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
+                const currentSubtotal = itemPrice * buyNowItem.quantity;
+                discount = Math.floor(currentSubtotal * 0.2);
+            }
         } else {
             discount = Math.floor(basePrice * quantity * 0.2);
         }
@@ -517,16 +537,8 @@ document.getElementById('applyBtn').addEventListener('click', () => {
         message.className = 'mt-3 text-sm text-green-600 fade-in';
         message.classList.remove('hidden');
         
-        if (!isBuyNow) {
-            updatePrices();
-        } else {
-            // Update total for buy now
-            const subtotalElement = document.getElementById('subtotal');
-            const subtotalText = subtotalElement.textContent.replace('₹', '').replace(',', '');
-            const currentSubtotal = parseInt(subtotalText);
-            const total = currentSubtotal - discount;
-            document.getElementById('totalPrice').textContent = `₹${total.toLocaleString()}`;
-        }
+        // Update prices for both buy now and cart
+        updatePrices();
     } else if (code) {
         message.textContent = 'Invalid coupon code';
         message.className = 'mt-3 text-sm text-red-600 fade-in';
@@ -599,7 +611,11 @@ async function updateQuantity(cartItemId, change) {
         // Update the item total
         const itemTotal = itemElement.querySelector('.item-total');
         const updatedItem = data.cart.items.find(item => item._id === cartItemId);
-        const itemPrice = updatedItem.product.salePrice || updatedItem.product.price;
+        // Find the variant for this cart item
+        const variant = updatedItem.product.variants.find(v => 
+            v.color === updatedItem.color && v.size === updatedItem.size
+        );
+        const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
         itemTotal.textContent = `₹${(itemPrice * updatedItem.quantity).toLocaleString()}`;
 
         // Update the cart totals
@@ -630,7 +646,12 @@ function updateCartUI(cart) {
             // Update price
             const priceElement = itemElement.querySelector('.item-total');
             if (priceElement) {
-                const total = (item.product.salePrice || item.product.price) * item.quantity;
+                // Find the variant for this cart item
+                const variant = item.product.variants.find(v => 
+                    v.color === item.color && v.size === item.size
+                );
+                const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
+                const total = itemPrice * item.quantity;
                 priceElement.textContent = `₹${total.toLocaleString()}`;
             }
         }

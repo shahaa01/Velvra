@@ -182,6 +182,80 @@
                 </div>
             </div>
 
+            <!-- Order Details -->
+            <div class="bg-white rounded-2xl p-6 luxury-shadow mb-6 slide-up" style="animation-delay: 0.15s">
+                <h2 class="text-sm font-medium text-gray-500 mb-4">ORDER DETAILS</h2>
+                <div class="space-y-4">
+                    <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                        <!-- Buy Now - Single Product -->
+                        <% 
+                        // Find the variant for this buy now item
+                        const buyNowVariant = buyNowItem.product.variants.find(v => 
+                            v.color === buyNowItem.color && v.size === buyNowItem.size
+                        );
+                        const buyNowPrice = buyNowVariant ? (buyNowVariant.salePrice || buyNowVariant.price) : 0;
+                        const buyNowOriginalPrice = buyNowVariant ? buyNowVariant.price : 0;
+                        const buyNowHasSale = buyNowVariant && buyNowVariant.salePrice && buyNowVariant.salePrice < buyNowVariant.price;
+                        %>
+                        <div class="flex space-x-4">
+                            <img src="<%= buyNowItem.product.images[0] %>" 
+                                 alt="<%= buyNowItem.product.name %>" 
+                                 class="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 object-cover rounded-lg sm:rounded-xl">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><%= buyNowItem.product.brand %></p>
+                                        <h3 class="font-medium text-gray-900 clamp-2"><%= buyNowItem.product.name %></h3>
+                                        <p class="text-sm text-gray-500 mt-1">Size: <%= buyNowItem.size %> | Color: <%= buyNowItem.color %></p>
+                                        <div class="flex items-center space-x-3 mt-2">
+                                            <span class="text-sm text-gray-500">Qty: <%= buyNowItem.quantity %></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right ml-4">
+                                        <p class="font-semibold">₹<%= (buyNowPrice * buyNowItem.quantity).toLocaleString() %></p>
+                                        <% if(buyNowHasSale) { %>
+                                            <p class="text-sm text-gray-400 line-through">₹<%= (buyNowOriginalPrice * buyNowItem.quantity).toLocaleString() %></p>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <!-- Cart Items -->
+                        <% cart.items.forEach(item => { 
+                            // Find the variant for this cart item
+                            const variant = item.product.variants.find(v => 
+                                v.color === item.color && v.size === item.size
+                            );
+                            const itemPrice = variant ? (variant.salePrice || variant.price) : 0;
+                            const originalPrice = variant ? variant.price : 0;
+                            const hasSale = variant && variant.salePrice && variant.salePrice < variant.price;
+                        %>
+                            <div class="flex space-x-4" data-cart-item-id="<%= item._id %>">
+                                <img src="<%= item.product.images[0] %>" 
+                                     alt="<%= item.product.name %>" 
+                                     class="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 object-cover rounded-lg sm:rounded-xl">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1"><%= item.product.brand %></p>
+                                            <h3 class="font-medium text-gray-900 clamp-2"><%= item.product.name %></h3>
+                                            <p class="text-sm text-gray-500 mt-1">Size: <%= item.size %> | Color: <%= item.color %></p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-semibold item-total">₹<%= (itemPrice * item.quantity).toLocaleString() %></p>
+                                            <% if(hasSale) { %>
+                                                <p class="text-sm text-gray-400 line-through">₹<%= (originalPrice * item.quantity).toLocaleString() %></p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+                </div>
+            </div>
+
             <!-- Order Summary -->
             <div class="bg-white rounded-2xl p-6 luxury-shadow mb-6 slide-up" style="animation-delay: 0.2s">
                 <h2 class="text-sm font-medium text-gray-500 mb-4">ORDER SUMMARY</h2>
@@ -335,6 +409,33 @@
         </div>
     </div>
 
+    <!-- Processing Overlay -->
+    <div id="processingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+            <div class="mb-6">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-gold-500"></div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Processing Your Order</h3>
+                <p class="text-sm text-gray-600">Please wait while we create your order...</p>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Validating payment method</span>
+                </div>
+                <div class="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.5s"></div>
+                    <span>Creating order</span>
+                </div>
+                <div class="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                    <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style="animation-delay: 1s"></div>
+                    <span>Preparing confirmation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- COD Modal -->
     <div id="codModal" class="modal fixed inset-0 z-50 flex items-end md:items-center justify-center">
         <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeCodModal()"></div>
@@ -360,5 +461,22 @@
 <script>
 // Pass addresses data to JavaScript
 window.userAddresses = <%- JSON.stringify(addresses || []) %>;
+
+// Pass buyNow data to JavaScript if this is a buyNow order
+<% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+window.isBuyNow = true;
+window.buyNowItem = {
+    product: {
+        _id: '<%= buyNowItem.product._id %>',
+        name: '<%= buyNowItem.product.name %>',
+        brand: '<%= buyNowItem.product.brand %>',
+        images: <%- JSON.stringify(buyNowItem.product.images) %>,
+        variants: <%- JSON.stringify(buyNowItem.product.variants) %>
+    },
+    quantity: <%= buyNowItem.quantity %>,
+    size: '<%= buyNowItem.size %>',
+    color: '<%= buyNowItem.color %>'
+};
+<% } %>
 </script>
 <% block('script').append('<script src="/js/finalizePayment.js"></script>') %>

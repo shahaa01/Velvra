@@ -203,7 +203,13 @@
                     <div class="space-y-3">
                         <div class="flex justify-between text-sm">
                             <span>Subtotal</span>
-                            <span id="subtotal">₹<%= (typeof subtotal !== 'undefined' ? subtotal : cart.total).toLocaleString() %></span>
+                            <span id="subtotal">
+                                <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                                    ₹<%= subtotal.toLocaleString() %>
+                                <% } else { %>
+                                    ₹<%= (typeof subtotal !== 'undefined' ? subtotal : cart.total).toLocaleString() %>
+                                <% } %>
+                            </span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span>Shipping</span>
@@ -216,7 +222,13 @@
                         <div class="pt-3 border-t border-gray-100">
                             <div class="flex justify-between items-baseline">
                                 <span class="font-medium">Total to Pay</span>
-                                <span class="text-2xl font-semibold gold-text" id="totalPrice">₹<%= (typeof total !== 'undefined' ? total : cart.total).toLocaleString() %></span>
+                                <span class="text-2xl font-semibold gold-text" id="totalPrice">
+                                    <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                                        ₹<%= total.toLocaleString() %>
+                                    <% } else { %>
+                                        ₹<%= (typeof total !== 'undefined' ? total : cart.total).toLocaleString() %>
+                                    <% } %>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -269,5 +281,23 @@
         <p class="text-center text-xs text-gray-500 mt-2">By proceeding, you agree to our Terms & Conditions</p>
     </div>
 </section>
+<% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+    <script>
+        // Pass buyNow data to frontend
+        window.buyNowItem = {
+            product: {
+                _id: '<%= buyNowItem.product._id %>',
+                name: '<%= buyNowItem.product.name %>',
+                brand: '<%= buyNowItem.product.brand %>',
+                images: <%- JSON.stringify(buyNowItem.product.images) %>,
+                variants: <%- JSON.stringify(buyNowItem.product.variants) %>
+            },
+            quantity: <%= buyNowItem.quantity %>,
+            size: '<%= buyNowItem.size %>',
+            color: '<%= buyNowItem.color %>'
+        };
+        window.isBuyNow = true;
+    </script>
+<% } %>
 <% block('script').append('<script src="/js/paymentSummary.js"></script>') %>
 
