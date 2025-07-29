@@ -669,6 +669,68 @@ router.route('/women')
         });
     }));
 
+router.route('/kids')
+    .get(asyncWrap(async (req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        
+        // Parse all filters from query parameters, including category
+        const filters = {
+            minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : undefined,
+            maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : undefined,
+            categories: req.query.categories ? req.query.categories.split(',') : [],
+            colors: req.query.colors ? req.query.colors.split(',') : [],
+            brands: req.query.brands ? req.query.brands.split(',') : [],
+            discounts: (req.query.discounts && req.query.discounts !== '') ? req.query.discounts.split(',') : [],
+            sizes: req.query.sizes ? req.query.sizes.split(',') : [],
+            category: 'kids' // Hardcode category for this route
+        };
+
+        // Build query based on ALL filters
+        const query = buildFilterQuery(filters);
+        
+        // Add kids filter - check if first element of categoryPath is "kids" (case-insensitive)
+        query['categoryPath.0'] = { $regex: new RegExp('^kids$', 'i') };
+
+        // Debug: Log the query and results
+        console.log('Kids route query:', JSON.stringify(query, null, 2));
+        const totalProducts = await Product.countDocuments(query);
+        console.log('Total kids products found:', totalProducts);
+        
+        // Get filtered products for current page with sorting
+        const products = await Product.find(query)
+            .skip(skip)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ 
+                contentScore: -1, 
+                averageRating: -1, 
+                salePercentage: -1, 
+                createdAt: -1 
+            });
+        
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+        const hasMore = page < totalPages;
+        const startItem = totalProducts > 0 ? skip + 1 : 0;
+        const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+        
+        res.render('page/shop', {
+            title: "Kids Collection | Velvra", 
+            heroDescription: "Discover our carefully curated selection of premium kids' fashion. Each piece combines comfort, style, and durability to keep your little ones looking adorable and feeling great.",
+            heroTitle: "Kids", 
+            products: products,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                hasMore: hasMore,
+                startItem: startItem,
+                endItem: endItem,
+                itemsPerPage: ITEMS_PER_PAGE
+            }
+        });
+    }));
+
 // Add new route for unisex products
 router.route('/unisex')
     .get(asyncWrap(async (req, res) => {

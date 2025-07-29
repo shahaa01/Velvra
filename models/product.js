@@ -156,14 +156,19 @@ productSchema.pre('save', function (next) {
     this.salePercentage = 0;
   }
 
-  // Set category to second element of categoryPath if provided (only if not already set)
-  if (!this.category && Array.isArray(this.categoryPath) && this.categoryPath.length > 1) {
-    this.category = this.categoryPath[1];
+  // Filter out 'Fashion' from categoryPath and update it
+  if (Array.isArray(this.categoryPath) && this.categoryPath.length > 0) {
+    this.categoryPath = this.categoryPath.filter(tag => tag !== 'Fashion');
+  }
+
+  // Set category to first element of categoryPath if provided (only if not already set)
+  if (!this.category && Array.isArray(this.categoryPath) && this.categoryPath.length > 0) {
+    this.category = this.categoryPath[0];
   }
   
-  // Set tags to categoryPath excluding 'Fashion' (only if not already set)
+  // Set tags to copy of categoryPath (only if not already set)
   if ((!this.tags || this.tags.length === 0) && Array.isArray(this.categoryPath) && this.categoryPath.length > 0) {
-    this.tags = this.categoryPath.filter(tag => tag !== 'Fashion');
+    this.tags = [...this.categoryPath];
   }
 
   // Auto-update updatedAt timestamp
