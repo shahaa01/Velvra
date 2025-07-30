@@ -99,7 +99,9 @@ class CartManager {
 async function addToCart(productData) {
     try {
         // Optimistic update
-        window.cartManager.incrementCartCount();
+        if (window.cartManager && typeof window.cartManager.incrementCartCount === 'function') {
+            window.cartManager.incrementCartCount();
+        }
 
         const response = await fetch('/cart/toggle', {
             method: 'POST',
@@ -116,12 +118,16 @@ async function addToCart(productData) {
         const data = await response.json();
         
         // Update with actual server response
-        window.cartManager.handleCartUpdate(data);
+        if (window.cartManager && typeof window.cartManager.handleCartUpdate === 'function') {
+            window.cartManager.handleCartUpdate(data);
+        }
         
         return data;
     } catch (error) {
         // Revert optimistic update on error
-        window.cartManager.decrementCartCount();
+        if (window.cartManager && typeof window.cartManager.decrementCartCount === 'function') {
+            window.cartManager.decrementCartCount();
+        }
         throw error;
     }
 }
@@ -130,7 +136,9 @@ async function addToCart(productData) {
 async function removeFromCart(productData) {
     try {
         // Optimistic update
-        window.cartManager.decrementCartCount();
+        if (window.cartManager && typeof window.cartManager.decrementCartCount === 'function') {
+            window.cartManager.decrementCartCount();
+        }
 
         const response = await fetch('/cart/toggle', {
             method: 'POST',
@@ -147,12 +155,16 @@ async function removeFromCart(productData) {
         const data = await response.json();
         
         // Update with actual server response
-        window.cartManager.handleCartUpdate(data);
+        if (window.cartManager && typeof window.cartManager.handleCartUpdate === 'function') {
+            window.cartManager.handleCartUpdate(data);
+        }
         
         return data;
     } catch (error) {
         // Revert optimistic update on error
-        window.cartManager.incrementCartCount();
+        if (window.cartManager && typeof window.cartManager.incrementCartCount === 'function') {
+            window.cartManager.incrementCartCount();
+        }
         throw error;
     }
 }
@@ -163,7 +175,11 @@ async function refreshCartCount() {
         const response = await fetch('/cart/count');
         if (response.ok) {
             const data = await response.json();
-            window.cartManager.updateCartCount(data.count);
+            if (window.cartManager && typeof window.cartManager.updateCartCount === 'function') {
+                window.cartManager.updateCartCount(data.count);
+            } else {
+                console.warn('Cart manager not initialized yet, skipping cart count update');
+            }
         }
     } catch (error) {
         console.error('Failed to refresh cart count:', error);
@@ -179,11 +195,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create global cart manager instance
     window.cartManager = new CartManager();
     
-    // Refresh cart count on page load
-    refreshCartCount();
+    // Refresh cart count on page load after a short delay to ensure initialization
+    setTimeout(() => {
+        refreshCartCount();
+    }, 100);
 });
+
+// Safe function to get cart manager instance
+function getCartManager() {
+    if (window.cartManager && typeof window.cartManager === 'object') {
+        return window.cartManager;
+    }
+    console.warn('Cart manager not initialized yet');
+    return null;
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CartManager, addToCart, removeFromCart, refreshCartCount };
+    module.exports = { CartManager, addToCart, removeFromCart, refreshCartCount, getCartManager };
 } 

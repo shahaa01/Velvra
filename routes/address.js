@@ -19,6 +19,11 @@ router.post('/add', isLoggedIn, asyncWrap(async (req, res) => {
     throw new AppError('User not found', 404);
   }
 
+  // Check address limit (maximum 3 addresses)
+  if (user.addresses && user.addresses.length >= 3) {
+    throw new AppError('You can only have a maximum of 3 addresses. Please delete an existing address before adding a new one.', 400);
+  }
+
   // Check for duplicate address
   const isDuplicate = user.addresses.some(addr => 
     addr.street === value.street &&
@@ -48,6 +53,12 @@ router.get('/', isLoggedIn, asyncWrap(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) {
     throw new AppError('User not found', 404);
+  }
+
+  // Ensure addresses array exists
+  if (!user.addresses) {
+    user.addresses = [];
+    await user.save();
   }
 
   res.json({ addresses: user.addresses });
@@ -126,6 +137,41 @@ router.put('/:addressId/default', isLoggedIn, asyncWrap(async (req, res) => {
 
   res.json({
     message: 'Default address updated successfully',
+    addresses: user.addresses
+  });
+}));
+
+// Delete address
+router.delete('/:addressId', isLoggedIn, asyncWrap(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  const address = user.addresses.id(req.params.addressId);
+  if (!address) {
+    throw new AppError('Address not found', 404);
+  }
+
+  // Don't allow deletion if it's the only address
+  if (user.addresses.length === 1) {
+    throw new AppError('You must have at least one address. Please add another address before deleting this one.', 400);
+  }
+
+  // If deleting the default address, set the first remaining address as default
+  if (address.defaultShipping) {
+    const remainingAddresses = user.addresses.filter(addr => addr._id.toString() !== req.params.addressId);
+    if (remainingAddresses.length > 0) {
+      remainingAddresses[0].defaultShipping = true;
+    }
+  }
+
+  // Remove the address
+  user.addresses.pull(req.params.addressId);
+  await user.save();
+
+  res.json({
+    message: 'Address deleted successfully',
     addresses: user.addresses
   });
 }));

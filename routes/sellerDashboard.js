@@ -494,13 +494,48 @@ router.get('/inventory', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     }
 
     const products = await Product.find({ seller: seller._id })
-        .sort({ stock: 1, name: 1 });
+        .sort({ createdAt: -1 });
+
+    // Calculate inventory statistics based on variants
+    let inStock = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+    let totalValue = 0;
+
+    const productsWithStats = products.map(product => {
+        // Calculate total stock from variants
+        const totalStock = product.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
+        
+        // Determine status based on total stock
+        let status = 'in-stock';
+        if (totalStock === 0) {
+            status = 'out-of-stock';
+            outOfStock++;
+        } else if (totalStock <= 5) {
+            status = 'low-stock';
+            lowStock++;
+        } else {
+            inStock++;
+        }
+
+        // Calculate total value
+        const productValue = totalStock * (product.variants[0]?.price || 0);
+        totalValue += productValue;
+
+        return {
+            ...product.toObject(),
+            totalStock,
+            status,
+            productValue
+        };
+    });
 
     const stats = {
         totalProducts: products.length,
-        inStock: products.filter(p => p.inStock && p.stock > 0).length,
-        lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
-        outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
+        inStock,
+        lowStock,
+        outOfStock,
+        totalValue: Math.round(totalValue)
     };
 
     // Fetch the full user document for sidebar toggle logic
@@ -509,7 +544,7 @@ router.get('/inventory', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
         title: 'Inventory - Velvra',
         user,
         seller,
-        products,
+        products: productsWithStats,
         stats,
         currentPage: 'inventory'
     });
@@ -523,7 +558,7 @@ router.get('/promotions', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     }
 
     // Get products for promotion creation
-    const products = await Product.find({ seller: seller._id, inStock: true, stock: { $gt: 0 } });
+    const products = await Product.find({ seller: seller._id }).select('name brand images category');
 
     // Fetch the full user document for sidebar toggle logic
     const user = await User.findById(req.user._id);
@@ -543,60 +578,30 @@ router.get('/performance', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
         return res.redirect('/seller');
     }
 
-        // Get orders for analytics
-        const orders = await Order.find({ 'items.seller': seller._id })
-            .populate('items.product')
-            .populate('user')
-            .sort({ createdAt: -1 });
-
-        // Calculate performance metrics
-        let totalRevenue = 0;
-        let totalOrders = orders.length;
-        let completedOrders = 0;
-        let productPerformance = {};
-
-        orders.forEach(order => {
-            let sellerItems = order.items.filter(item => String(item.seller) === String(seller._id));
-            let orderTotalForSeller = sellerItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-            
-            if (order.orderStatus === 'delivered' || order.orderStatus === 'completed') {
-                totalRevenue += orderTotalForSeller;
-                completedOrders++;
-            }
-            
-            sellerItems.forEach(item => {
-                if (!productPerformance[item.product]) {
-                    productPerformance[item.product] = {
-                        name: item.product?.name || 'Unknown Product',
-                        sales: 0,
-                        revenue: 0
-                    };
-                }
-                productPerformance[item.product].sales += item.quantity;
-                productPerformance[item.product].revenue += item.totalPrice;
-            });
-        });
-
-        const stats = {
-            totalRevenue,
-            totalOrders,
-            completedOrders,
-            completionRate: totalOrders > 0 ? (completedOrders / totalOrders * 100).toFixed(1) : 0,
-            averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0
-        };
-
-        // Fetch the full user document for sidebar toggle logic
-        const user = await User.findById(req.user._id);
-        res.render('page/SellerDashboard/sellerPerformance', {
-            title: 'Performance - Velvra',
-            user,
-            seller,
-            orders,
-            stats,
-            productPerformance: Object.values(productPerformance),
-            currentPage: 'performance'
-        });
+    // Fetch the full user document for sidebar toggle logic
+    const user = await User.findById(req.user._id);
+    res.render('page/SellerDashboard/sellerPerformance', {
+        title: 'Performance - Velvra',
+        user,
+        seller,
+        currentPage: 'performance'
+    });
 }));
+
+// Analytics API endpoints
+const analyticsController = require('../controllers/analyticsController');
+
+// Track user interaction
+router.post('/analytics/track', analyticsController.trackInteraction);
+
+// Get seller analytics data
+router.get('/analytics/data', isLoggedIn, isSeller, analyticsController.getSellerAnalytics);
+
+// Test endpoint for development (remove in production)
+router.get('/analytics/test-data', analyticsController.getTestAnalytics);
+
+// Export analytics data
+router.get('/analytics/export', isLoggedIn, isSeller, analyticsController.exportAnalytics);
 
 // Messages (Inbox)
 router.get('/messages', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
@@ -1166,6 +1171,122 @@ router.get('/profile', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     const seller = await Seller.findOne({ user: req.user._id });
     if (!seller) throw new AppError('Seller not found', 403);
     res.json({ success: true, sellerId: seller._id.toString() });
+}));
+
+// API Routes for Inventory Management
+
+// Get product details for stock update modal
+router.get('/api/inventory/product/:productId', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    
+    const product = await Product.findOne({ 
+        _id: req.params.productId, 
+        seller: seller._id 
+    });
+    
+    if (!product) throw new AppError('Product not found', 404);
+    
+    res.json({ success: true, product });
+}));
+
+// Update product stock
+router.put('/api/inventory/product/:productId/stock', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    
+    const { variants, lowStockThreshold } = req.body;
+    
+    const product = await Product.findOne({ 
+        _id: req.params.productId, 
+        seller: seller._id 
+    });
+    
+    if (!product) throw new AppError('Product not found', 404);
+    
+    // Update variants with new stock values
+    if (variants && Array.isArray(variants)) {
+        product.variants = variants;
+    }
+    
+    // Update low stock threshold if provided
+    if (lowStockThreshold !== undefined) {
+        product.lowStockThreshold = lowStockThreshold;
+    }
+    
+    await product.save();
+    
+    // Calculate updated stats
+    const totalStock = product.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
+    let status = 'in-stock';
+    if (totalStock === 0) {
+        status = 'out-of-stock';
+    } else if (totalStock <= 5) {
+        status = 'low-stock';
+    }
+    
+    res.json({ 
+        success: true, 
+        message: 'Stock updated successfully',
+        product: {
+            ...product.toObject(),
+            totalStock,
+            status
+        }
+    });
+}));
+
+// Get filtered inventory data
+router.get('/api/inventory/filter', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) throw new AppError('Seller not found', 403);
+    
+    const { search, category, stockStatus } = req.query;
+    
+    let query = { seller: seller._id };
+    
+    // Apply search filter
+    if (search) {
+        query.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { brand: { $regex: search, $options: 'i' } }
+        ];
+    }
+    
+    // Apply category filter
+    if (category && category !== '') {
+        query.category = category;
+    }
+    
+    const products = await Product.find(query).sort({ createdAt: -1 });
+    
+    // Apply stock status filter and calculate stats
+    const productsWithStats = products.map(product => {
+        const totalStock = product.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
+        let status = 'in-stock';
+        if (totalStock === 0) {
+            status = 'out-of-stock';
+        } else if (totalStock <= 5) {
+            status = 'low-stock';
+        }
+        
+        // Calculate product value
+        const productValue = totalStock * (product.variants[0]?.price || 0);
+        
+        return {
+            ...product.toObject(),
+            totalStock,
+            status,
+            productValue
+        };
+    }).filter(product => {
+        if (stockStatus && stockStatus !== '') {
+            return product.status === stockStatus;
+        }
+        return true;
+    });
+    
+    res.json({ success: true, products: productsWithStats });
 }));
 
 router.get('/add_product', isLoggedIn, isSeller, sellerController.renderAddProduct);

@@ -16,6 +16,29 @@ router.route('/paymentSummary')
             throw new AppError('Cart not found', 404);
         }
 
+        // Calculate cart total properly
+        let cartTotal = 0;
+        if (cart.items && cart.items.length > 0) {
+            cartTotal = cart.items.reduce((total, item) => {
+                if (item.product && item.product.variants) {
+                    const variant = item.product.variants.find(v => 
+                        v.color === item.color && v.size === item.size
+                    );
+                    if (variant) {
+                        const itemPrice = variant.salePrice || variant.price;
+                        const itemTotal = itemPrice * item.quantity;
+                        console.log(`Item: ${item.product.name}, Price: ${itemPrice}, Qty: ${item.quantity}, Total: ${itemTotal}`);
+                        return total + itemTotal;
+                    }
+                }
+                return total;
+            }, 0);
+        }
+
+        // Update cart total
+        cart.total = cartTotal;
+        console.log('Calculated cart total:', cartTotal);
+
         console.log('Rendering paymentSummary with hideFooter:', true);
         res.render('page/paymentSummary', {
             cart,

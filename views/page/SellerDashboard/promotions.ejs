@@ -1,6 +1,6 @@
 <% layout('layouts/sellerDashboardBoilerplate.ejs') %>
 <% block('css').append(`
-    <link rel="stylesheet" href="/css/sellerDashboardStyles/dashboardPromotions.css">
+    <link rel="stylesheet" href="/css/sellerDashboardStyles/sellerPromotions.css">
 `); %>
     <!-- Mobile Menu Overlay -->
     <div id="mobileMenuOverlay" class="fixed inset-0 bg-charcoal bg-opacity-50 z-40 lg:hidden hidden"></div>
@@ -37,41 +37,41 @@
         <main class="p-4 sm:p-6">
             <!-- Stats Overview -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="stats-card bg-cream rounded-lg p-4 border border-beige">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-700">Active Coupons</p>
-                            <p class="text-xl font-bold text-charcoal">8</p>
-                            <p class="text-xs text-green-600 mt-1">↑ 2 this week</p>
+                            <p class="text-xl font-bold text-charcoal">0</p>
+                            <p class="text-xs text-green-600 mt-1">↑ 0 this week</p>
                         </div>
                         <i class="fas fa-ticket-alt text-gold"></i>
                     </div>
                 </div>
-                <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="stats-card bg-cream rounded-lg p-4 border border-beige">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-700">Total Uses</p>
-                            <p class="text-xl font-bold text-charcoal">1,234</p>
+                            <p class="text-xl font-bold text-charcoal">0</p>
                             <p class="text-xs text-gray-700 mt-1">This month</p>
                         </div>
                         <i class="fas fa-users text-gold"></i>
                     </div>
                 </div>
-                <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="stats-card bg-cream rounded-lg p-4 border border-beige">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-700">Revenue Impact</p>
-                            <p class="text-xl font-bold text-charcoal">$8.5k</p>
+                            <p class="text-xl font-bold text-charcoal">Rs. 0k</p>
                             <p class="text-xs text-green-600 mt-1">↑ 15%</p>
                         </div>
                         <i class="fas fa-chart-line text-gold"></i>
                     </div>
                 </div>
-                <div class="bg-cream rounded-lg p-4 border border-beige">
+                <div class="stats-card bg-cream rounded-lg p-4 border border-beige">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-700">Avg. Discount</p>
-                            <p class="text-xl font-bold text-charcoal">18%</p>
+                            <p class="text-xl font-bold text-charcoal">0%</p>
                             <p class="text-xs text-gray-700 mt-1">Per order</p>
                         </div>
                         <i class="fas fa-percentage text-gold"></i>
@@ -171,7 +171,7 @@
                             <label class="cursor-pointer">
                                 <input type="radio" name="type" value="fixed" class="sr-only peer">
                                 <div class="p-3 border border-beige rounded-lg text-center peer-checked:border-gold peer-checked:bg-gold/10">
-                                    <i class="fas fa-dollar-sign text-gold mb-1"></i>
+                                    <i class="fas fa-rupee-sign text-gold mb-1"></i>
                                     <p class="text-sm">Fixed</p>
                                 </div>
                             </label>
@@ -261,5 +261,6 @@
 
 
 <% block('script').append(`
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/sellerDashboardJS/dashboardPromotion.js"></script>
 `); %>

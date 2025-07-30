@@ -159,6 +159,19 @@ function getStockForColorSize(product, colorName, sizeName) {
                 </svg>
             </button>
         </div>
+
+        <!-- Mobile Applied Promo Code (Hidden by default) -->
+        <div class="bg-green-50 rounded-2xl p-4 border border-green-200 mb-4 hidden" id="mobileAppliedPromo">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-green-800">Promo Code Applied</p>
+                    <p class="text-xs text-green-600" id="mobilePromoCode">SAVE20</p>
+                </div>
+                <button id="mobileRemovePromoBtn" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Desktop Cart Layout -->
@@ -310,7 +323,12 @@ function getStockForColorSize(product, colorName, sizeName) {
                             </div>
                             <div class="flex justify-between items-center hidden" id="discountRow">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="font-medium text-green-600" id="discount">-₹0</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-green-600" id="discount">-₹0</span>
+                                    <button id="removePromoBtn" class="text-red-500 hover:text-red-700 text-sm hidden">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                             <hr class="border-gray-200">
                             <div class="flex justify-between items-center text-lg">
