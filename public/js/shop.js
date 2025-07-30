@@ -1,3 +1,78 @@
+// Color mapping utility for better color matching
+const COLOR_MAPPING = {
+    'Blue': ['#0000FF', '#0066CC', '#0033FF', '#1E90FF', '#4169E1'],
+    'Pink': ['#FFC0CB', '#FF69B4', '#FF1493', '#FFB6C1', '#FFC0CB'],
+    'Green': ['#008000', '#00FF00', '#32CD32', '#228B22', '#006400'],
+    'Black': ['#000000', '#000000'],
+    'Multi': ['#FF0000', '#00FF00', '#0000FF', '#FFFF00'], // Multi-color products
+    'White': ['#FFFFFF', '#F5F5F5', '#FAFAFA', '#F0F0F0'],
+    'Yellow': ['#FFFF00', '#FFD700', '#FFA500', '#FF8C00'],
+    'Red': ['#FF0000', '#DC143C', '#B22222', '#8B0000'],
+    'Purple': ['#800080', '#9932CC', '#8A2BE2', '#9370DB'],
+    'Maroon': ['#800000', '#B22222', '#8B0000'],
+    'Navy Blue': ['#000080', '#191970', '#00008B'],
+    'Grey': ['#808080', '#696969', '#A9A9A9', '#C0C0C0'],
+    'Mustard': ['#FFD700', '#DAA520', '#B8860B'],
+    'Peach': ['#FFCBA4', '#FFDAB9', '#FFE4B5'],
+    'Beige': ['#F5F5DC', '#F5DEB3', '#DEB887'],
+    'Off White': ['#FAF0E6', '#FDF5E6', '#F5F5F5'],
+    'Orange': ['#FFA500', '#FF8C00', '#FF7F50'],
+    'Teal': ['#008080', '#20B2AA', '#48D1CC'],
+    'Brown': ['#A52A2A', '#8B4513', '#654321'],
+    'Cream': ['#FFFDD0', '#FFFACD', '#F0E68C'],
+    'Turquoise Blue': ['#40E0D0', '#48D1CC', '#00CED1'],
+    'Lavender': ['#E6E6FA', '#D8BFD8', '#DDA0DD'],
+    'Sea Green': ['#2E8B57', '#3CB371', '#20B2AA'],
+    'Olive': ['#808000', '#6B8E23', '#556B2F'],
+    'Burgundy': ['#800020', '#8B0000', '#A52A2A'],
+    'Rust': ['#B7410E', '#CD853F', '#D2691E'],
+    'Magenta': ['#FF00FF', '#FF1493', '#C71585'],
+    'Mauve': ['#E0B0FF', '#DDA0DD', '#D8BFD8'],
+    'Lime Green': ['#32CD32', '#00FF00', '#90EE90'],
+    'Coral': ['#FF7F50', '#FA8072', '#F08080'],
+    'Violet': ['#8A2BE2', '#9370DB', '#8B008B'],
+    'Coffee Brown': ['#6F4E37', '#8B4513', '#654321'],
+    'Charcoal': ['#36454F', '#2F4F4F', '#696969'],
+    'Gold': ['#FFD700', '#DAA520', '#B8860B'],
+    'Rose': ['#FFE4E1', '#FFB6C1', '#FFC0CB'],
+    'Taupe': ['#483C32', '#8B7355', '#A0522D'],
+    'Khaki': ['#C3B091', '#F4A460', '#DEB887'],
+    'Camel Brown': ['#C19A6B', '#D2B48C', '#DEB887'],
+    'Fluorescent Green': ['#39FF14', '#00FF00', '#32CD32'],
+    'Grey Melange': ['#9CA3AF', '#A9A9A9', '#C0C0C0'],
+    'Bronze': ['#CD7F32', '#D2691E', '#B8860B'],
+    'Tan': ['#D2B48C', '#DEB887', '#F4A460'],
+    'Nude': ['#E3BC9A', '#DEB887', '#F5DEB3'],
+    'Rose Gold': ['#B76E79', '#E8B4B8', '#F4C2C2'],
+    'Silver': ['#C0C0C0', '#A9A9A9', '#D3D3D3'],
+    'Copper': ['#B87333', '#CD853F', '#D2691E'],
+    'Champagne': ['#F7E7CE', '#F5DEB3', '#F0E68C'],
+    'Assorted': ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
+    'Steel': ['#4682B4', '#5F9EA0', '#708090'],
+    'Metallic': ['#C0C0C0', '#FFD700', '#B87333'],
+    'Transparent': ['transparent', 'rgba(0,0,0,0)', '#FFFFFF']
+};
+
+// Color similarity utility function
+function getSimilarColors(colorName) {
+    const similarColors = {
+        'Blue': ['Navy Blue', 'Turquoise Blue', 'Steel'],
+        'Red': ['Maroon', 'Burgundy', 'Rust', 'Coral'],
+        'Green': ['Sea Green', 'Olive', 'Lime Green', 'Fluorescent Green'],
+        'Brown': ['Coffee Brown', 'Camel Brown', 'Tan', 'Taupe'],
+        'Grey': ['Charcoal', 'Grey Melange', 'Silver'],
+        'Pink': ['Rose', 'Rose Gold', 'Mauve'],
+        'Yellow': ['Gold', 'Mustard', 'Champagne'],
+        'Purple': ['Violet', 'Lavender', 'Magenta'],
+        'Orange': ['Rust', 'Coral', 'Peach'],
+        'White': ['Off White', 'Cream', 'Nude'],
+        'Black': ['Charcoal', 'Coffee Brown'],
+        'Beige': ['Cream', 'Nude', 'Champagne', 'Off White']
+    };
+    
+    return similarColors[colorName] || [];
+}
+
 // State Management
 class VelvraState {
     constructor() {
@@ -895,12 +970,58 @@ document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
     });
 });
 
-// Color swatches
+// Color swatches - improved to handle both name and hex matching with color mapping
 document.querySelectorAll('.color-swatch').forEach(swatch => {
     swatch.addEventListener('click', (e) => {
         const color = e.currentTarget.dataset.color;
+        const backgroundColor = e.currentTarget.style.backgroundColor;
+        
+        // Extract hex code from background color if available
+        let hexCode = '';
+        if (backgroundColor) {
+            // Convert rgb(r, g, b) to hex if needed
+            if (backgroundColor.startsWith('rgb')) {
+                const rgb = backgroundColor.match(/\d+/g);
+                if (rgb && rgb.length >= 3) {
+                    hexCode = '#' + rgb.map(x => {
+                        const hex = parseInt(x).toString(16);
+                        return hex.length === 1 ? '0' + hex : hex;
+                    }).join('');
+                }
+            } else if (backgroundColor.startsWith('#')) {
+                hexCode = backgroundColor;
+            }
+        }
+        
         swatch.classList.toggle('selected');
-        state.updateFilter('colors', color);
+        
+        // Get all possible hex codes for this color from our mapping
+        const colorHexCodes = COLOR_MAPPING[color] || [];
+        
+        // Get similar colors for better matching
+        const similarColors = getSimilarColors(color);
+        
+        // Create a comprehensive filter value with color name, hex codes, and similar colors
+        let filterValue = color;
+        const allHexCodes = hexCode ? [hexCode, ...colorHexCodes] : colorHexCodes;
+        
+        if (allHexCodes.length > 0 || similarColors.length > 0) {
+            const filterParts = [color];
+            
+            // Add hex codes
+            if (allHexCodes.length > 0) {
+                filterParts.push(allHexCodes.join(','));
+            }
+            
+            // Add similar colors
+            if (similarColors.length > 0) {
+                filterParts.push(similarColors.join(','));
+            }
+            
+            filterValue = filterParts.join('|');
+        }
+        
+        state.updateFilter('colors', filterValue);
     });
 });
 

@@ -215,9 +215,41 @@ const buildFilterQuery = (filters, searchQuery) => {
         andConditions.push({ tags: { $in: filters.categories } });
     }
     
-    // Color filter
+    // Color filter - improved to search by both name and hex code
     if (filters.colors && filters.colors.length > 0) {
-        andConditions.push({ 'colors.name': { $in: filters.colors } });
+        // Create an array of color conditions for each filter color
+        const colorConditions = filters.colors.map(filterColor => {
+            // Handle combined format: "ColorName|#HexCode1,#HexCode2,...|SimilarColor1,SimilarColor2,..." or just "ColorName"
+            const parts = filterColor.split('|');
+            const colorName = parts[0];
+            const hexCodes = parts[1] ? parts[1].split(',') : [];
+            const similarColors = parts[2] ? parts[2].split(',') : [];
+            
+            const conditions = [
+                { 'colors.name': { $regex: new RegExp(colorName, 'i') } } // Case-insensitive name match
+            ];
+            
+            // Add hex code conditions if available
+            if (hexCodes.length > 0) {
+                const hexConditions = hexCodes.map(hexCode => ({
+                    'colors.hex': { $regex: new RegExp(hexCode.trim(), 'i') }
+                }));
+                conditions.push(...hexConditions);
+            }
+            
+            // Add similar color name conditions if available
+            if (similarColors.length > 0) {
+                const similarColorConditions = similarColors.map(similarColor => ({
+                    'colors.name': { $regex: new RegExp(similarColor.trim(), 'i') }
+                }));
+                conditions.push(...similarColorConditions);
+            }
+            
+            return { $or: conditions };
+        });
+        
+        // Add all color conditions with $or
+        andConditions.push({ $or: colorConditions });
     }
     
     // Brand filter
@@ -236,16 +268,17 @@ const buildFilterQuery = (filters, searchQuery) => {
         });
     }
     
-    // Discount filter - updated for variant structure
+    // Discount filter - updated for variant structure to check maximum salePercentage
     if (filters.discounts && filters.discounts.length > 0) {
         const discountConditions = filters.discounts.map(discount => {
             const discountValue = parseInt(discount);
             if (!isNaN(discountValue)) {
                 return {
-                    variants: {
-                        $elemMatch: {
-                            salePercentage: { $gte: discountValue }
-                        }
+                    $expr: {
+                        $gte: [
+                            { $max: "$variants.salePercentage" },
+                            discountValue
+                        ]
                     }
                 };
             }
@@ -460,12 +493,36 @@ router.get('/api/products/sale', asyncWrap(async (req, res) => {
         if (req.query.discounts) {
             const discounts = req.query.discounts.split(',').map(Number).filter(n => !isNaN(n));
             if (discounts.length > 0) {
-                query.variants = {
-                    $elemMatch: {
-                        ...query.variants.$elemMatch,
-                        salePercentage: { $gte: Math.min(...discounts) }
+                // Use aggregation to check maximum salePercentage across all variants
+                const pipeline = [
+                    { $match: query },
+                    { $addFields: {
+                        maxSalePercentage: { $max: "$variants.salePercentage" }
+                    }},
+                    { $match: {
+                        maxSalePercentage: { $gte: Math.min(...discounts) }
+                    }},
+                    { $skip: skip },
+                    { $limit: ITEMS_PER_PAGE }
+                ];
+                const products = await Product.aggregate(pipeline);
+                const totalProducts = await Product.countDocuments(query);
+                const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+                const hasMore = page < totalPages;
+                const startItem = totalProducts > 0 ? skip + 1 : 0;
+                const endItem = Math.min(skip + ITEMS_PER_PAGE, totalProducts);
+                return res.json({
+                    products,
+                    pagination: {
+                        currentPage: page,
+                        totalPages,
+                        totalProducts,
+                        hasMore,
+                        startItem,
+                        endItem,
+                        itemsPerPage: ITEMS_PER_PAGE
                     }
-                };
+                });
             }
         }
         if (req.query.sizes) query.variants = {

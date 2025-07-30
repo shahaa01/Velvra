@@ -255,51 +255,411 @@
                     </svg>
                 </button>
                 <div class="filter-panel active">
-                    <div class="color-grid">
-                        <button class="color-swatch" style="background-color: #000000" data-color="Black">
+                    <div class="color-grid" style="grid-template-columns: repeat(5, 1fr); gap: 3px; justify-items: center; align-items: center; display: grid;">
+                        <button class="color-swatch" style="background-color: #0000FF; width: 34px; height: 34px;" data-color="Blue">
+                            <div class="color-tooltip">Blue</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFC0CB; width: 34px; height: 34px;" data-color="Pink">
+                            <div class="color-tooltip">Pink</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #008000; width: 34px; height: 34px;" data-color="Green">
+                            <div class="color-tooltip">Green</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #000000; width: 34px; height: 34px;" data-color="Black">
                             <div class="color-tooltip">Black</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="white" stroke="white" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </button>
-                        <button class="color-swatch" style="background-color: #FFFFFF" data-color="White">
+                        <button class="color-swatch" style="background: linear-gradient(45deg, #FF0000, #00FF00, #0000FF, #FFFF00); width: 34px; height: 34px;" data-color="Multi">
+                            <div class="color-tooltip">Multi</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFFFFF; width: 34px; height: 34px;" data-color="White">
                             <div class="color-tooltip">White</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </button>
-                        <button class="color-swatch" style="background-color: #6B7280" data-color="Gray">
-                            <div class="color-tooltip">Gray</div>
+                        <button class="color-swatch" style="background-color: #FFFF00; width: 34px; height: 34px;" data-color="Yellow">
+                            <div class="color-tooltip">Yellow</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="white" stroke="white" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </button>
-                        <button class="color-swatch" style="background-color: #1E3A8A" data-color="Navy">
-                            <div class="color-tooltip">Navy</div>
+                        <button class="color-swatch" style="background-color: #FF0000; width: 34px; height: 34px;" data-color="Red">
+                            <div class="color-tooltip">Red</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="white" stroke="white" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </button>
-                        <button class="color-swatch" style="background-color: #92400E" data-color="Brown">
-                            <div class="color-tooltip">Brown</div>
+                        <button class="color-swatch" style="background-color: #800080; width: 34px; height: 34px;" data-color="Purple">
+                            <div class="color-tooltip">Purple</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="white" stroke="white" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </button>
-                        <button class="color-swatch" style="background-color: #D4A574" data-color="Beige">
+                        <button class="color-swatch" style="background-color: #800000; width: 34px; height: 34px;" data-color="Maroon">
+                            <div class="color-tooltip">Maroon</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #000080; width: 34px; height: 34px;" data-color="Navy Blue">
+                            <div class="color-tooltip">Navy Blue</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #808080; width: 34px; height: 34px;" data-color="Grey">
+                            <div class="color-tooltip">Grey</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFD700; width: 34px; height: 34px;" data-color="Mustard">
+                            <div class="color-tooltip">Mustard</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFCBA4; width: 34px; height: 34px;" data-color="Peach">
+                            <div class="color-tooltip">Peach</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #F5F5DC; width: 34px; height: 34px;" data-color="Beige">
                             <div class="color-tooltip">Beige</div>
                             <div class="color-checkmark">
-                                <svg width="12" height="12" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FAF0E6; width: 34px; height: 34px;" data-color="Off White">
+                            <div class="color-tooltip">Off White</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFA500; width: 34px; height: 34px;" data-color="Orange">
+                            <div class="color-tooltip">Orange</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #008080; width: 34px; height: 34px;" data-color="Teal">
+                            <div class="color-tooltip">Teal</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #A52A2A; width: 34px; height: 34px;" data-color="Brown">
+                            <div class="color-tooltip">Brown</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFFDD0; width: 34px; height: 34px;" data-color="Cream">
+                            <div class="color-tooltip">Cream</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #40E0D0; width: 34px; height: 34px;" data-color="Turquoise Blue">
+                            <div class="color-tooltip">Turquoise Blue</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #E6E6FA; width: 34px; height: 34px;" data-color="Lavender">
+                            <div class="color-tooltip">Lavender</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #2E8B57; width: 34px; height: 34px;" data-color="Sea Green">
+                            <div class="color-tooltip">Sea Green</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #808000; width: 34px; height: 34px;" data-color="Olive">
+                            <div class="color-tooltip">Olive</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #800020; width: 34px; height: 34px;" data-color="Burgundy">
+                            <div class="color-tooltip">Burgundy</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #B7410E; width: 34px; height: 34px;" data-color="Rust">
+                            <div class="color-tooltip">Rust</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FF00FF; width: 34px; height: 34px;" data-color="Magenta">
+                            <div class="color-tooltip">Magenta</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #E0B0FF; width: 34px; height: 34px;" data-color="Mauve">
+                            <div class="color-tooltip">Mauve</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #32CD32; width: 34px; height: 34px;" data-color="Lime Green">
+                            <div class="color-tooltip">Lime Green</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FF7F50; width: 34px; height: 34px;" data-color="Coral">
+                            <div class="color-tooltip">Coral</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="MM5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #8A2BE2; width: 34px; height: 34px;" data-color="Violet">
+                            <div class="color-tooltip">Violet</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #6F4E37; width: 34px; height: 34px;" data-color="Coffee Brown">
+                            <div class="color-tooltip">Coffee Brown</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #36454F; width: 34px; height: 34px;" data-color="Charcoal">
+                            <div class="color-tooltip">Charcoal</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFD700; width: 34px; height: 34px;" data-color="Gold">
+                            <div class="color-tooltip">Gold</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #FFE4E1; width: 34px; height: 34px;" data-color="Rose">
+                            <div class="color-tooltip">Rose</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #483C32; width: 34px; height: 34px;" data-color="Taupe">
+                            <div class="color-tooltip">Taupe</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #C3B091; width: 34px; height: 34px;" data-color="Khaki">
+                            <div class="color-tooltip">Khaki</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #C19A6B; width: 34px; height: 34px;" data-color="Camel Brown">
+                            <div class="color-tooltip">Camel Brown</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #39FF14; width: 34px; height: 34px;" data-color="Fluorescent Green">
+                            <div class="color-tooltip">Fluorescent Green</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #9CA3AF; width: 34px; height: 34px;" data-color="Grey Melange">
+                            <div class="color-tooltip">Grey Melange</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #CD7F32; width: 34px; height: 34px;" data-color="Bronze">
+                            <div class="color-tooltip">Bronze</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #D2B48C; width: 34px; height: 34px;" data-color="Tan">
+                            <div class="color-tooltip">Tan</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #E3BC9A; width: 34px; height: 34px;" data-color="Nude">
+                            <div class="color-tooltip">Nude</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #B76E79; width: 34px; height: 34px;" data-color="Rose Gold">
+                            <div class="color-tooltip">Rose Gold</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #C0C0C0; width: 34px; height: 34px;" data-color="Silver">
+                            <div class="color-tooltip">Silver</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #B87333; width: 34px; height: 34px;" data-color="Copper">
+                            <div class="color-tooltip">Copper</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #F7E7CE; width: 34px; height: 34px;" data-color="Champagne">
+                            <div class="color-tooltip">Champagne</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background: linear-gradient(45deg, #FF0000, #00FF00, #0000FF, #FFFF00, #FF00FF, #00FFFF); width: 34px; height: 34px;" data-color="Assorted">
+                            <div class="color-tooltip">Assorted</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: #4682B4; width: 34px; height: 34px;" data-color="Steel">
+                            <div class="color-tooltip">Steel</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background: linear-gradient(45deg, #C0C0C0, #FFD700); width: 34px; height: 34px;" data-color="Metallic">
+                            <div class="color-tooltip">Metallic</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="white" stroke="white" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <button class="color-swatch" style="background-color: transparent; border: 1px dashed #ccc; width: 34px; height: 34px;" data-color="Transparent">
+                            <div class="color-tooltip">Transparent</div>
+                            <div class="color-checkmark">
+                                <svg width="10" height="10" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
@@ -655,22 +1015,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Newsletter Section -->
-    <section class="newsletter-section">
-        <div class="container">
-            <h2 class="newsletter-title">Stay In Touch</h2>
-            <p class="newsletter-description">
-                Be the first to know about new collections, exclusive events, and members-only offers.
-            </p>
-            <form class="newsletter-form">
-                <input type="email" class="newsletter-input" placeholder="Enter your email">
-                <button type="submit" class="newsletter-submit">Subscribe</button>
-            </form>
-        </div>
-    </section>
-
-
 
 <!-- Filter Overlay -->
 <div class="filter-overlay" id="filterOverlay"></div>

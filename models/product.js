@@ -117,6 +117,18 @@ const productSchema = new mongoose.Schema({
 
   description: { type: String }, // HTML
 
+  // View count tracking
+  viewCount: {
+    type: Number,
+    default: 0
+  },
+
+  // Cart count tracking (number of users who have this product in their cart)
+  cartCount: {
+    type: Number,
+    default: 0
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   contentScore: { type: Number, default: 0, required: true }

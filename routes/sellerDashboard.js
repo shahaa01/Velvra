@@ -189,11 +189,36 @@ router.get('/products', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     const products = await Product.find({ seller: seller._id })
         .sort({ createdAt: -1 });
 
+    // Calculate cart counts for each product
+    const Cart = require('../models/cart');
+    const productsWithCartCounts = await Promise.all(products.map(async (product) => {
+        const cartCount = await Cart.countDocuments({
+            'items.product': product._id
+        });
+        
+        // Update the product's cart count in the database
+        await Product.findByIdAndUpdate(product._id, { cartCount });
+        
+        return {
+            ...product.toObject(),
+            cartCount
+        };
+    }));
+
     const stats = {
         totalProducts: products.length,
-        activeProducts: products.filter(p => p.inStock && p.stock > 0).length,
-        lowStock: products.filter(p => p.inStock && p.stock <= 3 && p.stock > 0).length,
-        outOfStock: products.filter(p => !p.inStock || p.stock === 0).length
+        activeProducts: products.filter(p => {
+            // Check if any variant has stock > 0
+            return p.variants && p.variants.some(v => v.stock > 0 && v.active);
+        }).length,
+        lowStock: products.filter(p => {
+            // Check if any variant has low stock (1-3)
+            return p.variants && p.variants.some(v => v.stock > 0 && v.stock <= 3 && v.active);
+        }).length,
+        outOfStock: products.filter(p => {
+            // Check if all variants are out of stock or inactive
+            return !p.variants || p.variants.every(v => v.stock === 0 || !v.active);
+        }).length
     };
 
     // Fetch the full user document for sidebar toggle logic
@@ -202,10 +227,184 @@ router.get('/products', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
         title: 'Products - Velvra',
         user,
         seller,
-        products,
+        products: productsWithCartCounts,
         stats,
         currentPage: 'products'
     });
+}));
+
+// API: Get products with search and filtering
+router.get('/api/products', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
+    }
+
+    const { search, category, status, sortBy } = req.query;
+    
+    // Build query
+    let query = { seller: seller._id };
+    
+    // Search functionality
+    if (search) {
+        query.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
+            { tags: { $in: [new RegExp(search, 'i')] } }
+        ];
+    }
+    
+    // Category filter
+    if (category) {
+        query.category = category;
+    }
+    
+    // Status filter (exclude draft)
+    if (status && status !== 'draft') {
+        if (status === 'active') {
+            query['variants'] = { $elemMatch: { stock: { $gt: 0 }, active: true } };
+        } else if (status === 'out-of-stock') {
+            query.$or = [
+                { variants: { $size: 0 } },
+                { variants: { $not: { $elemMatch: { stock: { $gt: 0 }, active: true } } } }
+            ];
+        }
+    }
+    
+    // Note: Sorting is now handled in JavaScript after fetching products
+    // to properly calculate total stock and handle complex sorting logic
+    
+    let products = await Product.find(query);
+    
+    // Calculate cart counts and total stock
+    const Cart = require('../models/cart');
+    const productsWithCartCounts = await Promise.all(products.map(async (product) => {
+        const cartCount = await Cart.countDocuments({
+            'items.product': product._id
+        });
+        
+        // Calculate total stock across all variants
+        const totalStock = product.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
+        
+        // Update cart count in database
+        await Product.findByIdAndUpdate(product._id, { cartCount });
+        
+        return {
+            ...product.toObject(),
+            cartCount,
+            totalStock
+        };
+    }));
+    
+    // Apply custom sorting for stock-low
+    if (sortBy === 'stock-low') {
+        productsWithCartCounts.sort((a, b) => a.totalStock - b.totalStock);
+    } else {
+        // For other sorts, apply the database sort
+        productsWithCartCounts.sort((a, b) => {
+            switch (sortBy) {
+                case 'newest':
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                case 'oldest':
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                case 'price-high':
+                    const maxPriceA = Math.max(...a.variants.map(v => v.price || 0));
+                    const maxPriceB = Math.max(...b.variants.map(v => v.price || 0));
+                    return maxPriceB - maxPriceA;
+                case 'price-low':
+                    const minPriceA = Math.min(...a.variants.map(v => v.price || 0));
+                    const minPriceB = Math.min(...b.variants.map(v => v.price || 0));
+                    return minPriceA - minPriceB;
+                default:
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+        });
+    }
+    
+    res.json({ success: true, products: productsWithCartCounts });
+}));
+
+// API: Get single product for editing
+router.get('/api/products/:id', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
+    }
+    
+    const product = await Product.findOne({ _id: req.params.id, seller: seller._id });
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+    
+    res.json({ success: true, product });
+}));
+
+// API: Update product
+router.put('/api/products/:id', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
+    }
+    
+    const product = await Product.findOne({ _id: req.params.id, seller: seller._id });
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+    
+    const { name, description, images, variants, highlights, moreDetails, variantSalePrices } = req.body;
+    
+    // Update product
+    const updateData = {
+        name,
+        description,
+        images,
+        variants,
+        highlights,
+        moreDetails
+    };
+    
+    // Update individual variant sale prices
+    if (variantSalePrices && typeof variantSalePrices === 'object') {
+        const product = await Product.findById(req.params.id);
+        if (product && product.variants && product.variants.length > 0) {
+            const updatedVariants = product.variants.map((variant, index) => ({
+                ...variant.toObject(),
+                salePrice: variantSalePrices[index] !== undefined ? variantSalePrices[index] : variant.salePrice
+            }));
+            updateData.variants = updatedVariants;
+        }
+    }
+    
+    const updatedProduct = await Product.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        { new: true, runValidators: true }
+    );
+    
+    res.json({ success: true, product: updatedProduct });
+}));
+
+// API: Delete product
+router.delete('/api/products/:id', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
+    const seller = await Seller.findOne({ user: req.user._id });
+    if (!seller) {
+        throw new AppError('Seller not found', 404);
+    }
+    
+    const product = await Product.findOne({ _id: req.params.id, seller: seller._id });
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+    
+    await Product.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: 'Product deleted successfully' });
+}));
+
+// API: Increment view count
+router.post('/api/products/:id/view', asyncWrap(async (req, res) => {
+    await Product.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
+    res.json({ success: true });
 }));
 
 // Orders Management
