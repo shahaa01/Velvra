@@ -14,222 +14,132 @@ mobileMenuOverlay.addEventListener('click', () => {
     mobileMenuOverlay.classList.add('hidden');
 });
 
-// Tab functionality
-const tabButtons = document.querySelectorAll('.tab-button');
-const tabContents = document.querySelectorAll('.tab-content');
+// Store Profile Form Handling
+const storeProfileForm = document.getElementById('storeProfileForm');
+const saveAllBtn = document.getElementById('saveAllBtn');
 
-tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const targetTab = button.dataset.tab;
-        
-        // Update active states
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active', 'text-charcoal');
-            btn.classList.add('text-gray-700');
-        });
-        button.classList.add('active', 'text-charcoal');
-        button.classList.remove('text-gray-700');
-        
-        // Show corresponding content
-        tabContents.forEach(content => {
-            content.classList.add('hidden');
-        });
-        document.getElementById(`${targetTab}Tab`).classList.remove('hidden');
-    });
-});
-
-// Toggle switches functionality
-document.querySelectorAll('.toggle-switch').forEach(toggle => {
-    toggle.addEventListener('click', () => {
-        toggle.classList.toggle('active');
-        
-        // Special handling for 2FA toggle
-        if (toggle.dataset.toggle === '2fa') {
-            const setup = document.getElementById('2faSetup');
-            if (toggle.classList.contains('active')) {
-                setup.classList.remove('hidden');
-                setup.classList.add('fade-in');
-                // Simulate QR code generation
-                generateQRCode();
-            } else {
-                setup.classList.add('hidden');
-            }
-        }
-        
-        // Enable/disable related inputs for shipping toggles
-        if (toggle.dataset.toggle === 'intl-shipping') {
-            const inputs = toggle.closest('.p-4').querySelectorAll('input, select');
-            inputs.forEach(input => {
-                if (toggle.classList.contains('active')) {
-                    input.disabled = false;
-                    input.classList.remove('opacity-50', 'cursor-not-allowed');
-                } else {
-                    input.disabled = true;
-                    input.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-            });
-        }
-    });
-});
-
-// Image upload functionality
-const logoDropZone = document.getElementById('logoDropZone');
-const logoInput = document.getElementById('logoInput');
-const logoPreview = document.getElementById('logoPreview');
-
-logoDropZone.addEventListener('click', () => logoInput.click());
-
-logoDropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    logoDropZone.classList.add('dragover');
-});
-
-logoDropZone.addEventListener('dragleave', () => {
-    logoDropZone.classList.remove('dragover');
-});
-
-logoDropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    logoDropZone.classList.remove('dragover');
-    handleImageUpload(e.dataTransfer.files[0]);
-});
-
-logoInput.addEventListener('change', (e) => {
-    handleImageUpload(e.target.files[0]);
-});
-
-function handleImageUpload(file) {
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            logoPreview.src = e.target.result;
-            showNotification('Logo uploaded successfully!');
-        };
-        reader.readAsDataURL(file);
-    } else {
-        showNotification('Please upload a valid image file', 'error');
-    }
-}
-
-// Password strength checker
-const newPasswordInput = document.getElementById('newPassword');
-const passwordStrength = document.getElementById('passwordStrength');
-const passwordStrengthBar = document.getElementById('passwordStrengthBar');
-
-newPasswordInput.addEventListener('input', () => {
-    const password = newPasswordInput.value;
-    let strength = 0;
-    let strengthText = '';
-    let strengthColor = '';
-
-    if (password.length >= 8) strength++;
-    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
-    if (password.match(/[0-9]/)) strength++;
-    if (password.match(/[^a-zA-Z0-9]/)) strength++;
-
-    switch (strength) {
-        case 0:
-        case 1:
-            strengthText = 'Weak';
-            strengthColor = 'bg-red-500';
-            break;
-        case 2:
-            strengthText = 'Fair';
-            strengthColor = 'bg-yellow-500';
-            break;
-        case 3:
-            strengthText = 'Good';
-            strengthColor = 'bg-blue-500';
-            break;
-        case 4:
-            strengthText = 'Strong';
-            strengthColor = 'bg-green-500';
-            break;
-    }
-
-    passwordStrength.textContent = strengthText;
-    passwordStrengthBar.style.width = `${strength * 25}%`;
-    passwordStrengthBar.className = `h-2 rounded-full transition-all duration-300 ${strengthColor}`;
-});
-
-// Form submissions
-document.getElementById('passwordForm').addEventListener('submit', (e) => {
+// Form submission
+storeProfileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotification('Please fill in all password fields', 'error');
-        return;
-    }
-
-    if (newPassword !== confirmPassword) {
-        showNotification('New passwords do not match', 'error');
-        return;
-    }
-
-    // Simulate password update
-    simulateSaving(() => {
-        document.getElementById('passwordForm').reset();
-        passwordStrength.textContent = '-';
-        passwordStrengthBar.style.width = '0%';
-        showNotification('Password updated successfully!');
-    });
-});
-
-// Save section buttons
-document.querySelectorAll('.save-section-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        simulateSaving(() => {
-            showNotification('Settings saved successfully!');
+    // Show loading state
+    const submitBtn = storeProfileForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    submitBtn.disabled = true;
+    
+    try {
+        // Collect form data
+        const formData = new FormData(storeProfileForm);
+        const data = Object.fromEntries(formData);
+        
+        // Validate phone number format
+        if (!/^9\d{9}$/.test(data.phone)) {
+            throw new Error('Phone number must be exactly 10 digits starting with 9');
+        }
+        
+        // Validate PAN/VAT number format
+        if (!/^\d{9}$/.test(data.panVatNumber)) {
+            throw new Error('PAN/VAT number must be exactly 9 digits');
+        }
+        
+        // Make API call to update seller profile
+        const response = await fetch('/seller-dashboard/settings/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
         });
-    });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to update profile');
+        }
+        
+        // Update the display section with new values
+        updateDisplaySection(data);
+        
+        // Show success notification
+        showNotification('Store profile updated successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        showNotification(error.message || 'Failed to update profile', 'error');
+    } finally {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
 });
 
-// Save all button
-document.getElementById('saveAllBtn').addEventListener('click', () => {
-    simulateSaving(() => {
-        showNotification('All settings saved successfully!');
-    }, 2000);
+// Save all button functionality
+saveAllBtn.addEventListener('click', () => {
+    storeProfileForm.dispatchEvent(new Event('submit'));
+});
+
+// Update display section with new values
+function updateDisplaySection(data) {
+    const displayElements = {
+        'currentBrandName': data.brandName,
+        'currentContactPerson': data.contactPerson,
+        'currentPhone': data.phone,
+        'currentEmail': data.email,
+        'currentBusinessType': data.businessType,
+        'currentLocation': data.location,
+        'currentCity': data.city,
+        'currentOwnerName': data.ownerName,
+        'currentPanVatNumber': data.panVatNumber
+    };
+    
+    Object.keys(displayElements).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = displayElements[id];
+        }
+    });
+}
+
+// Real-time validation
+const phoneInput = document.getElementById('phone');
+const panVatInput = document.getElementById('panVatNumber');
+
+phoneInput.addEventListener('input', (e) => {
+    const value = e.target.value;
+    if (value && !/^9\d{9}$/.test(value)) {
+        phoneInput.classList.add('border-red-500');
+        phoneInput.classList.remove('border-beige');
+    } else {
+        phoneInput.classList.remove('border-red-500');
+        phoneInput.classList.add('border-beige');
+    }
+});
+
+// PAN/VAT input is readonly, but we can still validate on form submission
+panVatInput.addEventListener('input', (e) => {
+    const value = e.target.value;
+    if (value && !/^\d{9}$/.test(value)) {
+        panVatInput.classList.add('border-red-500');
+        panVatInput.classList.remove('border-beige');
+    } else {
+        panVatInput.classList.remove('border-red-500');
+        panVatInput.classList.add('border-beige');
+    }
 });
 
 // Utility functions
-function simulateSaving(callback, duration = 1000) {
-    // Show loading state on buttons
-    const buttons = document.querySelectorAll('button:not([disabled])');
-    const originalContents = new Map();
-    
-    buttons.forEach(btn => {
-        if (btn.textContent.includes('Save')) {
-            originalContents.set(btn, btn.innerHTML);
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-            btn.disabled = true;
-        }
-    });
-
-    setTimeout(() => {
-        buttons.forEach(btn => {
-            if (originalContents.has(btn)) {
-                btn.innerHTML = originalContents.get(btn);
-                btn.disabled = false;
-                btn.classList.add('success-pulse');
-                setTimeout(() => btn.classList.remove('success-pulse'), 500);
-            }
-        });
-        callback();
-    }, duration);
-}
-
 function showNotification(message, type = 'success') {
-    const notification = document.getElementById('successNotification');
-    const notificationMessage = document.getElementById('notificationMessage');
+    const notification = type === 'success' ? 
+        document.getElementById('successNotification') : 
+        document.getElementById('errorNotification');
     
-    notificationMessage.textContent = message;
-    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
-        type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
-    }`;
+    const messageElement = type === 'success' ? 
+        document.getElementById('notificationMessage') : 
+        document.getElementById('errorMessage');
+    
+    messageElement.textContent = message;
     
     // Show notification
     setTimeout(() => {
@@ -242,33 +152,8 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-function generateQRCode() {
-    const qrCode = document.getElementById('qrCode');
-    // Simulate QR code generation with a pattern
-    qrCode.innerHTML = `
-        <div class="grid grid-cols-8 gap-0.5 p-2">
-            ${Array(64).fill(0).map(() => `
-                <div class="w-1 h-1 ${Math.random() > 0.5 ? 'bg-white' : 'bg-transparent'}"></div>
-            `).join('')}
-        </div>
-    `;
-}
-
-// Character counter for bio
-const storeBio = document.getElementById('storeBio');
-const charCounter = storeBio.nextElementSibling;
-
-storeBio.addEventListener('input', () => {
-    const length = storeBio.value.length;
-    charCounter.textContent = `${length}/200 characters`;
-    
-    if (length > 200) {
-        storeBio.value = storeBio.value.substring(0, 200);
-        charCounter.textContent = '200/200 characters';
-    }
-});
-
 // Initialize
 window.addEventListener('load', () => {
     // Any initialization code here
+    console.log('Seller settings page loaded');
 });

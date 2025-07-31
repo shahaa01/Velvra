@@ -607,117 +607,237 @@ router.get('/wishlist/data', isLoggedIn, asyncWrap(async (req, res) => {
 }));
 
 // Messages (Inbox)
-router.get('/messages', isLoggedIn, asyncWrap(async (req, res) => {
-    console.log('Messages route accessed with query:', req.query);
-    
-    // If order and seller are provided, find or create the conversation
-    if (req.query.order && req.query.seller) {
-        const orderId = req.query.order;
-        const sellerId = req.query.seller;
+router.get('/messages', isLoggedIn, async (req, res) => {
+    try {
+        console.log('Messages route accessed with query:', req.query);
         
-        console.log('Creating/finding conversation for order:', orderId, 'seller:', sellerId);
-        
-        // Validate seller ID is not null or invalid
-        if (!sellerId || sellerId === 'null' || sellerId === 'undefined') {
-            console.log('Invalid seller ID:', sellerId);
-            throw new AppError('Invalid seller information. Please contact support.', 400);
-        }
-        
-        // Validate seller exists
-        const seller = await mongoose.model('Seller').findById(sellerId);
-        if (!seller) {
-            console.log('Seller not found:', sellerId);
-            throw new AppError('Seller not found. Please contact support.', 404);
-        }
-        
-        // Validate order exists and belongs to user
-        const order = await Order.findById(orderId);
-        if (!order) {
-            console.log('Order not found:', orderId);
-            throw new AppError('Order not found. Please contact support.', 404);
-        }
-        
-        if (order.user.toString() !== req.user._id.toString()) {
-            console.log('Order access denied for user:', req.user._id);
-            throw new AppError('Access denied. This order does not belong to you.', 403);
-        }
-        
-        // Prevent conversation creation for cancelled or returned orders
-        if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
-            console.log('Cannot create conversation for order with status:', order.orderStatus);
-            throw new AppError(`Cannot contact seller for ${order.orderStatus} orders. Please contact support if you need assistance.`, 400);
-        }
-        
-        // First, check if a conversation already exists between this user and seller (regardless of order)
-        let conversation = await Conversation.findOne({
-            'participants': {
-                $all: [
-                    { $elemMatch: { id: req.user._id, model: 'User' } },
-                    { $elemMatch: { id: sellerId, model: 'Seller' } }
-                ]
+        // If order and seller are provided, find or create the conversation
+        if (req.query.order && req.query.seller) {
+            const orderId = req.query.order;
+            const sellerId = req.query.seller;
+            
+            console.log('Creating/finding conversation for order:', orderId, 'seller:', sellerId);
+            
+            // Validate seller ID is not null or invalid
+            if (!sellerId || sellerId === 'null' || sellerId === 'undefined') {
+                console.log('Invalid seller ID:', sellerId);
+                return res.status(400).render('error', { error: 'Invalid seller information. Please contact support.' });
             }
-        });
-        
-        if (conversation) {
-            console.log('Found existing conversation between user and seller:', conversation._id);
-            // If conversation exists but doesn't have this order, update it to include the order
-            if (!conversation.order || conversation.order.toString() !== orderId) {
-                conversation.order = orderId;
-                await conversation.save();
-                console.log('Updated existing conversation with order:', orderId);
+            
+            // Validate seller exists
+            const seller = await mongoose.model('Seller').findById(sellerId);
+            if (!seller) {
+                console.log('Seller not found:', sellerId);
+                return res.status(404).render('error', { error: 'Seller not found. Please contact support.' });
             }
-        } else {
-            console.log('Creating new conversation between user and seller');
-            conversation = await Conversation.create({
-                participants: [
-                    { id: req.user._id, model: 'User' },
-                    { id: sellerId, model: 'Seller' }
-                ],
-                order: orderId
+            
+            // Validate order exists and belongs to user
+            const order = await Order.findById(orderId);
+            if (!order) {
+                console.log('Order not found:', orderId);
+                return res.status(404).render('error', { error: 'Order not found. Please contact support.' });
+            }
+            
+            if (order.user.toString() !== req.user._id.toString()) {
+                console.log('Order access denied for user:', req.user._id);
+                return res.status(403).render('error', { error: 'Access denied. This order does not belong to you.' });
+            }
+            
+            // Prevent conversation creation for cancelled or returned orders
+            if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+                console.log('Cannot create conversation for order with status:', order.orderStatus);
+                return res.status(400).render('error', { 
+                    error: `Cannot contact seller for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+                });
+            }
+            
+            // First, check if a conversation already exists between this user and seller (regardless of order)
+            let conversation = await Conversation.findOne({
+                'participants': {
+                    $all: [
+                        { $elemMatch: { id: req.user._id, model: 'User' } },
+                        { $elemMatch: { id: sellerId, model: 'Seller' } }
+                    ]
+                }
+            });
+            
+            if (conversation) {
+                console.log('Found existing conversation between user and seller:', conversation._id);
+                // If conversation exists but doesn't have this order, update it to include the order
+                if (!conversation.order || conversation.order.toString() !== orderId) {
+                    conversation.order = orderId;
+                    await conversation.save();
+                    console.log('Updated existing conversation with order:', orderId);
+                }
+            } else {
+                console.log('Creating new conversation between user and seller');
+                conversation = await Conversation.create({
+                    participants: [
+                        { id: req.user._id, model: 'User' },
+                        { id: sellerId, model: 'Seller' }
+                    ],
+                    order: orderId
+                });
+            }
+            
+            return res.redirect(`/dashboard/messages/${conversation._id}`);
+        }
+
+        console.log('Loading all conversations for user:', req.user._id);
+        
+        // Find all conversations where user is a participant
+        const conversations = await Conversation.find({
+            'participants.id': req.user._id,
+            'participants.model': 'User'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        console.log('Found conversations:', conversations.length);
+
+        // Get comprehensive data for each conversation
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            // Get the other participant (seller)
+            const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) {
+                console.log('No seller participant found for conversation:', conversation._id);
+                continue; // Skip if no seller participant
+            }
+            
+            const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!seller) {
+                console.log('Seller not found for participant:', sellerParticipant.id);
+                continue; // Skip if seller doesn't exist
+            }
+            
+            // Get messages for this conversation
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1); // Get latest message
+            
+            // Get unread count for this conversation
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            // Get order details if exists
+            let orderDetails = null;
+            if (conversation.order) {
+                orderDetails = await Order.findById(conversation.order)
+                    .populate('items.product')
+                    .populate('items.seller');
+            }
+
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                seller: seller,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: orderDetails,
+                latestMessage: messages[0] || null
             });
         }
-        
-        return res.redirect(`/dashboard/messages/${conversation._id}`);
-    }
 
-    console.log('Loading all conversations for user:', req.user._id);
-    
-    // Find all conversations where user is a participant
-    const conversations = await Conversation.find({
-        'participants.id': req.user._id,
-        'participants.model': 'User'
-    }).populate('order').sort({ updatedAt: -1 });
+        console.log('Processed conversations:', conversationsWithDetails.length);
 
-    console.log('Found conversations:', conversations.length);
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
 
-    // Get comprehensive data for each conversation
-    const conversationsWithDetails = [];
-    for (const conversation of conversations) {
-        // Get the other participant (seller)
-        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
-        if (!sellerParticipant) {
-            console.log('No seller participant found for conversation:', conversation._id);
-            continue; // Skip if no seller participant
-        }
-        
-        const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
-        if (!seller) {
-            console.log('Seller not found for participant:', sellerParticipant.id);
-            continue; // Skip if seller doesn't exist
-        }
-        
-        // Get messages for this conversation
-        const messages = await Message.find({ conversationId: conversation._id })
-            .sort({ createdAt: -1 })
-            .limit(1); // Get latest message
-        
-        // Get unread count for this conversation
-        const unreadCount = await Message.countDocuments({
-            conversationId: conversation._id,
-            recipient: req.user._id,
-            recipientModel: 'User',
-            isRead: false
+        res.render('page/UserDashboard/userMessage', {
+            title: 'Messages - Velvra',
+            user: req.user,
+            conversations: conversationsWithDetails,
+            stats: stats,
+            currentConversationId: null
         });
+    } catch (error) {
+        console.error('Messages route error:', error);
+        res.status(500).render('error', { error: 'Failed to load messages' });
+    }
+});
+
+// API endpoint to get all user conversations
+router.get('/api/messages', isLoggedIn, async (req, res) => {
+    try {
+        const conversations = await Conversation.find({
+            'participants.id': req.user._id,
+            'participants.model': 'User'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) continue; 
+
+            const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!seller) continue;
+
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1);
+
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                seller: seller,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: conversation.order,
+                latestMessage: messages[0] || null
+            });
+        }
+
+        res.json({ success: true, conversations: conversationsWithDetails });
+    } catch (error) {
+        console.error('API: Get conversations error:', error);
+        res.status(500).json({ error: 'Failed to get conversations' });
+    }
+});
+
+// Single Conversation
+router.get('/messages/:conversationId', isLoggedIn, async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId)
+            .populate('order');
+        
+        if (!conversation) {
+            return res.status(404).render('error', { error: 'Conversation not found' });
+        }
+
+        // Check user is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).render('error', { error: 'Access denied' });
+        }
+
+        // Get the seller participant
+        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+        const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
+
+        // Get all messages for this conversation
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: 1 });
+
+        // Mark messages as read
+        await Message.updateMany(
+            {
+                conversationId: conversation._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            },
+            { isRead: true }
+        );
 
         // Get order details if exists
         let orderDetails = null;
@@ -727,261 +847,173 @@ router.get('/messages', isLoggedIn, asyncWrap(async (req, res) => {
                 .populate('items.seller');
         }
 
-        conversationsWithDetails.push({
-            _id: conversation._id,
-            seller: seller,
-            lastMessage: conversation.lastMessage,
-            updatedAt: conversation.updatedAt,
-            unreadCount: unreadCount,
-            order: orderDetails,
-            latestMessage: messages[0] || null
+        // Get all conversations for sidebar
+        const allConversations = await Conversation.find({
+            'participants.id': req.user._id,
+            'participants.model': 'User'
+        }).populate('order').sort({ updatedAt: -1 });
+
+        const conversationsWithDetails = [];
+        for (const conv of allConversations) {
+            const sellerParticipant = conv.participants.find(p => p.model === 'Seller');
+            if (!sellerParticipant) continue; // Skip if no seller participant
+            
+            const convSeller = await mongoose.model('Seller').findById(sellerParticipant.id);
+            if (!convSeller) continue; // Skip if seller doesn't exist
+            
+            const unreadCount = await Message.countDocuments({
+                conversationId: conv._id,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            });
+
+            conversationsWithDetails.push({
+                _id: conv._id,
+                seller: convSeller,
+                lastMessage: conv.lastMessage,
+                updatedAt: conv.updatedAt,
+                unreadCount: unreadCount,
+                order: conv.order
+            });
+        }
+
+        // Get comprehensive stats for sidebar
+        const stats = await getDashboardStats(req.user._id);
+
+        res.render('page/UserDashboard/userMessage', {
+            title: 'Messages - Velvra',
+            user: req.user,
+            conversations: conversationsWithDetails,
+            currentConversation: {
+                _id: conversation._id,
+                seller: seller,
+                messages: messages,
+                order: orderDetails
+            },
+            stats: stats,
+            currentConversationId: conversation._id
         });
+    } catch (error) {
+        console.error('Single conversation route error:', error);
+        res.status(500).render('error', { error: 'Failed to load conversation' });
     }
-
-    console.log('Processed conversations:', conversationsWithDetails.length);
-
-    // Get comprehensive stats for sidebar
-    const stats = await getDashboardStats(req.user._id);
-
-    res.render('page/UserDashboard/userMessage', {
-        title: 'Messages - Velvra',
-        user: req.user,
-        conversations: conversationsWithDetails,
-        stats: stats,
-        currentConversationId: null
-    });
-}));
-
-// API endpoint to get all user conversations
-router.get('/api/messages', isLoggedIn, asyncWrap(async (req, res) => {
-    const conversations = await Conversation.find({
-        'participants.id': req.user._id,
-        'participants.model': 'User'
-    }).populate('order').sort({ updatedAt: -1 });
-
-    const conversationsWithDetails = [];
-    for (const conversation of conversations) {
-        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
-        if (!sellerParticipant) continue; 
-
-        const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
-        if (!seller) continue;
-
-        const messages = await Message.find({ conversationId: conversation._id })
-            .sort({ createdAt: -1 })
-            .limit(1);
-
-        const unreadCount = await Message.countDocuments({
-            conversationId: conversation._id,
-            recipient: req.user._id,
-            recipientModel: 'User',
-            isRead: false
-        });
-
-        conversationsWithDetails.push({
-            _id: conversation._id,
-            seller: seller,
-            lastMessage: conversation.lastMessage,
-            updatedAt: conversation.updatedAt,
-            unreadCount: unreadCount,
-            order: conversation.order,
-            latestMessage: messages[0] || null
-        });
-    }
-
-    res.json({ success: true, conversations: conversationsWithDetails });
-}));
-
-// Single Conversation
-router.get('/messages/:conversationId', isLoggedIn, asyncWrap(async (req, res) => {
-    const conversation = await Conversation.findById(req.params.conversationId)
-        .populate('order');
-    
-    if (!conversation) {
-        throw new AppError('Conversation not found', 404);
-    }
-
-    // Check user is a participant
-    const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
-    if (!isParticipant) {
-        throw new AppError('Access denied', 403);
-    }
-
-    // Get the seller participant
-    const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
-    const seller = await mongoose.model('Seller').findById(sellerParticipant.id);
-
-    // Get all messages for this conversation
-    const messages = await Message.find({ conversationId: conversation._id })
-        .sort({ createdAt: 1 });
-
-    // Mark messages as read
-    await Message.updateMany(
-        {
-            conversationId: conversation._id,
-            recipient: req.user._id,
-            recipientModel: 'User',
-            isRead: false
-        },
-        { isRead: true }
-    );
-
-    // Get order details if exists
-    let orderDetails = null;
-    if (conversation.order) {
-        orderDetails = await Order.findById(conversation.order)
-            .populate('items.product')
-            .populate('items.seller');
-    }
-
-    // Get all conversations for sidebar
-    const allConversations = await Conversation.find({
-        'participants.id': req.user._id,
-        'participants.model': 'User'
-    }).populate('order').sort({ updatedAt: -1 });
-
-    const conversationsWithDetails = [];
-    for (const conv of allConversations) {
-        const sellerParticipant = conv.participants.find(p => p.model === 'Seller');
-        if (!sellerParticipant) continue; // Skip if no seller participant
-        
-        const convSeller = await mongoose.model('Seller').findById(sellerParticipant.id);
-        if (!convSeller) continue; // Skip if seller doesn't exist
-        
-        const unreadCount = await Message.countDocuments({
-            conversationId: conv._id,
-            recipient: req.user._id,
-            recipientModel: 'User',
-            isRead: false
-        });
-
-        conversationsWithDetails.push({
-            _id: conv._id,
-            seller: convSeller,
-            lastMessage: conv.lastMessage,
-            updatedAt: conv.updatedAt,
-            unreadCount: unreadCount,
-            order: conv.order
-        });
-    }
-
-    // Get comprehensive stats for sidebar
-    const stats = await getDashboardStats(req.user._id);
-
-    res.render('page/UserDashboard/userMessage', {
-        title: 'Messages - Velvra',
-        user: req.user,
-        conversations: conversationsWithDetails,
-        currentConversation: {
-            _id: conversation._id,
-            seller: seller,
-            messages: messages,
-            order: orderDetails
-        },
-        stats: stats,
-        currentConversationId: conversation._id
-    });
-}));
+});
 
 // API endpoint to send a message
-router.post('/messages/:conversationId/send', isLoggedIn, asyncWrap(async (req, res) => {
-    const { content } = req.body;
-    const conversationId = req.params.conversationId;
+router.post('/messages/:conversationId/send', isLoggedIn, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const conversationId = req.params.conversationId;
 
-    if (!content || !content.trim()) {
-        throw new AppError('Message content is required', 400);
+        if (!content || !content.trim()) {
+            return res.status(400).json({ error: 'Message content is required' });
+        }
+
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Get the seller participant
+        const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
+
+        // Create the message
+        const message = await Message.create({
+            conversationId: conversationId,
+            sender: req.user._id,
+            senderModel: 'User',
+            recipient: sellerParticipant.id,
+            recipientModel: 'Seller',
+            order: conversation.order,
+            content: content.trim()
+        });
+
+        // Update conversation's last message
+        conversation.lastMessage = content.trim();
+        conversation.updatedAt = new Date();
+        await conversation.save();
+
+        // Populate sender details for response
+        await message.populate('sender', 'firstName lastName');
+
+        res.json({
+            success: true,
+            message: message
+        });
+    } catch (error) {
+        console.error('Send message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
     }
-
-    // Verify conversation exists and user is participant
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-        throw new AppError('Conversation not found', 404);
-    }
-
-    const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
-    if (!isParticipant) {
-        throw new AppError('Access denied', 403);
-    }
-
-    // Get the seller participant
-    const sellerParticipant = conversation.participants.find(p => p.model === 'Seller');
-
-    // Create the message
-    const message = await Message.create({
-        conversationId: conversationId,
-        sender: req.user._id,
-        senderModel: 'User',
-        recipient: sellerParticipant.id,
-        recipientModel: 'Seller',
-        order: conversation.order,
-        content: content.trim()
-    });
-
-    // Update conversation's last message
-    conversation.lastMessage = content.trim();
-    conversation.updatedAt = new Date();
-    await conversation.save();
-
-    // Populate sender details for response
-    await message.populate('sender', 'firstName lastName');
-
-    res.json({
-        success: true,
-        message: message
-    });
-}));
+});
 
 // API endpoint to mark messages as read
-router.post('/messages/:conversationId/read', isLoggedIn, asyncWrap(async (req, res) => {
-    const conversationId = req.params.conversationId;
+router.post('/messages/:conversationId/read', isLoggedIn, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
 
-    // Verify conversation exists and user is participant
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-        throw new AppError('Conversation not found', 404);
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Mark all unread messages as read
+        await Message.updateMany(
+            {
+                conversationId: conversationId,
+                recipient: req.user._id,
+                recipientModel: 'User',
+                isRead: false
+            },
+            { isRead: true }
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark as read error:', error);
+        res.status(500).json({ error: 'Failed to mark messages as read' });
     }
-
-    const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
-    if (!isParticipant) {
-        throw new AppError('Access denied', 403);
-    }
-
-    // Mark all unread messages as read
-    await Message.updateMany(
-        {
-            conversationId: conversationId,
-            recipient: req.user._id,
-            recipientModel: 'User',
-            isRead: false
-        },
-        { isRead: true }
-    );
-
-    res.json({ success: true });
-}));
+});
 
 // API endpoint to get conversation messages
-router.get('/messages/:conversationId/messages', isLoggedIn, asyncWrap(async (req, res) => {
-    const conversationId = req.params.conversationId;
+router.get('/messages/:conversationId/messages', isLoggedIn, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
 
-    // Verify conversation exists and user is participant
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-        throw new AppError('Conversation not found', 404);
+        // Verify conversation exists and user is participant
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
+        if (!isParticipant) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Get messages
+        const messages = await Message.find({ conversationId: conversationId })
+            .populate('sender', 'firstName lastName')
+            .sort({ createdAt: 1 });
+
+        res.json({ success: true, messages: messages });
+    } catch (error) {
+        console.error('Get messages error:', error);
+        res.status(500).json({ error: 'Failed to get messages' });
     }
-
-    const isParticipant = conversation.participants.some(p => p.id.equals(req.user._id) && p.model === 'User');
-    if (!isParticipant) {
-        throw new AppError('Access denied', 403);
-    }
-
-    // Get messages
-    const messages = await Message.find({ conversationId: conversationId })
-        .populate('sender', 'firstName lastName')
-        .sort({ createdAt: 1 });
-
-    res.json({ success: true, messages: messages });
-}));
+});
 
 // Report Issue (dynamic)
 router.get('/report-issue', isLoggedIn, asyncWrap(async (req, res) => {
@@ -1079,75 +1111,82 @@ router.get('/orders/:orderId/tracking', isLoggedIn, asyncWrap(async (req, res) =
 }));
 
 // Send Message to Seller
-router.post('/orders/:orderId/message', isLoggedIn, asyncWrap(async (req, res) => {
-    const { message, sellerId } = req.body;
-    const orderId = req.params.orderId;
+router.post('/orders/:orderId/message', isLoggedIn, async (req, res) => {
+    try {
+        const { message, sellerId } = req.body;
+        const orderId = req.params.orderId;
 
-    if (!message || !sellerId) {
-        throw new AppError('Message and seller ID are required', 400);
-    }
-
-    // Verify order belongs to user and is not cancelled/returned
-    const order = await Order.findById(orderId);
-    if (!order) {
-        throw new AppError('Order not found', 404);
-    }
-    
-    if (order.user.toString() !== req.user._id.toString()) {
-        throw new AppError('Access denied', 403);
-    }
-    
-    // Prevent messaging for cancelled or returned orders
-    if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
-        throw new AppError(`Cannot send messages for ${order.orderStatus} orders. Please contact support if you need assistance.`, 400);
-    }
-
-    // Find or create conversation
-    let conversation = await Conversation.findOne({
-        'participants': {
-            $all: [
-                { $elemMatch: { id: req.user._id, model: 'User' } },
-                { $elemMatch: { id: sellerId, model: 'Seller' } }
-            ]
+        if (!message || !sellerId) {
+            return res.status(400).json({ error: 'Message and seller ID are required' });
         }
-    });
 
-    if (conversation) {
-        // If conversation exists but doesn't have this order, update it to include the order
-        if (!conversation.order || conversation.order.toString() !== orderId) {
-            conversation.order = orderId;
+        // Verify order belongs to user and is not cancelled/returned
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
         }
-        conversation.lastMessage = message;
-        conversation.updatedAt = new Date();
-        await conversation.save();
-    } else {
-        conversation = await Conversation.create({
-            participants: [
-                { id: req.user._id, model: 'User' },
-                { id: sellerId, model: 'Seller' }
-            ],
-            order: orderId,
-            lastMessage: message
+        
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        // Prevent messaging for cancelled or returned orders
+        if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') {
+            return res.status(400).json({ 
+                error: `Cannot send messages for ${order.orderStatus} orders. Please contact support if you need assistance.` 
+            });
+        }
+
+        // Find or create conversation
+        let conversation = await Conversation.findOne({
+            'participants': {
+                $all: [
+                    { $elemMatch: { id: req.user._id, model: 'User' } },
+                    { $elemMatch: { id: sellerId, model: 'Seller' } }
+                ]
+            }
         });
+
+        if (conversation) {
+            // If conversation exists but doesn't have this order, update it to include the order
+            if (!conversation.order || conversation.order.toString() !== orderId) {
+                conversation.order = orderId;
+            }
+            conversation.lastMessage = message;
+            conversation.updatedAt = new Date();
+            await conversation.save();
+        } else {
+            conversation = await Conversation.create({
+                participants: [
+                    { id: req.user._id, model: 'User' },
+                    { id: sellerId, model: 'Seller' }
+                ],
+                order: orderId,
+                lastMessage: message
+            });
+        }
+
+        // Create message
+        const newMessage = await Message.create({
+            conversationId: conversation._id,
+            sender: req.user._id,
+            senderModel: 'User',
+            recipient: sellerId,
+            recipientModel: 'Seller',
+            order: orderId,
+            content: message
+        });
+
+        res.json({
+            success: true,
+            message: 'Message sent successfully',
+            conversationId: conversation._id
+        });
+    } catch (error) {
+        console.error('Message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
     }
-
-    // Create message
-    const newMessage = await Message.create({
-        conversationId: conversation._id,
-        sender: req.user._id,
-        senderModel: 'User',
-        recipient: sellerId,
-        recipientModel: 'Seller',
-        order: orderId,
-        content: message
-    });
-
-    res.json({
-        success: true,
-        message: 'Message sent successfully',
-        conversationId: conversation._id
-    });
-}));
+});
 
 // Get Order Statistics (for filtering)
 router.get('/orders/stats', isLoggedIn, asyncWrap(async (req, res) => {

@@ -26,7 +26,6 @@ const Conversation = require('./models/conversation');
 const { handleNotFound, handleError, handleDevError } = require('./middlewares/errorMiddleware');
 const { enhancedFlashMiddleware } = require('./utils/flashMessages');
 const dbUrl = process.env.MONGO_ATLAS_URL;
-console.log('Database URL:', dbUrl); // Log the database URL for debugging
 const Product = require('./models/product');
 const authRoutes = require('./routes/authRoute');
 const mobileAuthRoutes = require('./routes/mobileAuthRoute');
@@ -200,6 +199,11 @@ io.on('connection', (socket) => {
     
     socket.on('joinConversation', (conversationId) => {
         socket.join(conversationId);
+    });
+    
+    socket.on('sendMessage', (data) => {
+        // Broadcast the message to all participants in the conversation
+        socket.to(data.conversationId).emit('receiveMessage', data.message);
     });
 });
 

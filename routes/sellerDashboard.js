@@ -583,63 +583,68 @@ router.get('/analytics/test-data', analyticsController.getTestAnalytics);
 router.get('/analytics/export', isLoggedIn, isSeller, analyticsController.exportAnalytics);
 
 // Messages (Inbox)
-router.get('/messages', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) {
-        throw new AppError('Seller not found', 404);
-    }
+router.get('/messages', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) {
+            return res.redirect('/seller');
+        }
 
-    // Find all conversations where seller is a participant
-    const conversations = await Conversation.find({
-        'participants.id': seller._id,
-        'participants.model': 'Seller'
-    }).populate('order').sort({ updatedAt: -1 });
+        // Find all conversations where seller is a participant
+        const conversations = await Conversation.find({
+            'participants.id': seller._id,
+            'participants.model': 'Seller'
+        }).populate('order').sort({ updatedAt: -1 });
 
-    // Get comprehensive data for each conversation
-    const conversationsWithDetails = [];
-    for (const conversation of conversations) {
-        // Get the other participant (user)
-        const userParticipant = conversation.participants.find(p => p.model === 'User');
-        if (!userParticipant) continue;
-        
-        const user = await mongoose.model('User').findById(userParticipant.id);
-        if (!user) continue;
-        
-        // Get messages for this conversation
-        const messages = await Message.find({ conversationId: conversation._id })
-            .sort({ createdAt: -1 })
-            .limit(1);
-        
-        // Get unread count for this conversation
-        const unreadCount = await Message.countDocuments({
-            conversationId: conversation._id,
-            recipient: seller._id,
-            recipientModel: 'Seller',
-            isRead: false
+        // Get comprehensive data for each conversation
+        const conversationsWithDetails = [];
+        for (const conversation of conversations) {
+            // Get the other participant (user)
+            const userParticipant = conversation.participants.find(p => p.model === 'User');
+            if (!userParticipant) continue;
+            
+            const user = await mongoose.model('User').findById(userParticipant.id);
+            if (!user) continue;
+            
+            // Get messages for this conversation
+            const messages = await Message.find({ conversationId: conversation._id })
+                .sort({ createdAt: -1 })
+                .limit(1);
+            
+            // Get unread count for this conversation
+            const unreadCount = await Message.countDocuments({
+                conversationId: conversation._id,
+                recipient: seller._id,
+                recipientModel: 'Seller',
+                isRead: false
+            });
+
+            conversationsWithDetails.push({
+                _id: conversation._id,
+                user: user,
+                lastMessage: conversation.lastMessage,
+                updatedAt: conversation.updatedAt,
+                unreadCount: unreadCount,
+                order: conversation.order,
+                latestMessage: messages[0] || null
+            });
+        }
+
+        // Fetch the full user document for sidebar toggle logic
+        const user = await User.findById(req.user._id);
+        res.render('page/SellerDashboard/sellerMessages', {
+            title: 'Messages - Velvra',
+            user,
+            seller,
+            conversations: conversationsWithDetails,
+            currentConversationId: null,
+            currentPage: 'messages'
         });
-
-        conversationsWithDetails.push({
-            _id: conversation._id,
-            user: user,
-            lastMessage: conversation.lastMessage,
-            updatedAt: conversation.updatedAt,
-            unreadCount: unreadCount,
-            order: conversation.order,
-            latestMessage: messages[0] || null
-        });
+    } catch (error) {
+        console.error('Messages route error:', error);
+        res.status(500).render('error', { error: 'Failed to load messages' });
     }
-
-    // Fetch the full user document for sidebar toggle logic
-    const user = await User.findById(req.user._id);
-    res.render('page/SellerDashboard/sellerMessages', {
-        title: 'Messages - Velvra',
-        user,
-        seller,
-        conversations: conversationsWithDetails,
-        currentConversationId: null,
-        currentPage: 'messages'
-    });
-}));
+});
 
 // Settings
 router.get('/settings', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
@@ -657,6 +662,9 @@ router.get('/settings', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
         currentPage: 'settings'
     });
 }));
+
+// Update Seller Settings
+router.post('/settings/update', isLoggedIn, isSeller, sellerController.updateSellerSettings);
 
 // Toggle user mode (buyer/seller)
 // (Removed, now handled globally in app.js)
@@ -1031,9 +1039,10 @@ router.get('/api/chart-data/:period', isLoggedIn, isSeller, asyncWrap(async (req
 // --- SELLER MESSAGING API ENDPOINTS ---
 
 // Get all conversations for the seller (JSON)
-router.get('/api/messages', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) throw new AppError('Seller not found', 403);
+router.get('/api/messages', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
 
         // Find all conversations where seller is a participant
         const conversations = await Conversation.find({
@@ -1071,79 +1080,98 @@ router.get('/api/messages', isLoggedIn, isSeller, asyncWrap(async (req, res) => 
             });
         }
         res.json({ success: true, conversations: conversationsWithDetails });
-}));
+    } catch (error) {
+        console.error('Seller API: Get conversations error:', error);
+        res.status(500).json({ error: 'Failed to load conversations' });
+    }
+});
 
 // Get all messages for a conversation (JSON)
-router.get('/api/messages/:conversationId/messages', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) throw new AppError('Seller not found', 403);
-    const conversation = await Conversation.findById(req.params.conversationId);
-    if (!conversation) throw new AppError('Conversation not found', 404);
-    // Check seller is a participant
-    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-    if (!isParticipant) throw new AppError('Access denied', 403);
-    // Get messages
-    const messages = await Message.find({ conversationId: conversation._id })
-        .sort({ createdAt: 1 });
-    // Ensure sender is always a string (ObjectId)
-    const messagesWithSenderId = messages.map(msg => ({
-        ...msg.toObject(),
-        sender: msg.sender.toString(),
-        senderId: msg.sender.toString(),
-    }));
-    res.json({ success: true, messages: messagesWithSenderId });
-}));
+router.get('/api/messages/:conversationId/messages', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Get messages
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: 1 });
+        // Ensure sender is always a string (ObjectId)
+        const messagesWithSenderId = messages.map(msg => ({
+            ...msg.toObject(),
+            sender: msg.sender.toString(),
+            senderId: msg.sender.toString(),
+        }));
+        res.json({ success: true, messages: messagesWithSenderId });
+    } catch (error) {
+        console.error('Seller API: Get messages error:', error);
+        res.status(500).json({ error: 'Failed to get messages' });
+    }
+});
 
 // Send a message as the seller
-router.post('/api/messages/:conversationId/send', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const { content } = req.body;
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) throw new AppError('Seller not found', 403);
-    const conversation = await Conversation.findById(req.params.conversationId);
-    if (!conversation) throw new AppError('Conversation not found', 404);
-    // Check seller is a participant
-    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-    if (!isParticipant) throw new AppError('Access denied', 403);
-    // Get the user participant
-    const userParticipant = conversation.participants.find(p => p.model === 'User');
-    if (!userParticipant) throw new AppError('User participant not found', 400);
-    // Create the message
-    const message = await Message.create({
-        conversationId: conversation._id,
-        sender: seller._id,
-        senderModel: 'Seller',
-        recipient: userParticipant.id,
-        recipientModel: 'User',
-        order: conversation.order,
-        content: content.trim()
-    });
-    // Update conversation's last message
-    conversation.lastMessage = content.trim();
-    conversation.updatedAt = new Date();
-    await conversation.save();
-    // Populate sender details for response
-    await message.populate('sender', 'brandName');
-    res.json({ success: true, message });
-}));
+router.post('/api/messages/:conversationId/send', isLoggedIn, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Get the user participant
+        const userParticipant = conversation.participants.find(p => p.model === 'User');
+        if (!userParticipant) return res.status(400).json({ error: 'User participant not found' });
+        // Create the message
+        const message = await Message.create({
+            conversationId: conversation._id,
+            sender: seller._id,
+            senderModel: 'Seller',
+            recipient: userParticipant.id,
+            recipientModel: 'User',
+            order: conversation.order,
+            content: content.trim()
+        });
+        // Update conversation's last message
+        conversation.lastMessage = content.trim();
+        conversation.updatedAt = new Date();
+        await conversation.save();
+        // Populate sender details for response
+        await message.populate('sender', 'brandName');
+        res.json({ success: true, message });
+    } catch (error) {
+        console.error('Seller API: Send message error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
 
 // Mark all messages as read for the seller
-router.post('/api/messages/:conversationId/read', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) throw new AppError('Seller not found', 403);
-    const conversation = await Conversation.findById(req.params.conversationId);
-    if (!conversation) throw new AppError('Conversation not found', 404);
-    // Check seller is a participant
-    const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
-    if (!isParticipant) throw new AppError('Access denied', 403);
-    // Mark all unread messages as read
-    await Message.updateMany({
-        conversationId: conversation._id,
-        recipient: seller._id,
-        recipientModel: 'Seller',
-        isRead: false
-    }, { isRead: true });
-    res.json({ success: true });
-}));
+router.post('/api/messages/:conversationId/read', isLoggedIn, async (req, res) => {
+    try {
+        const seller = await Seller.findOne({ user: req.user._id });
+        if (!seller) return res.status(403).json({ error: 'Seller not found' });
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+        // Check seller is a participant
+        const isParticipant = conversation.participants.some(p => p.id.equals(seller._id) && p.model === 'Seller');
+        if (!isParticipant) return res.status(403).json({ error: 'Access denied' });
+        // Mark all unread messages as read
+        await Message.updateMany({
+            conversationId: conversation._id,
+            recipient: seller._id,
+            recipientModel: 'Seller',
+            isRead: false
+        }, { isRead: true });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Seller API: Mark as read error:', error);
+        res.status(500).json({ error: 'Failed to mark messages as read' });
+    }
+});
 
 // Get seller profile data
 router.get('/profile', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
