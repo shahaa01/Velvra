@@ -550,27 +550,6 @@ router.get('/inventory', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     });
 }));
 
-// Promotions Management
-router.get('/promotions', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
-    const seller = await Seller.findOne({ user: req.user._id });
-    if (!seller) {
-        return res.redirect('/seller');
-    }
-
-    // Get products for promotion creation
-    const products = await Product.find({ seller: seller._id }).select('name brand images category');
-
-    // Fetch the full user document for sidebar toggle logic
-    const user = await User.findById(req.user._id);
-    res.render('page/SellerDashboard/promotions', {
-        title: 'Promotions - Velvra',
-        user,
-        seller,
-        products,
-        currentPage: 'promotions'
-    });
-}));
-
 // Performance Analytics
 router.get('/performance', isLoggedIn, isSeller, asyncWrap(async (req, res) => {
     const seller = await Seller.findOne({ user: req.user._id });

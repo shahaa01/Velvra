@@ -160,7 +160,7 @@ app.use('/search', require('./routes/searchRoute'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoute'));
 app.use('/api', require('./routes/apiRoutes'));
-app.use('/api/promotions', require('./routes/promotionRoutes'));
+// app.use('/api/promotions', require('./routes/promotionRoutes'));
 app.use('/', imagesRouter);
 
 // Test error routes (remove in production)

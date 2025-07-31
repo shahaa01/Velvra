@@ -8,7 +8,6 @@ class VelvraCart {
         this.promoCode = null;
         this.discount = 0;
         this.isUpdating = false;
-        this.appliedPromoCode = null; // Store the applied promo code details
         this.init();
     }
 
@@ -87,18 +86,6 @@ class VelvraCart {
                 e.preventDefault();
                 this.applyPromoCode();
             }
-            
-            // Remove promo
-            else if (e.target.id === 'removePromoBtn' || e.target.closest('#removePromoBtn')) {
-                e.preventDefault();
-                this.removePromoCodeManually();
-            }
-            
-            // Mobile remove promo
-            else if (e.target.id === 'mobileRemovePromoBtn' || e.target.closest('#mobileRemovePromoBtn')) {
-                e.preventDefault();
-                this.removePromoCodeManually();
-            }
         });
 
         // Quantity input change (for direct input)
@@ -111,11 +98,35 @@ class VelvraCart {
                 if (newQuantity >= 1 && newQuantity <= 10) {
                     await this.handleQuantityChange(cartId, 0, newQuantity);
                 } else {
-                    // Reset to valid value
-                    e.target.value = Math.min(Math.max(1, newQuantity), 10);
+                    // Reset to current quantity if invalid
+                    const item = this.getCartItem(cartId);
+                    if (item) {
+                        e.target.value = item.quantity;
+                    }
                 }
             }
         });
+
+        // Touch feedback
+        document.addEventListener('touchstart', (e) => {
+            const target = e.target;
+            if (target.classList.contains('quantity-btn-mobile') || 
+                target.classList.contains('remove-btn-mobile') ||
+                target.classList.contains('color-swatch-mobile') ||
+                target.classList.contains('btn-checkout-mobile')) {
+                target.style.transform = 'scale(0.95)';
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            const target = e.target;
+            if (target.classList.contains('quantity-btn-mobile') || 
+                target.classList.contains('remove-btn-mobile') ||
+                target.classList.contains('color-swatch-mobile') ||
+                target.classList.contains('btn-checkout-mobile')) {
+                target.style.transform = '';
+            }
+        }, { passive: true });
     }
 
     // Helper function to get stock for specific color and size
@@ -125,6 +136,7 @@ class VelvraCart {
         return variant ? variant.stock : 0;
     }
 
+    // Check if quantity change is allowed based on stock
     canIncreaseQuantity(cartItemId) {
         const item = this.getCartItem(cartItemId);
         if (!item) return false;
@@ -133,32 +145,50 @@ class VelvraCart {
         return item.quantity < currentStock;
     }
 
+    // Update stock validation for all items
     updateStockValidation() {
         this.cart.items.forEach(item => {
             this.updateItemStockValidation(item._id);
         });
     }
 
+    // Update stock validation for specific item
     updateItemStockValidation(cartItemId) {
         const item = this.getCartItem(cartItemId);
         if (!item) return;
 
         const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
-        const increaseBtn = document.querySelector(`.increase-btn[data-cart-id="${cartItemId}"]`);
+        const increaseButtons = document.querySelectorAll(`.increase-btn[data-cart-id="${cartItemId}"]`);
+        const decreaseButtons = document.querySelectorAll(`.decrease-btn[data-cart-id="${cartItemId}"]`);
         
-        if (increaseBtn) {
-            if (item.quantity >= currentStock) {
-                increaseBtn.disabled = true;
-                increaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                increaseBtn.style.pointerEvents = 'none';
+        // Handle increase buttons
+        increaseButtons.forEach(btn => {
+            if (item.quantity >= currentStock || item.quantity >= 10) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'none';
             } else {
-                increaseBtn.disabled = false;
-                increaseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                increaseBtn.style.pointerEvents = 'auto';
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'auto';
             }
-        }
+        });
+        
+        // Handle decrease buttons
+        decreaseButtons.forEach(btn => {
+            if (item.quantity <= 1) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.style.pointerEvents = 'auto';
+            }
+        });
     }
 
+    // Show premium stock error message
     showStockError(cartItemId, message) {
         // Remove any existing error messages
         this.removeStockError(cartItemId);
@@ -170,7 +200,7 @@ class VelvraCart {
         errorDiv.style.animation = 'fadeIn 0.3s ease-out';
         
         // Find the quantity controls container and insert error message
-        const quantityContainer = document.querySelector(`[data-cart-id="${cartItemId}"] .quantity-controls-mobile`);
+        const quantityContainer = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"]`);
         if (quantityContainer) {
             quantityContainer.appendChild(errorDiv);
         }
@@ -181,6 +211,7 @@ class VelvraCart {
         }, 3000);
     }
 
+    // Remove stock error message
     removeStockError(cartItemId) {
         const existingError = document.querySelector(`[data-cart-id="${cartItemId}"] .stock-error-message`);
         if (existingError) {
@@ -244,8 +275,12 @@ class VelvraCart {
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
 
-            // Validate promo code after cart update
-            await this.validateAppliedPromoCode();
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
 
         } catch (error) {
             console.error('Error updating quantity:', error);
@@ -286,9 +321,16 @@ class VelvraCart {
             return;
         }
 
-        // Check if new color has enough stock for current quantity
+        // Check if current quantity exceeds new color stock
         if (item.quantity > newColorStock) {
-            this.showStockError(cartItemId, `Only ${newColorStock} available in this color.`);
+            this.showStockError(cartItemId, `This color only has ${newColorStock} items in stock. Please reduce quantity.`);
+            return;
+        }
+
+        // Check if the new color exists in the product's colors array
+        const colorExists = item.product.colors && item.product.colors.find(c => c.name === newColor);
+        if (!colorExists) {
+            this.showStockError(cartItemId, 'This color is not available for this product.');
             return;
         }
 
@@ -296,17 +338,14 @@ class VelvraCart {
             this.isUpdating = true;
             this.showLoading(cartItemId);
 
-            // Update UI immediately
-            this.updateColorInDOM(cartItemId, newColor);
-
-            const response = await fetch('/cart/updateColor', {
+            const response = await fetch('/cart/update-color', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     cartItemId,
-                    newColor
+                    color: newColor
                 })
             });
 
@@ -317,15 +356,19 @@ class VelvraCart {
 
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
+            this.updateColorInDOM(cartItemId, newColor);
+            this.updateItemStockValidation(cartItemId);
 
-            // Validate promo code after cart update
-            await this.validateAppliedPromoCode();
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
 
         } catch (error) {
             console.error('Error updating color:', error);
             this.showErrorMessage(error.message || 'Failed to update color');
-            // Revert the color change on error
-            this.updateColorInDOM(cartItemId, item.color);
         } finally {
             this.isUpdating = false;
             this.hideLoading(cartItemId);
@@ -333,14 +376,8 @@ class VelvraCart {
     }
 
     updateColorInDOM(cartItemId, newColor) {
-        // Update color display
-        const colorDisplays = document.querySelectorAll(`.color-display[data-cart-id="${cartItemId}"]`);
-        colorDisplays.forEach(display => {
-            display.textContent = newColor;
-        });
-
         // Update color swatches
-        const swatches = document.querySelectorAll(`[data-cart-id="${cartItemId}"] .color-swatch-mobile`);
+        const swatches = document.querySelectorAll(`.color-swatch-mobile[data-cart-id="${cartItemId}"]`);
         swatches.forEach(swatch => {
             if (swatch.dataset.color === newColor) {
                 swatch.classList.add('selected');
@@ -349,97 +386,199 @@ class VelvraCart {
             }
         });
 
+        // Update color display text
+        const colorDisplays = document.querySelectorAll(`[data-cart-id="${cartItemId}"] .color-display`);
+        colorDisplays.forEach(display => {
+            display.textContent = newColor;
+        });
+        
         // Update the cart item data
         const item = this.getCartItem(cartItemId);
         if (item) {
             item.color = newColor;
         }
+        
+        // Update price display for the new color
+        this.updatePriceDisplay(cartItemId);
+        
+        // Update stock status display
+        this.updateStockStatusDisplay(cartItemId);
     }
-
+    
+    // Update price display for specific item
     updatePriceDisplay(cartItemId) {
         const item = this.getCartItem(cartItemId);
         if (!item) return;
-
-        // Calculate item price
-        const variant = item.product.variants.find(v => v.color === item.color && v.size === item.size);
+        
+        // Get the price for the current variant
+        const variant = item.product.variants.find(v => 
+            v.color === item.color && v.size === item.size
+        );
+        
         if (!variant) return;
-
-        const itemPrice = variant.salePrice || variant.price;
-        const totalPrice = itemPrice * item.quantity;
-
+        
+        const currentPrice = variant.salePrice || variant.price;
+        const originalPrice = variant.price;
+        const salePercentage = variant.salePercentage || 0;
+        
         // Update mobile price display
-        const mobilePrice = document.querySelector(`.price-mobile[data-cart-id="${cartItemId}"]`);
-        if (mobilePrice) {
-            mobilePrice.textContent = `₹${itemPrice.toLocaleString()}`;
+        const mobilePriceEl = document.querySelector(`.price-mobile[data-cart-id="${cartItemId}"]`);
+        const mobileOriginalPriceEl = document.querySelector(`.price-original-mobile[data-cart-id="${cartItemId}"]`);
+        const mobileBadgeEl = document.querySelector(`.badge-mobile[data-cart-id="${cartItemId}"]`);
+        
+        if (mobilePriceEl) {
+            mobilePriceEl.textContent = `₹${currentPrice.toLocaleString()}`;
         }
-
+        
+        if (mobileOriginalPriceEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                mobileOriginalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                mobileOriginalPriceEl.style.display = 'inline';
+            } else {
+                mobileOriginalPriceEl.style.display = 'none';
+            }
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the original price element if it doesn't exist but there's a sale
+            const mobileCartItem = document.querySelector(`.cart-item-mobile[data-cart-id="${cartItemId}"]`);
+            if (mobileCartItem && mobilePriceEl) {
+                const originalPriceEl = document.createElement('span');
+                originalPriceEl.className = 'price-original-mobile';
+                originalPriceEl.setAttribute('data-cart-id', cartItemId);
+                originalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                mobilePriceEl.parentNode.insertBefore(originalPriceEl, mobilePriceEl.nextSibling);
+            }
+        }
+        
+        if (mobileBadgeEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                mobileBadgeEl.textContent = `${salePercentage}% OFF`;
+                mobileBadgeEl.style.display = 'inline';
+            } else {
+                mobileBadgeEl.style.display = 'none';
+            }
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the badge element if it doesn't exist but there's a sale
+            const mobileCartItem = document.querySelector(`.cart-item-mobile[data-cart-id="${cartItemId}"]`);
+            if (mobileCartItem && mobilePriceEl) {
+                const badgeEl = document.createElement('span');
+                badgeEl.className = 'badge-mobile bg-red-500 text-white';
+                badgeEl.setAttribute('data-cart-id', cartItemId);
+                badgeEl.textContent = `${salePercentage}% OFF`;
+                mobilePriceEl.parentNode.appendChild(badgeEl);
+            }
+        }
+        
         // Update desktop price display
-        const desktopPrice = document.querySelector(`.desktop-price[data-cart-id="${cartItemId}"]`);
-        if (desktopPrice) {
-            desktopPrice.textContent = `₹${itemPrice.toLocaleString()}`;
+        const desktopPriceEl = document.querySelector(`.desktop-price[data-cart-id="${cartItemId}"]`);
+        const desktopOriginalPriceEl = document.querySelector(`.desktop-original-price[data-cart-id="${cartItemId}"]`);
+        
+        if (desktopPriceEl) {
+            desktopPriceEl.textContent = `₹${currentPrice.toLocaleString()}`;
         }
-
-        // Update original price if there's a sale
-        if (variant.salePrice && variant.salePrice < variant.price) {
-            const mobileOriginalPrice = document.querySelector(`.price-original-mobile[data-cart-id="${cartItemId}"]`);
-            const desktopOriginalPrice = document.querySelector(`.desktop-original-price[data-cart-id="${cartItemId}"]`);
-            
-            if (mobileOriginalPrice) {
-                mobileOriginalPrice.textContent = `₹${variant.price.toLocaleString()}`;
+        
+        if (desktopOriginalPriceEl) {
+            if (variant.salePrice && variant.salePrice < variant.price) {
+                desktopOriginalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                desktopOriginalPriceEl.style.display = 'inline';
+            } else {
+                desktopOriginalPriceEl.style.display = 'none';
             }
-            if (desktopOriginalPrice) {
-                desktopOriginalPrice.textContent = `₹${variant.price.toLocaleString()}`;
+        } else if (variant.salePrice && variant.salePrice < variant.price) {
+            // Create the original price element if it doesn't exist but there's a sale
+            const desktopCartItem = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"]`);
+            if (desktopCartItem && desktopPriceEl) {
+                const originalPriceEl = document.createElement('span');
+                originalPriceEl.className = 'text-sm text-gray-500 line-through ml-2 desktop-original-price';
+                originalPriceEl.setAttribute('data-cart-id', cartItemId);
+                originalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                desktopPriceEl.parentNode.insertBefore(originalPriceEl, desktopPriceEl.nextSibling);
             }
-
-            // Update sale badge
-            const salePercentage = Math.round(((variant.price - variant.salePrice) / variant.price) * 100);
-            const badges = document.querySelectorAll(`.badge-mobile[data-cart-id="${cartItemId}"]`);
-            badges.forEach(badge => {
-                badge.textContent = `${salePercentage}% OFF`;
-            });
         }
     }
-
+    
+    // Update stock status display for specific item
     updateStockStatusDisplay(cartItemId) {
         const item = this.getCartItem(cartItemId);
         if (!item) return;
-
+        
         const currentStock = this.getStockForColorSize(item.product, item.color, item.size);
-        const isOutOfStock = currentStock === 0;
-
+        const isInStock = currentStock > 0;
+        
         // Update mobile stock status
-        const mobileStockStatus = document.getElementById(`stock-mobile-${cartItemId}`);
-        if (mobileStockStatus) {
-            if (isOutOfStock) {
-                mobileStockStatus.textContent = 'Out of Stock';
-                mobileStockStatus.classList.add('text-red-500');
+        const mobileStockEl = document.getElementById(`stock-mobile-${cartItemId}`);
+        const mobileQuantityControls = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"] .quantity-controls-row`);
+        
+        if (mobileStockEl || mobileQuantityControls) {
+            if (isInStock) {
+                // Hide existing out of stock message and show quantity controls
+                if (mobileStockEl) {
+                    mobileStockEl.style.display = 'none';
+                }
+                if (mobileQuantityControls) {
+                    mobileQuantityControls.style.display = 'flex';
+                }
             } else {
-                mobileStockStatus.textContent = `${currentStock} in stock`;
-                mobileStockStatus.classList.remove('text-red-500');
+                // Show out of stock message and hide quantity controls
+                if (mobileStockEl) {
+                    mobileStockEl.style.display = 'inline';
+                    mobileStockEl.textContent = 'Out of Stock';
+                } else {
+                    // Create new out of stock element if it doesn't exist
+                    const quantityContainer = document.querySelector(`.quantity-controls-mobile[data-cart-id="${cartItemId}"]`);
+                    if (quantityContainer) {
+                        const outOfStockEl = document.createElement('span');
+                        outOfStockEl.className = 'text-[#D4AF37] font-light text-sm italic stock-status';
+                        outOfStockEl.id = `stock-mobile-${cartItemId}`;
+                        outOfStockEl.textContent = 'Out of Stock';
+                        quantityContainer.appendChild(outOfStockEl);
+                    }
+                }
+                if (mobileQuantityControls) {
+                    mobileQuantityControls.style.display = 'none';
+                }
             }
         }
-
+        
         // Update desktop stock status
-        const desktopStockStatus = document.getElementById(`stock-desktop-${cartItemId}`);
-        if (desktopStockStatus) {
-            if (isOutOfStock) {
-                desktopStockStatus.textContent = 'Out of Stock';
-                desktopStockStatus.classList.add('text-red-500');
+        const desktopStockEl = document.getElementById(`stock-desktop-${cartItemId}`);
+        const desktopQuantityControls = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"] .quantity-controls-mobile .quantity-controls-row`);
+        
+        if (desktopStockEl || desktopQuantityControls) {
+            if (isInStock) {
+                // Hide existing out of stock message and show quantity controls
+                if (desktopStockEl) {
+                    desktopStockEl.style.display = 'none';
+                }
+                if (desktopQuantityControls) {
+                    desktopQuantityControls.style.display = 'flex';
+                }
             } else {
-                desktopStockStatus.textContent = `${currentStock} in stock`;
-                desktopStockStatus.classList.remove('text-red-500');
+                // Show out of stock message and hide quantity controls
+                if (desktopStockEl) {
+                    desktopStockEl.style.display = 'inline';
+                    desktopStockEl.textContent = 'Out of Stock';
+                } else {
+                    // Create new out of stock element if it doesn't exist for desktop
+                    const desktopItem = document.querySelector(`.desktop-cart-item[data-cart-id="${cartItemId}"]`);
+                    if (desktopItem) {
+                        const priceSection = desktopItem.querySelector('.flex.items-center.justify-between');
+                        if (priceSection) {
+                            const outOfStockEl = document.createElement('span');
+                            outOfStockEl.className = 'text-[#D4AF37] font-light text-lg italic ml-4 stock-status';
+                            outOfStockEl.id = `stock-desktop-${cartItemId}`;
+                            outOfStockEl.textContent = 'Out of Stock';
+                            priceSection.appendChild(outOfStockEl);
+                        }
+                    }
+                }
+                if (desktopQuantityControls) {
+                    desktopQuantityControls.style.display = 'none';
+                }
             }
         }
-
-        // Update quantity controls visibility
-        const quantityControls = document.querySelectorAll(`[data-cart-id="${cartItemId}"] .quantity-controls-mobile`);
-        quantityControls.forEach(control => {
-            if (isOutOfStock) {
-                control.style.display = 'none';
-            } else {
-                control.style.display = 'flex';
-            }
-        });
+        
+        // Also update the item's stock validation
+        this.updateItemStockValidation(cartItemId);
     }
 
     async handleRemoveItem(cartItemId) {
@@ -490,8 +629,12 @@ class VelvraCart {
             const data = await response.json();
             this.updateCartData(data.cart, data.total);
 
-            // Validate promo code after cart update
-            await this.validateAppliedPromoCode();
+            // Update cart count using the global cart manager
+            if (window.cartManager) {
+                window.cartManager.handleCartUpdate({
+                    cartCount: data.cart.items.reduce((total, item) => total + item.quantity, 0)
+                });
+            }
 
             // Remove from DOM after animation completes
             setTimeout(() => {
@@ -538,27 +681,16 @@ class VelvraCart {
         }
 
         try {
-            // Validate promo code before checkout
-            if (this.appliedPromoCode) {
-                const isValid = await this.validatePromoCode(this.appliedPromoCode.code);
-                if (!isValid) {
-                    this.showErrorMessage('Promo code is no longer valid. Please remove it before checkout.');
-                    return;
-                }
-                
-                // Store promo code state for payment summary page
-                localStorage.setItem('appliedPromoCode', JSON.stringify(this.appliedPromoCode));
-                localStorage.setItem('promoDiscount', this.discount.toString());
-            } else {
-                // Clear any existing promo code state
-                localStorage.removeItem('appliedPromoCode');
-                localStorage.removeItem('promoDiscount');
-            }
-
+            this.showLoading('checkout');
+            
+            // Redirect to payment summary page
             window.location.href = '/payment/paymentSummary';
+
         } catch (error) {
-            console.error('Error during checkout:', error);
-            this.showErrorMessage('Error during checkout');
+            console.error('Error proceeding to checkout:', error);
+            this.showErrorMessage('Failed to proceed to checkout');
+        } finally {
+            this.hideLoading('checkout');
         }
     }
 
@@ -584,159 +716,44 @@ class VelvraCart {
             return;
         }
 
-        // Check if promo code is already applied
-        if (this.appliedPromoCode && this.appliedPromoCode.code === code) {
-            this.showErrorMessage('This promo code is already applied');
+        // Define valid promo codes
+        const validCodes = {
+            'FIRST10': { type: 'percentage', value: 10 },
+            'SAVE20': { type: 'fixed', value: 2000, minOrder: 10000 }
+        };
+
+        const promo = validCodes[code];
+
+        if (!promo) {
+            this.showErrorMessage('Invalid promo code');
             return;
         }
 
-        try {
-            const response = await fetch('/api/promotions/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    code: code,
-                    cartTotal: this.cart.total
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Store the applied promo code details
-                this.appliedPromoCode = {
-                    code: code,
-                    promotion: result.data.promotion,
-                    discount: result.data.discount,
-                    minPurchase: result.data.promotion.minPurchase || 0
-                };
-                
-                this.discount = result.data.discount;
-                
-                // Update UI to show discount
-                this.showDiscount(this.discount);
-                this.showSuccessMessage(`Promo code ${code} applied!`);
-                input.value = '';
-                
-                // Hide promo form after successful application
-                this.togglePromoForm();
-            } else {
-                this.showErrorMessage(result.message || 'Invalid promo code');
-            }
-        } catch (error) {
-            console.error('Error applying promo code:', error);
-            this.showErrorMessage('Error applying promo code');
-        }
-    }
-
-    // Validate promo code without applying it
-    async validatePromoCode(code) {
-        try {
-            const response = await fetch('/api/promotions/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    code: code,
-                    cartTotal: this.cart.total
-                })
-            });
-
-            const result = await response.json();
-            return result.success;
-        } catch (error) {
-            console.error('Error validating promo code:', error);
-            return false;
-        }
-    }
-
-    // Validate and potentially remove applied promo code
-    async validateAppliedPromoCode() {
-        if (!this.appliedPromoCode) return;
-
-        const { code, minPurchase } = this.appliedPromoCode;
-
-        // Check minimum purchase requirement
-        if (this.cart.total < minPurchase) {
-            this.removePromoCode(`Promo code ${code} requires minimum purchase of Rs. ${minPurchase.toLocaleString()}. Your cart total is now Rs. ${this.cart.total.toLocaleString()}.`);
+        if (promo.minOrder && this.cart.total < promo.minOrder) {
+            this.showErrorMessage(`Minimum order of ₹${promo.minOrder.toLocaleString()} required`);
             return;
         }
 
-        // Validate promo code with backend
-        const isValid = await this.validatePromoCode(code);
-        if (!isValid) {
-            this.removePromoCode(`Promo code ${code} is no longer valid.`);
-            return;
+        let discount = 0;
+        if (promo.type === 'percentage') {
+            discount = Math.floor(this.cart.total * (promo.value / 100));
+        } else {
+            discount = promo.value;
         }
 
-        // Recalculate discount for new cart total
-        try {
-            const response = await fetch('/api/promotions/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    code: code,
-                    cartTotal: this.cart.total
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                this.discount = result.data.discount;
-                this.showDiscount(this.discount);
-            } else {
-                this.removePromoCode(`Promo code ${code} is no longer valid.`);
-            }
-        } catch (error) {
-            console.error('Error recalculating promo code discount:', error);
-            this.removePromoCode(`Error validating promo code ${code}.`);
-        }
-    }
-
-    // Remove applied promo code
-    removePromoCode(message) {
-        this.appliedPromoCode = null;
-        this.discount = 0;
-        this.hideDiscount();
-        this.showErrorMessage(message);
-    }
-
-    // Manually remove promo code (user initiated)
-    removePromoCodeManually() {
-        if (!this.appliedPromoCode) return;
-        
-        this.appliedPromoCode = null;
-        this.discount = 0;
-        this.hideDiscount();
-        this.showSuccessMessage('Promo code removed successfully');
+        // Update UI to show discount
+        this.showDiscount(discount);
+        this.showSuccessMessage(`Promo code ${code} applied!`);
+        input.value = '';
     }
 
     showDiscount(discount) {
         const discountRow = document.getElementById('discountRow');
         const discountAmount = document.getElementById('discount');
-        const removePromoBtn = document.getElementById('removePromoBtn');
-        const mobileAppliedPromo = document.getElementById('mobileAppliedPromo');
-        const mobilePromoCode = document.getElementById('mobilePromoCode');
         
         if (discountRow && discountAmount) {
             discountRow.classList.remove('hidden');
             discountAmount.textContent = `-₹${discount.toLocaleString()}`;
-            
-            // Show remove promo button
-            if (removePromoBtn) {
-                removePromoBtn.classList.remove('hidden');
-            }
-            
-            // Show mobile applied promo
-            if (mobileAppliedPromo && mobilePromoCode && this.appliedPromoCode) {
-                mobileAppliedPromo.classList.remove('hidden');
-                mobilePromoCode.textContent = this.appliedPromoCode.code;
-            }
             
             // Update totals
             const finalTotal = this.cart.total - discount;
@@ -744,31 +761,6 @@ class VelvraCart {
             document.getElementById('desktopTotal').textContent = `₹${finalTotal.toLocaleString()}`;
             document.getElementById('mobileTotal').textContent = `₹${finalTotal.toLocaleString()}`;
         }
-    }
-
-    hideDiscount() {
-        const discountRow = document.getElementById('discountRow');
-        const removePromoBtn = document.getElementById('removePromoBtn');
-        const mobileAppliedPromo = document.getElementById('mobileAppliedPromo');
-        
-        if (discountRow) {
-            discountRow.classList.add('hidden');
-        }
-        
-        // Hide remove promo button
-        if (removePromoBtn) {
-            removePromoBtn.classList.add('hidden');
-        }
-        
-        // Hide mobile applied promo
-        if (mobileAppliedPromo) {
-            mobileAppliedPromo.classList.add('hidden');
-        }
-        
-        // Update totals without discount
-        document.getElementById('subtotal').textContent = `₹${this.cart.total.toLocaleString()}`;
-        document.getElementById('desktopTotal').textContent = `₹${this.cart.total.toLocaleString()}`;
-        document.getElementById('mobileTotal').textContent = `₹${this.cart.total.toLocaleString()}`;
     }
 
     updateCartData(newCartData, newTotal) {
@@ -788,19 +780,11 @@ class VelvraCart {
             itemCountEl.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'items'}`;
         }
 
-        // Update totals (without discount for now, discount will be applied separately)
+        // Update totals
         const total = this.cart.total || 0;
         document.getElementById('subtotal').textContent = `₹${total.toLocaleString()}`;
-        
-        // Apply discount if exists
-        if (this.appliedPromoCode && this.discount > 0) {
-            const finalTotal = total - this.discount;
-            document.getElementById('desktopTotal').textContent = `₹${finalTotal.toLocaleString()}`;
-            document.getElementById('mobileTotal').textContent = `₹${finalTotal.toLocaleString()}`;
-        } else {
-            document.getElementById('desktopTotal').textContent = `₹${total.toLocaleString()}`;
-            document.getElementById('mobileTotal').textContent = `₹${total.toLocaleString()}`;
-        }
+        document.getElementById('desktopTotal').textContent = `₹${total.toLocaleString()}`;
+        document.getElementById('mobileTotal').textContent = `₹${total.toLocaleString()}`;
 
         // Update price displays for all items
         this.cart.items.forEach(item => {
@@ -822,9 +806,8 @@ class VelvraCart {
     }
 
     showEmptyCart() {
+        // Show empty cart state for mobile
         const mobileContainer = document.getElementById('mobileCartContainer');
-        const desktopContainer = document.getElementById('desktopCartItems');
-        
         if (mobileContainer) {
             mobileContainer.innerHTML = `
                 <div class="text-center py-20">
@@ -839,7 +822,9 @@ class VelvraCart {
                 </div>
             `;
         }
-        
+
+        // Show empty cart state for desktop
+        const desktopContainer = document.getElementById('desktopCartItems');
         if (desktopContainer) {
             desktopContainer.innerHTML = `
                 <div class="text-center py-20">
@@ -854,26 +839,36 @@ class VelvraCart {
                 </div>
             `;
         }
+
+        // Hide summary bar
+        const summaryBar = document.querySelector('.mobile-summary-bar');
+        if (summaryBar) {
+            summaryBar.style.display = 'none';
+        }
     }
 
     showMobilePromoModal() {
-        // Implementation for mobile promo modal
-        this.togglePromoForm();
+        // For now, just show coming soon message
+        // You can implement a full modal later
+        this.showToast('Enter promo code on desktop view', 'info');
     }
 
     showToast(message, type = 'info') {
         const toast = document.createElement('div');
-        toast.className = `fixed bottom-4 left-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-            type === 'success' ? 'bg-green-500 text-white' :
-            type === 'error' ? 'bg-red-500 text-white' :
-            'bg-blue-500 text-white'
-        }`;
+        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-gray-800';
+        
+        toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full text-white text-sm font-medium ${bgColor} shadow-lg transition-all duration-300 opacity-0 translate-y-2`;
         toast.textContent = message;
         
         document.body.appendChild(toast);
         
+        requestAnimationFrame(() => {
+            toast.classList.remove('opacity-0', 'translate-y-2');
+        });
+        
         setTimeout(() => {
-            toast.remove();
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => document.body.removeChild(toast), 300);
         }, 3000);
     }
 
@@ -881,10 +876,6 @@ class VelvraCart {
         if ('vibrate' in navigator) {
             navigator.vibrate(10);
         }
-        element.classList.add('scale-95');
-        setTimeout(() => {
-            element.classList.remove('scale-95');
-        }, 100);
     }
 
     getCartItem(cartItemId) {
@@ -892,40 +883,63 @@ class VelvraCart {
     }
 
     showLoading(cartItemId) {
-        const loadingEl = document.querySelector(`[data-cart-id="${cartItemId}"] .loading-spinner`);
-        if (loadingEl) {
-            loadingEl.classList.remove('hidden');
-        }
+        const elements = document.querySelectorAll(`[data-cart-id="${cartItemId}"]`);
+        elements.forEach(el => {
+            el.classList.add('loading');
+            el.disabled = true;
+        });
     }
 
     hideLoading(cartItemId) {
-        const loadingEl = document.querySelector(`[data-cart-id="${cartItemId}"] .loading-spinner`);
-        if (loadingEl) {
-            loadingEl.classList.add('hidden');
-        }
+        const elements = document.querySelectorAll(`[data-cart-id="${cartItemId}"]`);
+        elements.forEach(el => {
+            el.classList.remove('loading');
+            el.disabled = false;
+        });
     }
 
     showSuccessMessage(message) {
-        this.showToast(message, 'success');
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 
     showErrorMessage(message) {
-        this.showToast(message, 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: message,
+            confirmButtonText: 'OK'
+        });
     }
-
-
 }
 
 // Initialize cart when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.cartManager = new VelvraCart();
+    // Create cart instance
+    const velvraCart = new VelvraCart();
+    
+    // Prevent zoom on double tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+    
+    // Optimize viewport height for mobile browsers
+    const setVH = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
 });
-
-// Set viewport height for mobile
-const setVH = () => {
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-};
-
-window.addEventListener('resize', setVH);
-setVH();
